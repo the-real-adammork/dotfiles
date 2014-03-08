@@ -117,6 +117,9 @@ inoremap <Esc>B <nop>
 inoremap <Esc>C <nop>
 inoremap <Esc>D <nop>
 
+" Map jk to esc
+inoremap jk <ESC>
+
 " splits
 nnoremap <leader><bar> :rightb vert new<CR>
 nnoremap <leader>_ :rightb new<CR>
