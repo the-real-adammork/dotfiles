@@ -56,6 +56,9 @@ source $ZSH/oh-my-zsh.sh
 # Set interactive comments
 set -k
 
+# use vim key bindings
+bindkey -v
+
 # Disable shared histories
 unsetopt share_history
 

@@ -30,7 +30,7 @@ filetype indent on
 
 " color scheme
 let g:solarized_termcolors=256
-set background=dark
+set background=light
 colorscheme solarized
 highlight clear SignColumn
 
@@ -116,6 +116,9 @@ inoremap <Esc>A <nop>
 inoremap <Esc>B <nop>
 inoremap <Esc>C <nop>
 inoremap <Esc>D <nop>
+
+" Map jk to esc
+inoremap jk <ESC>
 
 " splits
 nnoremap <leader><bar> :rightb vert new<CR>

@@ -1,5 +1,5 @@
 [user]
-	name = Adam MOrk
+	name = the Real Adam Mork
 	email = adammork@gmail.com
 [color]
 	diff = auto
@@ -35,3 +35,5 @@
 	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
 [credential]
 	helper = osxkeychain
+[push]
+	default = simple
