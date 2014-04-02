@@ -86,6 +86,9 @@ alias ga="git add"
 alias gmv="git mv"
 alias grm="git rm"
 
+# make diff work like git-diff
+alias diffg="git diff --no-index --"
+
 # rubygems
 export PATH="/Users/kenneth/.gem/ruby/1.8/bin:$PATH"
 
@@ -116,6 +119,15 @@ alias less-watch="coffee ~/lib/lessc-watch/src/lessc-watch.coffee . ."
 # go
 command_exists brew && brew ls go | grep vim >/dev/null && \
    export GOROOT=`brew ls go | grep vim | head -n 1 | ruby -ne 'Process.exit(1) unless $_ =~ /^(.+)\/misc\/vim/; puts $1'`
+
+# -----------------------------------------------------------------
+# DOCKER
+# -----------------------------------------------------------------
+
+if [ -f ~/bin/boot2docker ]; then
+    export DOCKER_HOST=tcp://
+fi
+
 
 # -----------------------------------------------------------------
 # PACKAGE MANAGER CONFIGUREATION
