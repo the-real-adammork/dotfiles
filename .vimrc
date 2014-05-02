@@ -153,6 +153,9 @@ set statusline+=%*
 vnoremap > >gv
 vnoremap < <gv
 
+" w!!
+cmap w!! %!sudo tee > /dev/null %
+
 
 
 " ==============================
