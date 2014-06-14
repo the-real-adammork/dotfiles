@@ -30,7 +30,7 @@ filetype indent on
 
 " color scheme
 let g:solarized_termcolors=256
-set background=light
+set background=dark
 colorscheme solarized
 highlight clear SignColumn
 
