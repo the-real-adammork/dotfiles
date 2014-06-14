@@ -79,6 +79,14 @@ set formatoptions=qrn1
 " backspace bullshit
 set backspace=indent,eol,start
 
+" mouse
+if has("mouse")
+    set mouse=a
+endif
+
+" use system clipboard
+set clipboard=unnamed
+
 
 " ==============================
 "           MAPPINGS
@@ -156,6 +164,27 @@ vnoremap < <gv
 " w!!
 cmap w!! %!sudo tee > /dev/null %
 
+" beg / end of line, easier mappings
+noremap H ^
+noremap L $
+
+"escape is hard to reach so map kj to <ESC>
+inoremap kj <ESC>l
+" nnoremap kj <ESC>
+vnoremap kj <ESC>
+
+" scroll up and down faster
+noremap K 5k
+noremap J 5j
+noremap <C-j> J
+
+
+" sudo write
+cnoremap w!! w !sudo tee % >/dev/null
+
+" keep search matches in the middle of the window
+nnoremap n nzzzv
+nnoremap N Nzzzv
 
 
 " ==============================
@@ -199,8 +228,10 @@ let g:ctrlp_working_path_mode = 2
 let g:ctrlp_custom_ignore = '\.git$\|\.hg$\|\.svn$'
 let g:ctrlp_prompt_mappings = {
             \ 'PrtClearCache()':      ['<C-r>'],
-            \ 'ToggleRegex()':        ['<S-C-r>'],
+            \ 'ToggleRegex()':        ['<C-/>'],
             \ }
+let g:ctrlp_open_multiple_files = 'tjr'
+let g:ctrlp_open_new_file = 'r'
 nnoremap <leader>b :CtrlPBuffer<CR>
 
 " you complete me
@@ -254,86 +285,3 @@ nnoremap <leader>t :TagbarToggle<CR>
 " ==============================
 " =        END OF VIMRC        =
 " ==============================
-
-
-
-
-
-
-
-
-
-
-
-
-" misc
-
-
-"" TODO: organize these settings better!
-" omni completion stuff i think
-"set wildmenu
-"set wildmode=list:longest
-"set wildignore+=*/tmp/*,*.so,*.swp,*.zip   " Linux/MacOSX
-
-""set undofile
-""set relativenumber
-
-
-
-
-
-
-
-
-
-"set pastetoggle=<C-p>
-
-"" matching of brackets, if else, etc
-"runtime macros/matchit.vim
-
-" super tab disabled in favor of YCM
-"" better completion
-""let g:SuperTabDefaultCompletionType = "context"
-
-" snipmate disabled
-"" snipmate
-"let g:snips_author = 'Kenneth Ballenegger'
-
-"" clang osx
-""let sdk_path = 'echo -n `ls /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs | head -1`'
-""let g:clang_complete_copen = 1
-""autocmd FileType objc let g:clang_use_library=1
-""autocmd FileType objc let g:clang_user_options = '-fblocks -isysroot ' . sdk_path . ' -D__IPHONE_OS_VERSION_MIN_REQUIRED=40300'
-
-
-
-
-"" ack \a
-"nnoremap <leader>a :Ack<space>
-"nmap <C-a> <Plug>ToggleAutoCloseMappings
-
-
-
-"" vlj
-"let vimclojure#HighlightBuiltins=1
-"let vimclojure#ParenRainbow=1
-
-
-"" copy to os x pasteboard
-"vmap <C-c> :w !pbcopy<CR>
-
-
-
-"" nmap <F8> :TagbarToggle<CR> 
-""au BufNewFile,BufRead * TagbarToggle
-
-"" gist settings
-"let g:gist_clip_command = 'pbcopy'
-"let g:gist_detect_filetype = 1
-"let g:gist_show_privates = 1
-"let g:gist_post_private = 1
-"let g:gist_get_multiplefile = 1
-"nnoremap <Leader>s :Gist<space>
-
-
-
