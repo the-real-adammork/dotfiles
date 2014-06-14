@@ -9,7 +9,7 @@
 	whitespace = trailing-space,space-before-tab
 	pager = less -r
 [github]
-	user = kballenegger
+	user = the-real-adammork
 	token = SECRET
 	password = SECRET
 [rerere]
