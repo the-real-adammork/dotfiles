@@ -1,0 +1,5 @@
+# global gitignore patterns
+.DS_Store
+*.swp
+*.swo
+*~
