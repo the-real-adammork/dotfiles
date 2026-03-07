@@ -4,4 +4,5 @@ brew "tmux"
 brew "neovim"
 brew "tig"
 brew "ranger"
-brew "scm_breeze"
+# scm_breeze is installed via its own installer:
+# https://github.com/scmbreeze/scm_breeze#installation

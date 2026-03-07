@@ -51,7 +51,8 @@ if command -v brew &>/dev/null; then
     brew bundle --file="$DOTS_DIR/Brewfile"
     if [[ "$OS" == "Darwin" && -f "$DOTS_DIR/Brewfile.macos" ]]; then
         info "Installing macOS tools from Brewfile.macos..."
-        brew bundle --file="$DOTS_DIR/Brewfile.macos"    fi
+        brew bundle --file="$DOTS_DIR/Brewfile.macos"
+    fi
 else
     warn "Homebrew not available, skipping package installation."
 fi
