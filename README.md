@@ -30,14 +30,22 @@ Each top-level directory is a stow package mirroring `~`:
 
 | Package     | Config files                  |
 |-------------|-------------------------------|
-| tmux        | `.tmux.conf`                  |
-| nvim        | `.config/nvim/init.lua`       |
-| zsh         | `.zshrc`, `.zshenv`           |
-| tig         | `.tigrc`                      |
-| scm_breeze  | `.scmbrc`                     |
-| claude      | `.claude/settings.json`       |
+| act         | `.actrc`                      |
+| alacritty   | `.alacritty.yml`              |
+| bash        | `.bash_profile`               |
+| claude      | `.claude/{settings,hooks,commands,skills,agents}` |
+| coc         | `.config/coc/memos.json`      |
+| gh          | `.config/gh/{config,hosts}.yml` |
+| git         | `.gitconfig`, `.config/git/ignore` |
+| lvim        | `.config/lvim/{config.lua,ftplugin/}` |
+| nvim        | `.config/nvim/init.vim`       |
 | ranger      | `.config/ranger/rc.conf`      |
-| git         | `.gitconfig`, `.gitignore_global` |
+| scm_breeze  | `.scmbrc`                     |
+| tig         | `.tigrc`                      |
+| tmux        | `.tmux.conf`                  |
+| vim         | `.vimrc`                      |
+| yarn        | `.yarnrc`                     |
+| zsh         | `.zshrc`, `.zshenv`, `.zprofile`, `.p10k.zsh` |
 
 ## Adding a New Package
 
