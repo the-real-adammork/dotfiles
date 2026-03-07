@@ -1,1 +1,21 @@
-# git configuration
+[user]
+	email = adammork@gmail.com
+	name = Adam Mork
+	signingkey = AA134A9A54E6B657
+[core]
+	pager = diff-so-fancy | less --tabs=4 -RFX
+[interactive]
+	diffFilter = diff-so-fancy --patch
+[commit]
+	gpgsign = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[credential]
+	helper = store
+[url "git@github.com:airbnb/lottie-ios.git"]
+	insteadOf = https://github.com/airbnb/lottie-ios.git
+[http]
+	postBuffer = 1048576000

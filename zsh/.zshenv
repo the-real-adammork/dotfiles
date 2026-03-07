@@ -1,1 +1,1 @@
-# zsh environment variables (loaded for all shell types)
+. "$HOME/.cargo/env"
