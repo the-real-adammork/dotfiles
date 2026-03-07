@@ -47,6 +47,18 @@ Each top-level directory is a stow package mirroring `~`:
 | yarn        | `.yarnrc`                     |
 | zsh         | `.zshrc`, `.zshenv`, `.zprofile`, `.p10k.zsh` |
 
+## Single Package on Another Machine
+
+To sync just one package (e.g., claude) to another computer without running the full install:
+
+```bash
+git clone git@github.com:<username>/dotfiles.git ~/dots
+cd ~/dots
+stow claude
+```
+
+The only dependency is `stow` (`brew install stow` / `apt install stow` / `dnf install stow`).
+
 ## Adding a New Package
 
 1. Create a directory: `mkdir -p newpkg/.config/newpkg`
