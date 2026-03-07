@@ -1,1 +1,126 @@
-{}
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(file:*)",
+      "Bash(stat:*)",
+      "Bash(tree:*)",
+      "Bash(du:*)",
+      "Bash(df:*)",
+      "Bash(which:*)",
+      "Bash(type:*)",
+      "Bash(realpath:*)",
+      "Bash(basename:*)",
+      "Bash(dirname:*)",
+      "Bash(pwd:*)",
+      "Bash(whoami:*)",
+      "Bash(uname:*)",
+      "Bash(date:*)",
+      "Bash(env:*)",
+      "Bash(echo:*)",
+      "Bash(printf:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(chmod:*)",
+      "Bash(tar:*)",
+      "Bash(zip:*)",
+      "Bash(unzip:*)",
+      "Bash(tee:*)",
+      "Bash(xargs:*)",
+      "Bash(diff:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(jq:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(md5:*)",
+      "Bash(shasum:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(pip3:*)",
+      "Bash(pip:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(sqlite3:*)",
+      "Bash(gh:*)",
+      "Bash(/usr/bin/git status:*)",
+      "Bash(/usr/bin/git diff:*)",
+      "Bash(/usr/bin/git log:*)",
+      "Bash(/usr/bin/git show:*)",
+      "Bash(/usr/bin/git blame:*)",
+      "Bash(/usr/bin/git branch:*)",
+      "Bash(/usr/bin/git remote:*)",
+      "Bash(/usr/bin/git tag:*)",
+      "Bash(/usr/bin/git rev-parse:*)",
+      "Bash(/usr/bin/git rev-list:*)",
+      "Bash(/usr/bin/git ls-files:*)",
+      "Bash(/usr/bin/git cat-file:*)",
+      "Bash(/usr/bin/git shortlog:*)",
+      "Bash(/usr/bin/git describe:*)",
+      "Bash(/usr/bin/git name-rev:*)",
+      "Bash(/usr/bin/git reflog:*)",
+      "Bash(/usr/bin/git -C:*)",
+      "Bash(/usr/bin/git add:*)",
+      "Bash(/usr/bin/git fetch:*)",
+      "Bash(/usr/bin/git worktree:*)",
+      "Bash(/usr/bin/git commit:*)",
+      "Bash(/usr/bin/git merge:*)",
+      "Bash(/usr/bin/git push:*)",
+      "Bash(/usr/bin/git pull:*)",
+      "Bash(/usr/bin/git checkout:*)",
+      "Bash(/usr/bin/git stash:*)",
+      "Bash(/usr/bin/git rebase:*)",
+      "Bash(/usr/bin/git cherry-pick:*)",
+      "Bash(cd:*)",
+      "Bash(compound command contains cd with output redirection)",
+      "Bash(command contains ambiguous syntax with command separators)",
+      "Bash(command contains shell metacharacters)"
+    ]
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  }
+}
