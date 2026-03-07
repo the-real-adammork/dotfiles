@@ -1,0 +1,4 @@
+# Brewfile.macos - macOS-only tools and casks
+# Add casks and macOS-specific formulae here, e.g.:
+# cask "iterm2"
+# cask "rectangle"
