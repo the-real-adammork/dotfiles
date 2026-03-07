@@ -9,6 +9,11 @@ ONLY=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --only)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --only requires a comma-separated list of packages"
+                echo "Usage: ./install.sh [--only pkg1,pkg2,...]"
+                exit 1
+            fi
             ONLY="$2"
             shift 2
             ;;
@@ -32,6 +37,10 @@ if ! command -v brew &>/dev/null; then
     if [[ "$OS" == "Darwin" ]]; then
         info "Installing Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        # Ensure brew is on PATH for this session (Apple Silicon)
+        if [[ -x /opt/homebrew/bin/brew ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        fi
     else
         warn "Homebrew not found. Install packages manually or install Linuxbrew."
     fi
