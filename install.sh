@@ -57,6 +57,14 @@ else
     warn "Homebrew not available, skipping package installation."
 fi
 
+# --- TPM (Tmux Plugin Manager) ---
+if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+    info "Installing TPM..."
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+else
+    ok "TPM already installed"
+fi
+
 # --- Stow ---
 if ! command -v stow &>/dev/null; then
     echo "Error: stow is not installed. Install it and re-run."
