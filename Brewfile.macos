@@ -3,5 +3,8 @@
 # cask "iterm2"
 # cask "rectangle"
 
+# Terminal
+cask "ghostty"
+
 # Fonts
 cask "font-monaspace"
