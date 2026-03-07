@@ -1,0 +1,7 @@
+\.git
+docs
+README\.md
+Brewfile.*
+install\.sh
+LICENSE
+\.stow-local-ignore
