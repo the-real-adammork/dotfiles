@@ -72,10 +72,7 @@ export GPG_TTY=$(tty)
 alias l='eza --long -a'
 alias ll='eza --long -a --git'
 alias lt='eza --long -a --tree --level=2'
-alias gcm='git commit -S -m '
 alias gpoh='git push origin HEAD '
-alias grs='git reset --soft '
-alias gch='git cherry-pick -- '
 
 # Tools
 eval "$(mise activate zsh)"
