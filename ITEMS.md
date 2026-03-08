@@ -4,7 +4,7 @@
 
 - [x] **Replace Powerlevel10k prompt** — replaced with oh-my-posh using a custom bubblesextra theme with Catppuccin Latte colors.
 - [ ] **Test new shell config** — zsh files were significantly rewritten (320 lines down to 95). Open a fresh terminal to verify: mise, SCM Breeze, mcfly, vi mode cursor, eza aliases, edit-command-line all work.
-- [ ] **Remove `.p10k.zsh`** — oh-my-posh is now active; delete this file once confirmed working in a fresh terminal.
+- [x] **Remove `.p10k.zsh`** — deleted along with the powerlevel10k oh-my-zsh theme.
 
 ## Git
 
