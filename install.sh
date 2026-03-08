@@ -57,6 +57,14 @@ else
     warn "Homebrew not available, skipping package installation."
 fi
 
+# --- Cargo tools ---
+if command -v cargo &>/dev/null; then
+    info "Installing tree-sitter CLI via cargo..."
+    cargo install tree-sitter-cli
+else
+    warn "Cargo not found. Install Rust (rustup) to get tree-sitter-cli."
+fi
+
 # --- TPM (Tmux Plugin Manager) ---
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     info "Installing TPM..."

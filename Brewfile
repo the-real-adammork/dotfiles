@@ -4,9 +4,11 @@ brew "tmux"
 brew "neovim"
 brew "tig"
 brew "ranger"
-brew "tree-sitter"
 brew "ripgrep"
 brew "swiftformat"
 brew "go"
+brew "rustup"
+# After install: rustup default stable
+# tree-sitter CLI: cargo install tree-sitter-cli
 # scm_breeze is installed via its own installer:
 # https://github.com/scmbreeze/scm_breeze#installation
