@@ -1,11 +1,5 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 # Oh My Zsh
 export ZSH=$HOME/.oh-my-zsh
-export ZSH_THEME="powerlevel10k/powerlevel10k"
 export CASE_SENSITIVE="true"
 export DISABLE_LS_COLORS="true"
 export DISABLE_AUTO_TITLE="true"
@@ -91,5 +85,5 @@ export MCFLY_FUZZY=2
 export MCFLY_INTERFACE_VIEW=BOTTOM
 source <(mcfly init zsh)
 
-# Powerlevel10k
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# Prompt
+eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/catppuccin-bubbles.omp.json)"
