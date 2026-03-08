@@ -14,6 +14,7 @@ Thumbs.db
 # Secrets
 .env
 .env.local
+**/gh/hosts.yml
 
 # Python
 *.pyc
