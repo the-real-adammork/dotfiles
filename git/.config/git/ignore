@@ -1,1 +1,23 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Secrets
+.env
+.env.local
+
+# Python
+*.pyc
+__pycache__/
+
+# Claude
 **/.claude/settings.local.json

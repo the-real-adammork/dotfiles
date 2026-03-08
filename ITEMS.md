@@ -3,14 +3,14 @@
 ## Shell
 
 - [x] **Replace Powerlevel10k prompt** — replaced with oh-my-posh using a custom bubblesextra theme with Catppuccin Latte colors.
-- [ ] **Test new shell config** — zsh files were significantly rewritten (320 lines down to 95). Open a fresh terminal to verify: mise, SCM Breeze, mcfly, vi mode cursor, eza aliases, edit-command-line all work.
+- [x] **Test new shell config** — verified: mise, SCM Breeze, mcfly, vi mode cursor, eza aliases, edit-command-line all working.
 - [x] **Remove `.p10k.zsh`** — deleted along with the powerlevel10k oh-my-zsh theme.
 
 ## Git
 
-- [ ] **Audit `.gitconfig`** — contains stale entries: Lottie iOS URL override (`url.insteadOf`) from a previous job/project, and `credential.helper = store` which saves passwords in plaintext (macOS Keychain via `osxkeychain` is safer).
-- [ ] **Add `diff-so-fancy` to Brewfile** — `.gitconfig` references it as the pager but it's not tracked as a dependency. Will break git diff on a fresh machine.
-- [ ] **Audit `.gitignore_global`** — tracked in `dots/git/` but contents haven't been reviewed for completeness or stale entries.
+- [x] **Audit `.gitconfig`** — switched credential helper to osxkeychain, removed stale lottie-ios URL rewrite and http.postBuffer override.
+- [x] **Add `diff-so-fancy` to Brewfile** — added and installed.
+- [x] **Audit `.gitignore_global`** — consolidated into `.config/git/ignore`, added missing patterns, removed obsolete `.gitignore_global`.
 
 ## Neovim
 
