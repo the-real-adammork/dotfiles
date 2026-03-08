@@ -14,8 +14,4 @@
 	process = git-lfs filter-process
 	required = true
 [credential]
-	helper = store
-[url "git@github.com:airbnb/lottie-ios.git"]
-	insteadOf = https://github.com/airbnb/lottie-ios.git
-[http]
-	postBuffer = 1048576000
+	helper = osxkeychain
