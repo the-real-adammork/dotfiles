@@ -99,14 +99,18 @@ require("lazy").setup({
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     config = function()
-      require("nvim-treesitter.configs").setup({
-        ensure_installed = {
-          "bash", "css", "dockerfile", "go", "html", "javascript", "json",
-          "kotlin", "lua", "markdown", "markdown_inline", "nginx", "python",
-          "rust", "sql", "swift", "tsx", "typescript", "vim", "vimdoc", "yaml",
-        },
-        highlight = { enable = true },
-        indent = { enable = true },
+      require("nvim-treesitter").setup()
+      require("nvim-treesitter").install({
+        "bash", "css", "dockerfile", "go", "html", "javascript", "json",
+        "kotlin", "lua", "markdown", "markdown_inline", "nginx", "python",
+        "rust", "sql", "swift", "tsx", "typescript", "vim", "vimdoc", "yaml",
+      })
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function()
+          if pcall(vim.treesitter.start) then
+            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
+        end,
       })
     end,
   },
@@ -139,7 +143,6 @@ require("lazy").setup({
         "ruff",
         "stylua",
         "shfmt",
-        "goimports",
         "sql-formatter",
         "ktlint",
       },
@@ -151,40 +154,30 @@ require("lazy").setup({
     "neovim/nvim-lspconfig",
     dependencies = { "williamboman/mason-lspconfig.nvim" },
     config = function()
-      local lspconfig = require("lspconfig")
-      local capabilities = require("blink.cmp").get_lsp_capabilities()
+      -- Global config for all LSP servers
+      vim.lsp.config("*", {
+        root_markers = { ".git" },
+      })
 
-      local servers = {
-        pyright = {},
-        ts_ls = {},
-        jsonls = {},
-        html = {},
-        cssls = {},
-        sourcekit = {},
-        rust_analyzer = {},
-        kotlin_language_server = {},
-        sqls = {},
-        marksman = {},
-        dockerls = {},
-        bashls = {},
-        gopls = {},
-        lua_ls = {
-          settings = {
-            Lua = {
-              runtime = { version = "LuaJIT" },
-              workspace = {
-                checkThirdParty = false,
-                library = { vim.env.VIMRUNTIME },
-              },
+      -- Server-specific config
+      vim.lsp.config("lua_ls", {
+        settings = {
+          Lua = {
+            runtime = { version = "LuaJIT" },
+            workspace = {
+              checkThirdParty = false,
+              library = { vim.env.VIMRUNTIME },
             },
           },
         },
-      }
+      })
 
-      for server, config in pairs(servers) do
-        config.capabilities = capabilities
-        lspconfig[server].setup(config)
-      end
+      -- Enable all LSP servers
+      vim.lsp.enable({
+        "pyright", "ts_ls", "jsonls", "html", "cssls", "sourcekit",
+        "rust_analyzer", "kotlin_language_server", "sqls", "marksman",
+        "dockerls", "bashls", "gopls", "lua_ls",
+      })
 
       -- LSP keybindings
       vim.api.nvim_create_autocmd("LspAttach", {
