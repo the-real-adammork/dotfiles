@@ -1,14 +1,7 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Must Have
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"colorscheme solarized
-" syntax on " syntax highlighting on
 syntax enable
-let g:solarized_termtrans = 1
-"call togglebg#map("<F5>")
-
-" Always use light
-set background=light
 
 let $PAGER=''
 
@@ -112,6 +105,7 @@ call vundle#end()            " required
 "
 
 call plug#begin()
+Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
 Plug 'mfussenegger/nvim-dap'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'Pocco81/dap-buddy.nvim'
@@ -123,6 +117,9 @@ Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
 Plug 'antoinemadec/FixCursorHold.nvim'
 Plug 'nvim-neotest/neotest'
 call plug#end()
+
+set background=light
+colorscheme catppuccin-latte
 
 filetype plugin indent on    " required
 " To ignore plugin indent changes, instead use:
@@ -690,7 +687,7 @@ let g:ctrlsf_auto_focus = {
 let g:sneak#streak = 1
 "let g:airline_theme='bubblegum'
 let g:lightline = {
-      \ 'colorscheme': 'solarized',
+      \ 'colorscheme': 'catppuccin',
       \ }
 
 "Prettier"
