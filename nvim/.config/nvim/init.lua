@@ -21,6 +21,9 @@ require("lazy").setup({
     name = "catppuccin",
     priority = 1000,
     config = function()
+      require("catppuccin").setup({
+        auto_integrations = true,
+      })
       vim.opt.background = "light"
       vim.cmd.colorscheme("catppuccin-latte")
     end,
