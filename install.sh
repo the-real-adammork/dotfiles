@@ -65,6 +65,23 @@ else
     warn "Cargo not found. Install Rust (rustup) to get tree-sitter-cli."
 fi
 
+# --- Bat theme cache ---
+if command -v bat &>/dev/null; then
+    info "Rebuilding bat theme cache..."
+    bat cache --build
+else
+    warn "bat not found, skipping theme cache build."
+fi
+
+# --- Mise (version manager for node, python, ruby) ---
+if command -v mise &>/dev/null; then
+    info "Setting up mise..."
+    mise use --global node@lts python@3 ruby@latest
+    mise install
+else
+    warn "mise not found, skipping language version setup."
+fi
+
 # --- TPM (Tmux Plugin Manager) ---
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     info "Installing TPM..."
