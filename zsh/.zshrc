@@ -1,5 +1,6 @@
 # Oh My Zsh
 export ZSH=$HOME/.oh-my-zsh
+export ZSH_THEME=""
 export CASE_SENSITIVE="true"
 export DISABLE_LS_COLORS="true"
 export DISABLE_AUTO_TITLE="true"
