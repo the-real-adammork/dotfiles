@@ -102,6 +102,12 @@ require("lazy").setup({
     end,
   },
 
+  -- Winbar breadcrumbs
+  {
+    "Bekaboo/dropbar.nvim",
+    opts = {},
+  },
+
   -- Motion
   {
     "folke/flash.nvim",
@@ -283,7 +289,16 @@ require("lazy").setup({
 
   -- TODO: investigate debugging plugins (nvim-dap, nvim-dap-ui)
   -- TODO: investigate testing plugins (neotest)
+}, {
+  ui = {
+    border = "rounded",
+  },
 })
+
+-- Floating window borders for LSP and diagnostics
+vim.diagnostic.config({ float = { border = "rounded" } })
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
+vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
 
 -- Settings
 vim.opt.colorcolumn = "100"
@@ -373,6 +388,11 @@ vim.opt.report = 0
 
 -- Clipboard
 vim.opt.clipboard = "unnamedplus"
+local paste_orig = vim.paste
+vim.paste = function(lines, phase)
+  if not vim.bo.modifiable then return false end
+  return paste_orig(lines, phase)
+end
 
 -- Indentation
 vim.opt.tabstop = 2
