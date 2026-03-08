@@ -56,11 +56,8 @@ export PATH="$PATH:/Users/adam/.local/bin"
 export PATH="$PATH:/Users/adam/Projects/xcode-build-server"
 export PATH="$PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
 
-# Custom PAGER (man pages in nvim)
-export PAGER="/bin/sh -c \"unset PAGER;col -b -x | \
-    nvim -R -c 'set ft=man nomod nolist' -c 'map q :q<CR>' \
-    -c 'map <SPACE> <C-D>' -c 'map b <C-U>' \
-    -c 'nmap K :Man <C-R>=expand(\\\"<cword>\\\")<CR><CR>' -\""
+# Man pages in nvim
+export MANPAGER="nvim +Man!"
 
 # GPG
 export GPG_TTY=$(tty)
@@ -87,4 +84,4 @@ export MCFLY_INTERFACE_VIEW=BOTTOM
 source <(mcfly init zsh)
 
 # Prompt
-eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/catppuccin-bubbles.omp.json)"
+eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/catppuccin-latte.omp.json)"
