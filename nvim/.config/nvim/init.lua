@@ -41,6 +41,9 @@ require("lazy").setup({
     config = function()
       require("neo-tree").setup({
         close_if_last_window = true,
+        window = {
+          width = 30,
+        },
         filesystem = {
           filtered_items = {
             visible = true,
@@ -99,6 +102,20 @@ require("lazy").setup({
           lualine_z = { "location" },
         },
       })
+    end,
+  },
+
+  -- Notifications
+  {
+    "rcarriga/nvim-notify",
+    config = function()
+      local notify = require("notify")
+      notify.setup({
+        stages = "fade",
+        timeout = 3000,
+        top_down = true,
+      })
+      vim.notify = notify
     end,
   },
 
