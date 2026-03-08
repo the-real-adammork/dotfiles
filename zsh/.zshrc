@@ -23,20 +23,22 @@ HISTFILESIZE=10000000
 # Vi mode
 bindkey -v
 export KEYTIMEOUT=1
+autoload -Uz edit-command-line
+zle -N edit-command-line
 bindkey -M vicmd "^V" edit-command-line
 bindkey -v '^?' backward-delete-char
 
 function zle-keymap-select zle-line-init {
     case $KEYMAP in
-        vicmd)      print -n -- "\E]50;CursorShape=0\C-G";;  # block cursor
-        viins|main) print -n -- "\E]50;CursorShape=1\C-G";;  # line cursor
+        vicmd)      print -n -- "\e[2 q";;  # block cursor
+        viins|main) print -n -- "\e[6 q";;  # line cursor
     esac
     zle reset-prompt
     zle -R
 }
 
 function zle-line-finish {
-    print -n -- "\E]50;CursorShape=0\C-G"  # block cursor
+    print -n -- "\e[2 q"  # block cursor
 }
 
 zle -N zle-line-init
@@ -72,6 +74,7 @@ export GPG_TTY=$(tty)
 alias l='eza --long -a'
 alias ll='eza --long -a --git'
 alias lt='eza --long -a --tree --level=2'
+alias gcm='git commit -m '
 alias gpoh='git push origin HEAD '
 
 # Tools
