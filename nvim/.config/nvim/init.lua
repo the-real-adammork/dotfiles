@@ -60,6 +60,41 @@ require("lazy").setup({
         options = {
           theme = "catppuccin",
         },
+        sections = {
+          lualine_a = { "mode" },
+          lualine_b = {
+            "branch",
+            "diagnostics",
+          },
+          lualine_c = {
+            "filename",
+            {
+              function()
+                local reg = vim.fn.reg_recording()
+                if reg ~= "" then return "recording @" .. reg end
+                return ""
+              end,
+              color = { fg = "#d20f39" },
+            },
+          },
+          lualine_x = {
+            "searchcount",
+            {
+              function()
+                local clients = vim.lsp.get_clients({ bufnr = 0 })
+                if #clients == 0 then return "" end
+                local names = {}
+                for _, c in ipairs(clients) do
+                  table.insert(names, c.name)
+                end
+                return " " .. table.concat(names, ", ")
+              end,
+            },
+            "filetype",
+          },
+          lualine_y = { "progress" },
+          lualine_z = { "location" },
+        },
       })
     end,
   },
