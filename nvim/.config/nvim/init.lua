@@ -40,6 +40,7 @@ require("lazy").setup({
     },
     config = function()
       require("neo-tree").setup({
+        close_if_last_window = true,
         filesystem = {
           filtered_items = {
             visible = true,
@@ -59,6 +60,8 @@ require("lazy").setup({
       require("lualine").setup({
         options = {
           theme = "catppuccin",
+          section_separators = "",
+          component_separators = "",
         },
         sections = {
           lualine_a = { "mode" },
@@ -405,3 +408,10 @@ vim.keymap.set("n", "<leader>h", function()
   vim.opt.number = not vim.o.number
   vim.opt.relativenumber = not vim.o.relativenumber
 end, { desc = "Toggle hybrid line numbers" })
+
+-- Open Neo-tree on startup
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    require("neo-tree.command").execute({ action = "show" })
+  end,
+})
