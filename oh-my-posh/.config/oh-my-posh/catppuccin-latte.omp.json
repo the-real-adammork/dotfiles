@@ -1,42 +1,53 @@
 {
   "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
   "palette": {
-        "os": "#ACB0BE",
-        "closer": "p:os",
-        "pink": "#ea76cb",
-        "lavender": "#7287FD",
-        "blue":  "#1e66f5"
+    "os": "#ACB0BE",
+    "pink": "#ea76cb",
+    "lavender": "#7287FD",
+    "blue": "#1e66f5",
+    "text": "#4c4f69",
+    "white": "#eff1f5",
+    "surface": "#ccd0da"
   },
   "blocks": [
     {
       "alignment": "left",
       "segments": [
         {
-          "foreground": "p:os",
-          "style": "plain",
-          "template": "{{.Icon}} ",
+          "background": "p:blue",
+          "foreground": "p:white",
+          "leading_diamond": "\ue0b6",
+          "style": "diamond",
+          "powerline_symbol": "\ue0b4",
+          "template": " {{.Icon}} ",
           "type": "os"
         },
         {
-          "foreground": "p:blue",
-          "style": "plain",
+          "background": "p:blue",
+          "foreground": "p:white",
+          "powerline_symbol": "\ue0b4",
+          "style": "powerline",
           "template": "{{ .UserName }}@{{ .HostName }} ",
           "type": "session"
         },
         {
-          "foreground": "p:pink",
-          "options": {
+          "background": "p:pink",
+          "foreground": "p:white",
+          "powerline_symbol": "\ue0b4",
+          "properties": {
             "folder_icon": "..\ue5fe..",
             "home_icon": "~",
             "style": "agnoster_short"
           },
-          "style": "plain",
-          "template": "{{ .Path }} ",
+          "style": "powerline",
+          "template": " {{ .Path }} ",
           "type": "path"
         },
         {
-          "foreground": "p:lavender",
-          "options": {
+          "background": "p:lavender",
+          "foreground": "p:white",
+          "powerline_symbol": "\ue0b4",
+          "properties": {
             "branch_icon": "\ue725 ",
             "cherry_pick_icon": "\ue29b ",
             "commit_icon": "\uf417 ",
@@ -48,15 +59,10 @@
             "revert_icon": "\uf0e2 ",
             "tag_icon": "\uf412 "
           },
-          "template": "{{ .HEAD }} ",
-          "style": "plain",
+          "style": "powerline",
+          "template": " {{ .HEAD }} ",
+          "trailing_diamond": "\ue0b4",
           "type": "git"
-        },
-        {
-          "style": "plain",
-          "foreground": "p:closer",
-          "template": "\uf105",
-          "type": "text"
         }
       ],
       "type": "prompt"
