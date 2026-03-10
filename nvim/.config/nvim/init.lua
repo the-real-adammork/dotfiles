@@ -23,6 +23,7 @@ require("lazy").setup({
     config = function()
       require("catppuccin").setup({
         auto_integrations = true,
+        transparent_background = true,
       })
       vim.opt.background = "light"
       vim.cmd.colorscheme("catppuccin-latte")
