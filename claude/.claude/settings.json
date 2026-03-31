@@ -89,13 +89,14 @@
       "Bash(cd:*)",
       "Bash(compound command contains cd with output redirection)",
       "Bash(command contains ambiguous syntax with command separators)",
-      "Bash(command contains shell metacharacters)"
+      "Bash(command contains shell metacharacters)",
+      "mcp__pencil"
     ]
   },
   "hooks": {
     "Notification": [
       {
-        "matcher": "permission_prompt",
+        "matcher": "permission_prompt|idle_prompt|elicitation_dialog",
         "hooks": [
           {
             "type": "command",
