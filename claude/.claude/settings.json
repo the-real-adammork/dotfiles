@@ -1,5 +1,12 @@
 {
   "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Bash(cat */.env)",
+      "Bash(source */.env)"
+    ],
     "allow": [
       "Read",
       "Edit",
