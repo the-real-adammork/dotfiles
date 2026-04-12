@@ -82,6 +82,36 @@ else
     warn "mise not found, skipping language version setup."
 fi
 
+# --- SoulseekQt (no brew cask available) ---
+if [[ "$OS" == "Darwin" ]] && ! [ -d "/Applications/SoulseekQt.app" ]; then
+    info "Installing SoulseekQt..."
+    SLSK_URL="https://f004.backblazeb2.com/file/SoulseekQt/SoulseekQt-2025-10-11.dmg"
+    TMP_DMG=$(mktemp /tmp/SoulseekQt.XXXXXX.dmg)
+    curl -fsSL "$SLSK_URL" -o "$TMP_DMG"
+    MOUNT=$(hdiutil attach "$TMP_DMG" -nobrowse -quiet | awk 'END{print $NF}')
+    cp -R "$MOUNT"/*.app /Applications/
+    hdiutil detach "$MOUNT" -quiet
+    rm "$TMP_DMG"
+    ok "SoulseekQt installed"
+else
+    ok "SoulseekQt already installed"
+fi
+
+# --- Spek (no brew cask available) ---
+if [[ "$OS" == "Darwin" ]] && ! [ -d "/Applications/Spek.app" ]; then
+    info "Installing Spek..."
+    SPEK_URL="https://github.com/alexkay/spek/releases/download/v0.8.5/spek-0.8.5-beta.dmg"
+    TMP_DMG=$(mktemp /tmp/Spek.XXXXXX.dmg)
+    curl -fsSL "$SPEK_URL" -o "$TMP_DMG"
+    MOUNT=$(hdiutil attach "$TMP_DMG" -nobrowse -quiet | awk 'END{print $NF}')
+    cp -R "$MOUNT"/*.app /Applications/
+    hdiutil detach "$MOUNT" -quiet
+    rm "$TMP_DMG"
+    ok "Spek installed"
+else
+    ok "Spek already installed"
+fi
+
 # --- TPM (Tmux Plugin Manager) ---
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     info "Installing TPM..."

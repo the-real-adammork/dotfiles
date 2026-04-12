@@ -1,10 +1,101 @@
-# Brewfile.macos - macOS-only tools and casks
-# Add casks and macOS-specific formulae here, e.g.:
-# cask "iterm2"
-# cask "rectangle"
+# Brewfile.macos — macOS-only tools, casks, and App Store apps
 
-# Terminal
+# -----------------------------------------------------------------------------
+# macOS-only formulae
+# -----------------------------------------------------------------------------
+brew "cocoapods"          # iOS dev
+brew "mas"                # Mac App Store CLI
+brew "pinentry-mac"       # GPG pinentry for macOS
+brew "terminal-notifier"  # macOS notifications from scripts
+
+# -----------------------------------------------------------------------------
+# Terminal / fonts
+# -----------------------------------------------------------------------------
 cask "ghostty"
-
-# Fonts
 cask "font-monaspace"
+
+# -----------------------------------------------------------------------------
+# Creative suite
+# -----------------------------------------------------------------------------
+cask "adobe-creative-cloud"
+
+# -----------------------------------------------------------------------------
+# Dev / cloud
+# -----------------------------------------------------------------------------
+cask "docker-desktop"
+cask "google-cloud-sdk"
+
+# -----------------------------------------------------------------------------
+# Browsers
+# -----------------------------------------------------------------------------
+cask "brave-browser"
+cask "google-chrome"
+
+# -----------------------------------------------------------------------------
+# Communication
+# -----------------------------------------------------------------------------
+cask "discord"
+cask "signal"
+cask "slack"
+cask "telegram"
+
+# -----------------------------------------------------------------------------
+# AI
+# -----------------------------------------------------------------------------
+cask "chatgpt"
+cask "claude"
+
+# -----------------------------------------------------------------------------
+# Passwords / secrets
+# -----------------------------------------------------------------------------
+cask "1password"
+cask "gpg-suite"
+
+# -----------------------------------------------------------------------------
+# Databases
+# -----------------------------------------------------------------------------
+cask "postgres-app"
+
+# -----------------------------------------------------------------------------
+# Utilities
+# -----------------------------------------------------------------------------
+cask "backblaze"
+cask "blackhole-16ch"
+cask "daisydisk"
+cask "switchresx"
+
+# -----------------------------------------------------------------------------
+# Media / audio
+# -----------------------------------------------------------------------------
+cask "ableton-live-suite"
+cask "audacity"
+cask "obs"
+cask "optimus-player"
+cask "qbittorrent"
+cask "rekordbox"
+cask "soundsource"
+cask "transmission"
+cask "vlc"
+
+# -----------------------------------------------------------------------------
+# Manual installs (automated in install.sh via curl + hdiutil)
+# -----------------------------------------------------------------------------
+# SoulseekQt — https://www.slsknet.org (URL is date-stamped, update as needed)
+# Spek       — https://github.com/alexkay/spek/releases
+
+# -----------------------------------------------------------------------------
+# Vendor downloads (not automatable — re-download from vendor when needed)
+# -----------------------------------------------------------------------------
+# Drobo Dashboard — https://www.drobo.com/start/
+# NDI Tools       — https://ndi.video/tools/
+
+# -----------------------------------------------------------------------------
+# Mac App Store
+# -----------------------------------------------------------------------------
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
+mas "Xcode", id: 497799835
+mas "Clear", id: 504544917
+mas "Shazam", id: 897118787
+mas "3Hub", id: 427515976
+mas "Color Picker", id: 641027709

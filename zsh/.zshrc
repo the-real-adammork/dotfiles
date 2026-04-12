@@ -51,7 +51,6 @@ bindkey '^[[1;9D' backward-word
 [ -z "${TMUX}" ] && bindkey '^[[1;3D' backward-word
 
 # PATH
-export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 export PATH="$PATH:/Users/adam/.local/bin"
 export PATH="$PATH:/Users/adam/Projects/xcode-build-server"
 export PATH="$PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
