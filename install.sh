@@ -90,6 +90,19 @@ else
     ok "TPM already installed"
 fi
 
+# --- claude-notify (macOS notification tool) ---
+if [[ "$OS" == "Darwin" ]]; then
+    info "Building claude-notify..."
+    APP_DIR="$HOME/.local/bin/claude-notify.app"
+    mkdir -p "$APP_DIR/Contents/MacOS"
+    cp "$DOTS_DIR/notify/src/Info.plist" "$APP_DIR/Contents/"
+    swiftc -o "$APP_DIR/Contents/MacOS/claude-notify" \
+        "$DOTS_DIR/notify/src/claude-notify.swift" \
+        -framework Cocoa -framework UserNotifications 2>/dev/null
+    codesign --force --sign - "$APP_DIR" 2>/dev/null
+    ok "claude-notify built"
+fi
+
 # --- Stow ---
 if ! command -v stow &>/dev/null; then
     echo "Error: stow is not installed. Install it and re-run."

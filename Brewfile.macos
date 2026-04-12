@@ -6,8 +6,5 @@
 # Terminal
 cask "ghostty"
 
-# Notifications
-brew "terminal-notifier"
-
 # Fonts
 cask "font-monaspace"
