@@ -1,12 +1,5 @@
 {
   "permissions": {
-    "deny": [
-      "Read(.env)",
-      "Read(**/.env)",
-      "Read(**/.env.local)",
-      "Bash(cat */.env)",
-      "Bash(source */.env)"
-    ],
     "allow": [
       "Read",
       "Edit",
@@ -122,7 +115,15 @@
       "Bash(compound command contains cd with output redirection)",
       "Bash(command contains ambiguous syntax with command separators)",
       "Bash(command contains shell metacharacters)",
+      "mcp__jcodemunch__*",
       "mcp__pencil"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Bash(cat */.env)",
+      "Bash(source */.env)"
     ]
   },
   "hooks": {
@@ -146,6 +147,28 @@
           }
         ]
       }
+    ],
+    "WorktreeCreate": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jcodemunch-mcp hook-event create"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jcodemunch-mcp hook-event remove"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {
@@ -160,5 +183,6 @@
         "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
       }
     }
-  }
+  },
+  "skipDangerousModePermissionPrompt": true
 }
