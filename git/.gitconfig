@@ -15,3 +15,5 @@
 	required = true
 [credential]
 	helper = osxkeychain
+[pull]
+	rebase = false
