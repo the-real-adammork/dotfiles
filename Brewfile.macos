@@ -97,7 +97,6 @@ cask "vlc"
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
 mas "Xcode", id: 497799835
-mas "Clear", id: 504544917
 mas "Shazam", id: 897118787
 mas "3Hub", id: 427515976
 mas "Color Picker", id: 641027709
