@@ -46,6 +46,16 @@ if ! command -v brew &>/dev/null; then
     fi
 fi
 
+# --- Rosetta 2 (needed for Intel-only MAS apps: 3Hub, Color Picker) ---
+if [[ "$OS" == "Darwin" ]] && [[ "$(uname -m)" == "arm64" ]]; then
+    if ! /usr/bin/pgrep -q oahd; then
+        info "Installing Rosetta 2..."
+        /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+    else
+        ok "Rosetta 2 already installed"
+    fi
+fi
+
 if command -v brew &>/dev/null; then
     info "Installing shared tools from Brewfile..."
     brew bundle --file="$DOTS_DIR/Brewfile"
