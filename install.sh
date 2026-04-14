@@ -235,7 +235,7 @@ fi
 # and empties directories so stow can take over.
 info "Resolving stow conflicts..."
 for pkg in "${packages[@]}"; do
-    stow -d "$DOTS_DIR" -t "$HOME" -n --restow "$pkg" 2>&1 | while IFS= read -r line; do
+    (stow -d "$DOTS_DIR" -t "$HOME" -n --restow "$pkg" 2>&1 || true) | while IFS= read -r line; do
         target=$(echo "$line" | sed -n 's/.*existing target is not owned by stow: *//p')
         [ -z "$target" ] && continue
         full="$HOME/$target"
