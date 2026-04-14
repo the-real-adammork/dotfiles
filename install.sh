@@ -230,21 +230,33 @@ if [[ -n "$ONLY" ]]; then
     packages=("${filtered[@]}")
 fi
 
-# Remove stale symlinks that would conflict with stow
-# (e.g. symlinks from a previous dotfiles clone in a different location)
-info "Clearing stale symlinks..."
+# Resolve stow conflicts from a previous dotfiles clone or leftover files.
+# Uses stow's own dry-run to detect conflicts, then removes stale symlinks
+# and empties directories so stow can take over.
+info "Resolving stow conflicts..."
 for pkg in "${packages[@]}"; do
-    find "$DOTS_DIR/$pkg" \( -type f -o -type l \) | while read -r src; do
-        rel="${src#$DOTS_DIR/$pkg/}"
-        target="$HOME/$rel"
-        # If target is a symlink but doesn't resolve into this dotfiles dir, remove it
-        if [ -L "$target" ]; then
-            link_dest="$(cd "$HOME" && python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$target" 2>/dev/null || echo "")"
-            case "$link_dest" in
-                "$DOTS_DIR/"*) ;;  # points into current dotfiles, leave it
-                *) warn "  Removing stale symlink: ~/$rel"
-                   rm "$target" ;;
-            esac
+    stow -d "$DOTS_DIR" -t "$HOME" -n --restow "$pkg" 2>&1 | while IFS= read -r line; do
+        target=$(echo "$line" | sed -n 's/.*existing target is not owned by stow: *//p')
+        [ -z "$target" ] && continue
+        full="$HOME/$target"
+        if [ -L "$full" ]; then
+            warn "  Removing stale symlink: ~/$target"
+            rm "$full"
+        elif [ -d "$full" ]; then
+            # Remove stale symlinks inside the directory, then remove if empty
+            find "$full" -type l | while read -r link; do
+                link_dest="$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$link" 2>/dev/null || echo "")"
+                case "$link_dest" in
+                    "$DOTS_DIR/"*) ;;
+                    *) warn "  Removing stale symlink: $link"
+                       rm "$link" ;;
+                esac
+            done
+            # Remove empty parent dirs up to $HOME so stow can tree-fold
+            find "$full" -depth -type d -empty -delete 2>/dev/null
+            if [ ! -d "$full" ]; then
+                warn "  Removed empty dir: ~/$target"
+            fi
         fi
     done
 done
