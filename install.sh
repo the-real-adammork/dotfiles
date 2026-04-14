@@ -67,12 +67,16 @@ else
     warn "Homebrew not available, skipping package installation."
 fi
 
-# --- Cargo tools ---
-if command -v cargo &>/dev/null; then
+# --- Rust (via rustup from Brewfile) ---
+if command -v rustup &>/dev/null; then
+    if ! rustup show active-toolchain &>/dev/null; then
+        info "Initializing rustup (stable toolchain)..."
+        rustup default stable
+    fi
     info "Installing tree-sitter CLI via cargo..."
     cargo install tree-sitter-cli
 else
-    warn "Cargo not found. Install Rust (rustup) to get tree-sitter-cli."
+    warn "rustup not found, skipping Rust setup."
 fi
 
 # --- Bat theme cache ---
@@ -96,7 +100,7 @@ fi
 if [[ "$OS" == "Darwin" ]] && ! [ -d "/Applications/SoulseekQt.app" ]; then
     info "Installing SoulseekQt..."
     SLSK_URL="https://f004.backblazeb2.com/file/SoulseekQt/SoulseekQt-2025-10-11.dmg"
-    TMP_DMG=$(mktemp /tmp/SoulseekQt.XXXXXX.dmg)
+    TMP_DMG="/tmp/SoulseekQt.dmg"
     curl -fsSL "$SLSK_URL" -o "$TMP_DMG"
     MOUNT=$(hdiutil attach "$TMP_DMG" -nobrowse | sed -n 's|.*\(/Volumes/.*\)|\1|p')
     cp -R "$MOUNT"/*.app /Applications/
@@ -111,7 +115,7 @@ fi
 if [[ "$OS" == "Darwin" ]] && ! [ -d "/Applications/Spek.app" ]; then
     info "Installing Spek..."
     SPEK_URL="https://github.com/alexkay/spek/releases/download/v0.8.5/spek-0.8.5-beta.dmg"
-    TMP_DMG=$(mktemp /tmp/Spek.XXXXXX.dmg)
+    TMP_DMG="/tmp/Spek.dmg"
     curl -fsSL "$SPEK_URL" -o "$TMP_DMG"
     MOUNT=$(hdiutil attach "$TMP_DMG" -nobrowse | sed -n 's|.*\(/Volumes/.*\)|\1|p')
     cp -R "$MOUNT"/*.app /Applications/
@@ -141,6 +145,15 @@ if [[ "$OS" == "Darwin" ]]; then
         -framework Cocoa -framework UserNotifications 2>/dev/null
     codesign --force --sign - "$APP_DIR" 2>/dev/null
     ok "claude-notify built"
+fi
+
+# --- Oh My Zsh ---
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    info "Installing Oh My Zsh..."
+    git clone https://github.com/ohmyzsh/ohmyzsh "$HOME/.oh-my-zsh"
+    ok "Oh My Zsh installed"
+else
+    ok "Oh My Zsh already installed"
 fi
 
 # --- Stow ---
