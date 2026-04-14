@@ -190,6 +190,25 @@ if [[ "$OS" == "Darwin" ]]; then
     ok "claude-notify built"
 fi
 
+# --- scm_breeze (git shortcuts, sourced from .zshrc) ---
+if [ ! -d "$HOME/.scm_breeze" ]; then
+    info "Installing scm_breeze..."
+    git clone https://github.com/scmbreeze/scm_breeze.git "$HOME/.scm_breeze"
+    "$HOME/.scm_breeze/install.sh"
+    # Upstream installer appends a hardcoded-path source line to .zshrc.
+    # The stowed .zshrc already has an equivalent $HOME-based line, so
+    # strip any duplicate scm_breeze source lines, keeping the first.
+    ZSHRC="$DOTS_DIR/zsh/.zshrc"
+    [ -f "$HOME/.zshrc" ] && [ ! -L "$HOME/.zshrc" ] && ZSHRC="$HOME/.zshrc"
+    if [ -f "$ZSHRC" ]; then
+        awk '/scm_breeze\.sh/ { if (seen++) next } { print }' "$ZSHRC" > "$ZSHRC.tmp" \
+            && mv "$ZSHRC.tmp" "$ZSHRC"
+    fi
+    ok "scm_breeze installed"
+else
+    ok "scm_breeze already installed"
+fi
+
 # --- Oh My Zsh ---
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     info "Installing Oh My Zsh..."
