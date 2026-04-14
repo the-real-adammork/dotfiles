@@ -23,8 +23,8 @@ brew "rustup"
 # tree-sitter CLI: cargo install tree-sitter-cli
 
 brew "gh"                       # has its own stow package (gh/.config/gh/)
-brew "zsh-autosuggestions"      # loaded in zsh/.zshrc plugins line
-brew "zsh-syntax-highlighting"  # loaded in zsh/.zshrc plugins line
+# zsh-autosuggestions and zsh-syntax-highlighting are cloned directly
+# into ~/.oh-my-zsh/custom/plugins/ by install.sh
 
 # scm_breeze is installed via its own installer:
 # https://github.com/scmbreeze/scm_breeze#installation
