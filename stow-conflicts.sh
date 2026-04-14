@@ -35,6 +35,24 @@ for dir in "$DOTS_DIR"/*/; do
   packages+=("$pkg")
 done
 
+# Use stow's own dry-run to detect real conflicts
+# stow -n reports conflicts to stderr like:
+#   * cannot stow pkg/file over existing target .file ...
+detect_conflicts() {
+  local conflicts=()
+  for pkg in "${packages[@]}"; do
+    while IFS= read -r line; do
+      # Extract target path from stow conflict message
+      local target
+      target=$(echo "$line" | sed -n 's/.*existing target \(.*\) since.*/\1/p')
+      if [ -n "$target" ]; then
+        conflicts+=("$HOME/$target")
+      fi
+    done < <(stow -d "$DOTS_DIR" -t "$HOME" -n --restow "$pkg" 2>&1 || true)
+  done
+  printf '%s\n' "${conflicts[@]}"
+}
+
 if [ "$MODE" = "cleanup" ]; then
   info "Cleaning up .bak files..."
   count=0
@@ -45,7 +63,6 @@ if [ "$MODE" = "cleanup" ]; then
       if [ -f "$bak" ]; then
         rm "$bak"
         echo "  deleted: ~/$rel.bak"
-        count=$((count + 1))
       fi
     done
   done
@@ -53,44 +70,31 @@ if [ "$MODE" = "cleanup" ]; then
   exit 0
 fi
 
-# Scan for conflicts
-conflicts=()
-for pkg in "${packages[@]}"; do
-  find "$DOTS_DIR/$pkg" -type f -not -path '*/.git/*' | while read -r src; do
-    rel="${src#$DOTS_DIR/$pkg/}"
-    target="$HOME/$rel"
-    if [ -f "$target" ] && [ ! -L "$target" ]; then
-      echo "$pkg:$rel"
-    fi
+# Detect conflicts via stow dry-run
+conflicts=$(detect_conflicts)
+
+if [ -z "$conflicts" ]; then
+  ok "No conflicts found. Stow is clear to run."
+  exit 0
+fi
+
+count=$(echo "$conflicts" | wc -l | tr -d ' ')
+
+if [ "$MODE" = "dry-run" ]; then
+  info "Conflicting files (would block stow):"
+  echo ""
+  echo "$conflicts" | while read -r f; do
+    echo "  ~/${f#$HOME/}"
   done
-done | {
-  count=0
-  if [ "$MODE" = "dry-run" ]; then
-    info "Conflicting files (would block stow):"
-    echo ""
-  fi
-
-  while IFS=: read -r pkg rel; do
-    target="$HOME/$rel"
-    count=$((count + 1))
-
-    if [ "$MODE" = "dry-run" ]; then
-      echo "  [$pkg] ~/$rel"
-    elif [ "$MODE" = "fix" ]; then
-      mv "$target" "$target.bak"
-      warn "  ~/$rel → ~/$rel.bak"
-    fi
+  echo ""
+  echo "  $count conflict(s) found."
+  echo "  Run with --fix to rename them to .bak"
+elif [ "$MODE" = "fix" ]; then
+  echo "$conflicts" | while read -r f; do
+    mv "$f" "$f.bak"
+    warn "  ~/${f#$HOME/} → ~/${f#$HOME/}.bak"
   done
-
-  if [ "$count" -eq 0 ]; then
-    ok "No conflicts found. Stow is clear to run."
-  elif [ "$MODE" = "dry-run" ]; then
-    echo ""
-    echo "  $count conflict(s) found."
-    echo "  Run with --fix to rename them to .bak"
-  elif [ "$MODE" = "fix" ]; then
-    echo ""
-    ok "$count file(s) renamed to .bak. Stow should now work."
-    echo "  Run with --cleanup to delete .bak files after verifying."
-  fi
-}
+  echo ""
+  ok "$count file(s) renamed to .bak. Stow should now work."
+  echo "  Run with --cleanup to delete .bak files after verifying."
+fi

@@ -127,6 +127,27 @@ else
     ok "Spek already installed"
 fi
 
+# --- Rekordbox 6 (pinned version, not available via brew) ---
+if [[ "$OS" == "Darwin" ]] && ! ls -d /Applications/rekordbox* &>/dev/null; then
+    info "Installing Rekordbox 6..."
+    RB_URL="https://cdn.rekordbox.com/files/20250610145702/Install_rekordbox_6_8_6.pkg_.zip"
+    TMP_ZIP="/tmp/rekordbox6.zip"
+    TMP_DIR="/tmp/rekordbox6"
+    curl -fsSL "$RB_URL" -o "$TMP_ZIP"
+    mkdir -p "$TMP_DIR"
+    unzip -qo "$TMP_ZIP" -d "$TMP_DIR"
+    PKG=$(find "$TMP_DIR" -name "*.pkg" -type f | head -1)
+    if [ -n "$PKG" ]; then
+        sudo installer -pkg "$PKG" -target /
+        ok "Rekordbox 6 installed"
+    else
+        warn "No .pkg found in archive, skipping Rekordbox install"
+    fi
+    rm -rf "$TMP_ZIP" "$TMP_DIR"
+else
+    ok "Rekordbox already installed"
+fi
+
 # --- TPM (Tmux Plugin Manager) ---
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     info "Installing TPM..."
