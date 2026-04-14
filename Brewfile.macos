@@ -23,7 +23,7 @@ cask "adobe-creative-cloud"
 # Dev / cloud
 # -----------------------------------------------------------------------------
 cask "docker-desktop"
-cask "google-cloud-sdk"
+cask "gcloud-cli"
 
 # -----------------------------------------------------------------------------
 # Browsers
