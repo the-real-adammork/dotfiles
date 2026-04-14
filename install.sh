@@ -97,6 +97,15 @@ else
     warn "mise not found, skipping language version setup."
 fi
 
+# --- Claude Code (CLI) ---
+if command -v npm &>/dev/null; then
+    info "Installing Claude Code..."
+    npm install -g @anthropic-ai/claude-code
+    ok "Claude Code installed"
+else
+    warn "npm not found, skipping Claude Code install."
+fi
+
 # --- SoulseekQt (no brew cask available) ---
 if [[ "$OS" == "Darwin" ]] && ! [ -d "/Applications/SoulseekQt.app" ]; then
     info "Installing SoulseekQt..."
@@ -220,6 +229,25 @@ if [[ -n "$ONLY" ]]; then
     done
     packages=("${filtered[@]}")
 fi
+
+# Remove stale symlinks that would conflict with stow
+# (e.g. symlinks from a previous dotfiles clone in a different location)
+info "Clearing stale symlinks..."
+for pkg in "${packages[@]}"; do
+    find "$DOTS_DIR/$pkg" \( -type f -o -type l \) | while read -r src; do
+        rel="${src#$DOTS_DIR/$pkg/}"
+        target="$HOME/$rel"
+        # If target is a symlink but doesn't resolve into this dotfiles dir, remove it
+        if [ -L "$target" ]; then
+            link_dest="$(cd "$HOME" && python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$target" 2>/dev/null || echo "")"
+            case "$link_dest" in
+                "$DOTS_DIR/"*) ;;  # points into current dotfiles, leave it
+                *) warn "  Removing stale symlink: ~/$rel"
+                   rm "$target" ;;
+            esac
+        fi
+    done
+done
 
 # Stow each package
 info "Stowing packages..."
