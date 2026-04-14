@@ -173,6 +173,9 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
 else
     ok "TPM already installed"
 fi
+# Install/update tmux plugins declared in tmux.conf (runs after stow below
+# would be ideal, but install_plugins only needs the config readable — we
+# re-run it at the end to ensure stowed config is active).
 
 # --- claude-notify (macOS notification tool) ---
 if [[ "$OS" == "Darwin" ]]; then
