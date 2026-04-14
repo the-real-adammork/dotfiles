@@ -98,9 +98,14 @@ else
 fi
 
 # --- Claude Code (CLI) ---
+if command -v mise &>/dev/null; then
+    export PATH="$HOME/.local/share/mise/shims:$PATH"
+fi
 if command -v npm &>/dev/null; then
     info "Installing Claude Code..."
     npm install -g @anthropic-ai/claude-code
+    info "Adding Claude Code plugin marketplace..."
+    claude plugin marketplace add anthropics/claude-plugins-official || true
     info "Installing Claude Code plugins..."
     claude plugin install superpowers@claude-plugins-official
     claude plugin install frontend-design@claude-plugins-official
