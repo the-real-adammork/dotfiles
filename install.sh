@@ -280,6 +280,12 @@ for pkg in "${packages[@]}"; do
     stow -d "$DOTS_DIR" -t "$HOME" --restow "$pkg"
 done
 
+# --- Tmux plugins (after stow so tmux.conf is in place) ---
+if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
+    info "Installing tmux plugins via TPM..."
+    "$HOME/.tmux/plugins/tpm/bin/install_plugins"
+fi
+
 # --- Summary ---
 echo ""
 ok "Done! Stowed ${#packages[@]} packages:"
