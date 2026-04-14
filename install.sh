@@ -101,6 +101,10 @@ fi
 if command -v npm &>/dev/null; then
     info "Installing Claude Code..."
     npm install -g @anthropic-ai/claude-code
+    info "Installing Claude Code plugins..."
+    claude plugin install superpowers@claude-plugins-official
+    claude plugin install frontend-design@claude-plugins-official
+    claude plugin install typescript-lsp@claude-plugins-official
     ok "Claude Code installed"
 else
     warn "npm not found, skipping Claude Code install."
