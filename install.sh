@@ -157,6 +157,16 @@ else
     ok "Oh My Zsh already installed"
 fi
 
+# Clone zsh plugins into Oh My Zsh custom plugins dir
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+mkdir -p "$ZSH_CUSTOM/plugins"
+for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
+    if [ ! -d "$ZSH_CUSTOM/plugins/$plugin" ]; then
+        info "Installing $plugin..."
+        git clone "https://github.com/zsh-users/$plugin" "$ZSH_CUSTOM/plugins/$plugin"
+    fi
+done
+
 # --- Stow ---
 if ! command -v stow &>/dev/null; then
     echo "Error: stow is not installed. Install it and re-run."
