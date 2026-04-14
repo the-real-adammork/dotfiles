@@ -73,6 +73,8 @@ if command -v rustup &>/dev/null; then
         info "Initializing rustup (stable toolchain)..."
         rustup default stable
     fi
+    # Ensure cargo is on PATH for this session
+    [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
     info "Installing tree-sitter CLI via cargo..."
     cargo install tree-sitter-cli
 else
