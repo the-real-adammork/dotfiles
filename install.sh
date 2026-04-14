@@ -68,13 +68,12 @@ else
 fi
 
 # --- Rust (via rustup from Brewfile) ---
-if command -v rustup &>/dev/null; then
-    if ! rustup show active-toolchain &>/dev/null; then
-        info "Initializing rustup (stable toolchain)..."
-        rustup default stable
+if command -v rustup-init &>/dev/null || command -v rustup &>/dev/null; then
+    if [ ! -d "$HOME/.cargo" ]; then
+        info "Initializing Rust toolchain..."
+        rustup-init -y --no-modify-path 2>/dev/null || rustup default stable
     fi
-    # Ensure cargo is on PATH for this session
-    [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+    source "$HOME/.cargo/env"
     info "Installing tree-sitter CLI via cargo..."
     cargo install tree-sitter-cli
 else
