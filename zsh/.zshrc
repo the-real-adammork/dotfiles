@@ -70,6 +70,8 @@ alias ll='eza --long -a --git'
 alias lt='eza --long -a --tree --level=2'
 alias gcm='git commit -m '
 alias gpoh='git push origin HEAD '
+alias vim='nvim'
+alias vi='nvim'
 
 # Tools
 eval "$(mise activate zsh)"
