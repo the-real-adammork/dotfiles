@@ -57,6 +57,7 @@ brew "pre-commit"
 brew "tealdeer"
 brew "trash"
 brew "tree"
+brew "vivid"            # generates LS_COLORS (used by fd/eza); see .zshrc
 brew "wget"
 brew "yamllint"
 brew "yarn"

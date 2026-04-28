@@ -58,6 +58,9 @@ export PATH="$PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDe
 # Man pages in nvim
 export MANPAGER="nvim +Man!"
 
+# LS_COLORS — Catppuccin Latte (used by fd, eza, ls, etc.)
+export LS_COLORS="$(vivid generate catppuccin-latte)"
+
 # GPG
 export GPG_TTY=$(tty)
 
