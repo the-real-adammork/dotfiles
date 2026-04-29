@@ -1,0 +1,56 @@
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+default_permissions = "claude-like"
+web_search = "live"
+personality = "pragmatic"
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+
+[sandbox_workspace_write]
+network_access = true
+
+[permissions.claude-like.filesystem.":project_roots"]
+"." = "write"
+".env" = "none"
+".env.local" = "none"
+"**/.env" = "none"
+"**/.env.local" = "none"
+
+[features]
+codex_hooks = true
+
+[notice]
+hide_full_access_warning = true
+
+[projects."/Users/adam/dots"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/cc"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/openemr"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[[hooks.PermissionRequest]]
+matcher = "Bash|apply_patch|Edit|Write"
+
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = "/Users/adam/.codex/hooks/notify.sh"
+timeout = 5
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = "/Users/adam/.codex/hooks/notify.sh"
+timeout = 5
+
+[plugins."superpowers@openai-curated"]
+enabled = true
+
+[plugins."figma@openai-curated"]
+enabled = true

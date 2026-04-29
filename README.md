@@ -34,6 +34,7 @@ Each top-level directory is a stow package mirroring `~`:
 | alacritty   | `.alacritty.yml`              |
 | bash        | `.bash_profile`               |
 | claude      | `.claude/{settings,hooks,commands,skills,agents}` |
+| codex       | `.codex/{config.toml,AGENTS.md,hooks,rules,skills}` |
 | coc         | `.config/coc/memos.json`      |
 | gh          | `.config/gh/{config,hosts}.yml` |
 | git         | `.gitconfig`, `.config/git/ignore` |
