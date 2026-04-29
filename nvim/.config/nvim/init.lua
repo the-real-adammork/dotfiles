@@ -44,6 +44,9 @@ require("lazy").setup({
         close_if_last_window = true,
         window = {
           width = 30,
+          mappings = {
+            ["/"] = "noop", -- use vim's native / search on visible buffer
+          },
         },
         filesystem = {
           filtered_items = {
@@ -319,7 +322,6 @@ vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { 
 vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
 
 -- Settings
-vim.opt.colorcolumn = "100"
 vim.opt.confirm = true
 vim.opt.startofline = false
 
@@ -343,6 +345,8 @@ vim.keymap.set("n", "g#", "g#zz")
 vim.keymap.set("n", ",n", "<cmd>Neotree toggle<cr>", { desc = "Toggle file tree" })
 vim.keymap.set("n", ",nf", "<cmd>Neotree reveal<cr>", { desc = "Find file in tree" })
 vim.keymap.set("n", "<leader>v", "<cmd>Neotree reveal<cr>", { desc = "Find file in tree" })
+vim.keymap.set("n", ",n+", "<cmd>vertical resize +20<cr>", { desc = "Window: wider 20" })
+vim.keymap.set("n", ",n-", "<cmd>vertical resize -20<cr>", { desc = "Window: narrower 20" })
 
 -- Navigate between splits
 vim.keymap.set("n", "<C-h>", "<C-w><C-h>")
