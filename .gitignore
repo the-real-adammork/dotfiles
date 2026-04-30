@@ -1,6 +1,7 @@
 gh/.config/gh/hosts.yml
 
 # Claude Code runtime state (not config)
+claude/.claude/.credentials.json
 claude/.claude/backups/
 claude/.claude/cache/
 claude/.claude/file-history/
