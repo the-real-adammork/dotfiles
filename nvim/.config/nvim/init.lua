@@ -42,10 +42,26 @@ require("lazy").setup({
     config = function()
       require("neo-tree").setup({
         close_if_last_window = true,
+        commands = {
+          copy_filename = function(state)
+            local node = state.tree:get_node()
+            local name = node.name or vim.fn.fnamemodify(node.path, ":t")
+            vim.fn.setreg("+", name)
+            vim.notify("Copied filename: " .. name)
+          end,
+          copy_path = function(state)
+            local node = state.tree:get_node()
+            vim.fn.setreg("+", node.path)
+            vim.notify("Copied path: " .. node.path)
+          end,
+        },
         window = {
           width = 30,
           mappings = {
             ["/"] = "noop", -- use vim's native / search on visible buffer
+            ["y"] = { "copy_to_clipboard", nowait = false },
+            ["yn"] = "copy_filename",
+            ["yp"] = "copy_path",
           },
         },
         filesystem = {
