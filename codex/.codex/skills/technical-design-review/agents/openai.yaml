@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical Design Review"
+  short_description: "Check design coverage against requirements"
+  default_prompt: "Use $technical-design-review to compare this technical design against its requirements document."

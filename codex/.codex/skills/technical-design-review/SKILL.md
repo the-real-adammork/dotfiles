@@ -1,0 +1,98 @@
+---
+name: technical-design-review
+description: Use when the user wants a technical design reviewed against its original requirements, spec, PRD, issue, or approved design brief.
+---
+
+# Technical Design Review
+
+Review a technical design against the requirements document it was created from. The goal is traceability and sufficiency: every requirement should map to a place in the technical design, and the design decision there should be capable of satisfying the requirement completely at the design level.
+
+## Start
+
+Announce: "I'm using the technical-design-review skill to check requirements coverage."
+
+Read both documents:
+
+- Requirements source: PRD, spec, issue, approved brief, or user-provided requirements.
+- Technical design: the design/strategy document being reviewed.
+
+If either document path is missing and cannot be inferred, ask for the missing path.
+
+## Review Standard
+
+For each requirement section or paragraph:
+
+- Identify the requirement in your own words.
+- Find the exact section, heading, table row, bullet, or paragraph in the technical design that addresses it.
+- Verify the design decision is capable of satisfying the requirement to completeness.
+- Do not require task-level implementation detail. A technical design can pass if the architecture, responsibility boundary, data/control flow, or integration decision is sufficient to support the requirement.
+- Mark a gap when the design omits the requirement, contradicts it, delegates it to an unclear owner, or proposes an approach that cannot fully satisfy it.
+
+## Coverage Levels
+
+Use exactly these labels:
+
+- `Covered` - the design clearly provides a viable strategy for the full requirement.
+- `Partially Covered` - the design addresses the requirement, but leaves an important part unsupported or ambiguous.
+- `Missing` - no meaningful design coverage found.
+- `Inconsistent` - the design conflicts with the requirement or with another design section.
+- `Out Of Scope` - the requirements source explicitly allows this requirement to be excluded from the current design.
+
+Do not use `Covered` just because a keyword appears. The design text must describe a relevant responsibility, flow, interface, state shape, constraint, or decision.
+
+## Method
+
+1. Split the requirements document into review units. Prefer headings and paragraphs. For dense bullet lists, treat each bullet as its own unit.
+2. Review units in source order. Do not skip low-level or awkward requirements.
+3. For each unit, search the technical design for the specific decision that handles it.
+4. Record the best matching design location and a short sufficiency judgment.
+5. After all units are reviewed, summarize cross-cutting problems, contradictions, and recommended design edits.
+
+## Output Format
+
+Lead with findings, then the traceability table.
+
+```markdown
+## Findings
+
+- [Severity] <gap or inconsistency>. Requirement: `<source heading or short quote>`. Design location: `<heading or "none">`. Recommendation: <specific design edit>.
+
+## Traceability Review
+
+| Requirement | Design Location | Coverage | Sufficiency Judgment |
+| --- | --- | --- | --- |
+| <source section/paragraph summary> | <design heading/bullet/paragraph> | Covered | <why the design can satisfy it> |
+| <source section/paragraph summary> | None | Missing | <what is absent> |
+
+## Summary
+
+- Covered: <count>
+- Partially Covered: <count>
+- Missing: <count>
+- Inconsistent: <count>
+- Out Of Scope: <count>
+
+## Recommended Design Changes
+
+1. <Concrete edit to the technical design document>
+2. <Concrete edit to the technical design document>
+```
+
+If there are no findings, say so clearly and still provide the traceability table and counts.
+
+## Severity
+
+Use severity only for findings:
+
+- `High` - a core requirement is missing, contradicted, or impossible under the proposed design.
+- `Medium` - a requirement is only partially supported or ownership/integration is too ambiguous to trust.
+- `Low` - wording, traceability, or minor design clarity issue that should be tightened before task planning.
+
+## Self-Review
+
+Before delivering the review:
+
+- Confirm every requirement unit appears in the traceability table.
+- Confirm every `Covered` row names a concrete design location.
+- Confirm every `Partially Covered`, `Missing`, or `Inconsistent` row has a recommended design edit.
+- Confirm you did not demand task-level detail when a high-level design decision is enough.

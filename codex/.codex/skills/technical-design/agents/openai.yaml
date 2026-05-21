@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical Design"
+  short_description: "Define architecture before task planning"
+  default_prompt: "Use $technical-design to define the implementation strategy before detailed planning."

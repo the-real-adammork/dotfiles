@@ -73,6 +73,16 @@ alias gpoh='git push origin HEAD '
 alias vim='nvim'
 alias vi='nvim'
 
+function codex-commit() {
+  local prompt='Use $commit with the deterministic fast subagent flow to inspect, stage, and commit the current changes.'
+  if [[ $# -gt 0 ]]; then
+    prompt="$prompt Additional user instructions: $*"
+  fi
+  codex exec -C "$PWD" "$prompt"
+}
+
+alias cxc='codex-commit'
+
 # Tools
 eval "$(mise activate zsh)"
 
