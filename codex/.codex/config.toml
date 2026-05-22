@@ -62,6 +62,9 @@ enabled = true
 [plugins."figma@openai-curated"]
 enabled = true
 
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
+
 [mcp_servers.railway]
 url = "https://mcp.railway.com"
 enabled = false

@@ -1,0 +1,13 @@
+onboarding = false
+
+[theme]
+name = "catppuccin-latte"
+
+[keys]
+prefix = "`"
+
+previous_workspace = "("
+next_workspace = ")"
+
+split_horizontal = "-"
+split_vertical = "\\"
