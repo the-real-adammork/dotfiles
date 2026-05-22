@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lesson"
+  short_description: "Save recurring fixes for agents"
+  default_prompt: "Use $lesson to document this recurring problem and update AGENTS.md with a concise pointer."

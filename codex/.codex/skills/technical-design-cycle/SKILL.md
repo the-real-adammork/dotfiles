@@ -36,6 +36,42 @@ The parent agent must:
 
 Subagents must not own the overall workflow, continue into implementation planning, commit changes, or decide human-facing design tradeoffs without parent review.
 
+## Stable Subagent Names
+
+Every dispatched subagent must have a stable, human-readable `agent_name` that maps to the bounded work it is performing. The native host may return its own agent id or nickname instead of displaying the requested `agent_name`. Put `agent_name` at the top of the spawned prompt, and immediately record the mapping from stable name to returned host agent id/nickname in a parent-owned Agent Directory.
+
+Use this parent-owned Agent Directory format in notes or the cycle handoff:
+
+```markdown
+## Agent Directory
+
+| Stable Agent Name | Host Agent ID/Nickname | Role | Status | Notes |
+| --- | --- | --- | --- | --- |
+```
+
+If the user may need to attach follow-up input to a subagent, tell them the mapping immediately after spawn. The host agent id/nickname is the attachment target; `agent_name` is the stable human label.
+
+Use this naming pattern:
+
+```text
+design-drafter: <feature-slug> / <requirements id>
+design-reviewer: <feature-slug> / <requirements id>
+replacement-design-drafter: <feature-slug> / resume
+replacement-design-reviewer: <feature-slug> / resume
+```
+
+Keep names short enough to scan in logs, but specific enough that the user can identify which host agent id/nickname maps to the intended subagent.
+
+## Context Budget And Handoff Rules
+
+Keep files as the source of truth. Pass document paths to subagents by default; do not paste full requirements, designs, or reviews into parent context unless the user asks.
+
+- Parent passes concise repo context: relevant file paths, commands, constraints, and decisions.
+- Drafting subagent returns the design artifact path plus a short summary, open questions, and blockers.
+- Review subagent writes large reviews to a file and returns only the review path, top findings, counts, and blocking status.
+- Parent reads targeted file sections only when patching, resolving a finding, or answering a user question.
+- If a subagent estimates it is at or above roughly 70% context usage, it must save a handoff under `docs/handoffs/` and return only the handoff path plus current artifact paths. Parent must dispatch a replacement from that handoff, not from chat history, using `replacement-design-drafter: <feature-slug> / resume` or `replacement-design-reviewer: <feature-slug> / resume` as appropriate.
+
 ## Phase 1: Requirements And Decision Gates
 
 1. Read the requirements source.
@@ -51,15 +87,17 @@ Skip questions for obvious local conventions or choices that can safely be defer
 
 ## Phase 2: Draft Technical Design Subagent
 
-Spawn exactly one drafting subagent after the decision gates are resolved.
+Spawn exactly one drafting subagent after the decision gates are resolved. Use `agent_name` in the format `design-drafter: <feature-slug> / <requirements id>`.
 
 Use a prompt with this structure:
 
 ```text
+agent_name: design-drafter: <feature-slug> / <requirements id>
+
 Use $technical-design to draft a technical design.
 
 Requirements source:
-<path or pasted requirements>
+<path>
 
 Human decisions already made:
 <decision list>
@@ -67,18 +105,27 @@ Human decisions already made:
 Repository context:
 <relevant files, commands, constraints, and patterns discovered by parent>
 
-Output only the complete Markdown technical design. Do not commit. Do not create an implementation plan. Do not ask the user questions; put unresolved blockers in Open Questions.
+Save the complete Markdown technical design to:
+<target design path>
+
+Return only: design path, 3-5 bullet summary, Open Questions, blockers, and whether any design decision needs human input. Do not commit. Do not create an implementation plan. Do not ask the user questions; put unresolved blockers in Open Questions.
+
+If context pressure reaches roughly 70%, save a handoff under `docs/handoffs/` and return only the handoff path plus current artifact paths.
 ```
 
-The parent agent reviews the draft, fixes obvious formatting or instruction violations, then saves it to the target design path.
+The parent agent reviews the draft and fixes obvious formatting or instruction violations.
+
+If the draft contains `Open Questions` that affect architecture, product behavior, data shape, migration risk, security/privacy posture, operational complexity, future extensibility, or requirement completeness, stop before review. Ask the human to resolve those questions, patch or rerun the design draft, and only then continue to `$technical-design-review`.
 
 ## Phase 3: Review Subagent
 
-Spawn exactly one review subagent after the design draft is saved.
+Spawn exactly one review subagent after the design draft is saved. Use `agent_name` in the format `design-reviewer: <feature-slug> / <requirements id>`.
 
 Use a prompt with this structure:
 
 ```text
+agent_name: design-reviewer: <feature-slug> / <requirements id>
+
 Use $technical-design-review to review the technical design against the requirements.
 
 Requirements document:
@@ -87,7 +134,11 @@ Requirements document:
 Technical design document:
 <path>
 
-Return the required Findings, Traceability Review, Summary, and Recommended Design Changes sections. Do not modify files. Do not continue into implementation planning.
+If the review has more than about 20 requirement units or is otherwise large, write the full review to `docs/reviews/YYYY-MM-DD-<feature>-technical-design-review.md` and return only the review path, top findings, counts, and blocking status.
+
+Otherwise return the required Findings, Traceability Review, Summary, and Recommended Design Changes sections. Do not modify files. Do not continue into implementation planning.
+
+If context pressure reaches roughly 70%, save a handoff under `docs/handoffs/` and return only the handoff path plus current artifact paths.
 ```
 
 The parent agent reviews the review output for completeness before presenting findings to the user.

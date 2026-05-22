@@ -18,6 +18,23 @@ Read both documents:
 
 If either document path is missing and cannot be inferred, ask for the missing path.
 
+## Context Budget
+
+Keep source documents as files. Do not paste full requirements or full technical designs into the conversation unless the user asks.
+
+If the review has more than about 20 requirement units, or the traceability table would be too large for a concise response, write the full review to:
+
+```text
+docs/reviews/YYYY-MM-DD-<feature>-technical-design-review.md
+```
+
+Then return only:
+
+- review file path;
+- top findings;
+- coverage counts;
+- whether anything blocks approval.
+
 ## Review Standard
 
 For each requirement section or paragraph:
@@ -79,6 +96,8 @@ Lead with findings, then the traceability table.
 ```
 
 If there are no findings, say so clearly and still provide the traceability table and counts.
+
+For file-based reviews, the saved review must use the same output format. The chat response should summarize rather than duplicate the full table.
 
 ## Severity
 
