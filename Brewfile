@@ -57,6 +57,7 @@ brew "pre-commit"
 brew "tealdeer"
 brew "trash"
 brew "tree"
+brew "uv"              # used by ~/lib_sh/pdf-to-markdown dependency setup
 brew "vivid"            # generates LS_COLORS (used by fd/eza); see .zshrc
 brew "wget"
 brew "yamllint"

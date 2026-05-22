@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implementation Plan Slicing"
+  short_description: "Split designs into plan documents"
+  default_prompt: "Use $implementation-plan-slicing to split this technical design into implementation plan documents."

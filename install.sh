@@ -93,14 +93,27 @@ if command -v mise &>/dev/null; then
     info "Setting up mise..."
     mise use --global node@lts python@3 ruby@latest
     mise install
+    export PATH="$HOME/.local/share/mise/shims:$PATH"
 else
     warn "mise not found, skipping language version setup."
 fi
 
-# --- Claude Code (CLI) ---
-if command -v mise &>/dev/null; then
-    export PATH="$HOME/.local/share/mise/shims:$PATH"
+# --- PDF to Markdown converter dependencies ---
+PDF_MD_VENV="$HOME/.local/share/dotfiles/pdf-to-markdown"
+if command -v uv &>/dev/null; then
+    info "Installing PDF to Markdown Python dependencies..."
+    mkdir -p "$(dirname "$PDF_MD_VENV")"
+    if [[ ! -x "$PDF_MD_VENV/bin/python" ]] || ! "$PDF_MD_VENV/bin/python" -c "import pymupdf4llm" &>/dev/null; then
+        uv venv "$PDF_MD_VENV"
+        uv pip install --python "$PDF_MD_VENV/bin/python" pymupdf4llm pymupdf
+    else
+        ok "PDF to Markdown dependencies already installed"
+    fi
+else
+    warn "uv not found, skipping PDF to Markdown Python dependencies."
 fi
+
+# --- Claude Code (CLI) ---
 if command -v npm &>/dev/null; then
     info "Installing Claude Code..."
     npm install -g @anthropic-ai/claude-code

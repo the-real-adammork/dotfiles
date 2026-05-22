@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical Design Cycle"
+  short_description: "Draft, review, and refine designs"
+  default_prompt: "Use $technical-design-cycle to turn these requirements into a reviewed technical design."

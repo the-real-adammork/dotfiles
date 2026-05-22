@@ -1,4 +1,4 @@
-# Claude Instructions for dots
+# Agent Instructions for dots
 
 ## Repeatability
 
@@ -18,14 +18,18 @@ Dependencies and configs must stay in sync. If a config references a binary, tha
 ## Repo Structure
 
 - Each top-level directory is a GNU Stow package symlinked into `$HOME`
-- `Brewfile` — cross-platform CLI tools
-- `Brewfile.macos` — macOS-only tools and casks
-- `install.sh` — full bootstrap: brew, cargo, stow, and setup steps
-- `ITEMS.md` — outstanding TODO items
+- `Brewfile` - cross-platform CLI tools
+- `Brewfile.macos` - macOS-only tools and casks
+- `install.sh` - full bootstrap: brew, cargo, stow, and setup steps
+- `ITEMS.md` - outstanding TODO items
 
 ## Git
 
 Use `/usr/bin/git` instead of `git` to avoid SCM Breeze wrapper conflicts.
+
+## Lessons
+
+- Linear implementation workflows: prefer the two-layer supervisor-owned task loop; keep native sub-agent dispatch at the supervisor level and use task/review/fix/merge workers for bounded work. See [docs/lessons/2026-05-21-supervisor-mediated-subagents.md](docs/lessons/2026-05-21-supervisor-mediated-subagents.md).
 
 ## Secrets and Credentials
 

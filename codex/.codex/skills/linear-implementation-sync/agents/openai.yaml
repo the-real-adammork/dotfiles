@@ -1,0 +1,4 @@
+interface:
+  display_name: "Linear Implementation Sync"
+  short_description: "Map plan docs to Linear projects and issues"
+  default_prompt: "Use $linear-implementation-sync to sync these implementation plans into Linear."

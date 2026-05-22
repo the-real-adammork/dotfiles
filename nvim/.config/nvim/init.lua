@@ -82,7 +82,7 @@ require("lazy").setup({
     config = function()
       require("lualine").setup({
         options = {
-          theme = "catppuccin",
+          theme = "catppuccin-latte",
           section_separators = "",
           component_separators = "",
         },
@@ -272,8 +272,12 @@ require("lazy").setup({
           vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
           vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
           vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-          vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
-          vim.keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
+          vim.keymap.set("n", "[d", function()
+            vim.diagnostic.jump({ count = -1, float = true })
+          end, opts)
+          vim.keymap.set("n", "]d", function()
+            vim.diagnostic.jump({ count = 1, float = true })
+          end, opts)
         end,
       })
     end,
@@ -333,9 +337,8 @@ require("lazy").setup({
 })
 
 -- Floating window borders for LSP and diagnostics
+vim.opt.winborder = "rounded"
 vim.diagnostic.config({ float = { border = "rounded" } })
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
 
 -- Settings
 vim.opt.confirm = true
@@ -363,6 +366,8 @@ vim.keymap.set("n", ",nf", "<cmd>Neotree reveal<cr>", { desc = "Find file in tre
 vim.keymap.set("n", "<leader>v", "<cmd>Neotree reveal<cr>", { desc = "Find file in tree" })
 vim.keymap.set("n", ",n+", "<cmd>vertical resize +20<cr>", { desc = "Window: wider 20" })
 vim.keymap.set("n", ",n-", "<cmd>vertical resize -20<cr>", { desc = "Window: narrower 20" })
+vim.keymap.set("n", "<leader>=", "<cmd>vertical resize +40<cr>", { desc = "Window: wider 40" })
+vim.keymap.set("n", "<leader>-", "<cmd>vertical resize -40<cr>", { desc = "Window: narrower 40" })
 
 -- Navigate between splits
 vim.keymap.set("n", "<C-h>", "<C-w><C-h>")

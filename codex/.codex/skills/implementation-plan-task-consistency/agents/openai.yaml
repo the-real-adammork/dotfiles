@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Task Consistency"
+  short_description: "Update future tasks in one plan"
+  default_prompt: "Use $implementation-plan-task-consistency to reconcile future tasks after this completed task."

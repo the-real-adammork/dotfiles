@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implementation Plan Orchestrator"
+  short_description: "Execute one plan in its worktree"
+  default_prompt: "Use $implementation-plan-orchestrator to execute or resume this implementation plan."

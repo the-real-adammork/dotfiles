@@ -51,7 +51,9 @@ bindkey '^[[1;9D' backward-word
 [ -z "${TMUX}" ] && bindkey '^[[1;3D' backward-word
 
 # PATH
+export PATH="$PATH:$HOME/lib_sh"
 export PATH="$PATH:/Users/adam/.local/bin"
+export PATH="$PATH:/Users/adam/.local/share/mise/installs/cargo-anchor-cli/0.31.1/bin"
 export PATH="$PATH:/Users/adam/Projects/xcode-build-server"
 export PATH="$PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
 
@@ -70,6 +72,18 @@ alias ll='eza --long -a --git'
 alias lt='eza --long -a --tree --level=2'
 alias gcm='git commit -m '
 alias gpoh='git push origin HEAD '
+alias vim='nvim'
+alias vi='nvim'
+
+function codex-commit() {
+  local prompt='Use $commit with the deterministic fast subagent flow to inspect, stage, and commit the current changes.'
+  if [[ $# -gt 0 ]]; then
+    prompt="$prompt Additional user instructions: $*"
+  fi
+  codex exec -m gpt-5.3-codex-spark -c model_reasoning_effort='"low"' -s danger-full-access -C "$PWD" "$prompt"
+}
+
+alias cxc='codex-commit'
 
 # Keep Codex diffs foreground-colored without tinted line backgrounds.
 function codex() {
