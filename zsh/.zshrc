@@ -71,6 +71,11 @@ alias lt='eza --long -a --tree --level=2'
 alias gcm='git commit -m '
 alias gpoh='git push origin HEAD '
 
+# Keep Codex diffs foreground-colored without tinted line backgrounds.
+function codex() {
+  FORCE_COLOR=1 command codex "$@"
+}
+
 # Tools
 eval "$(mise activate zsh)"
 

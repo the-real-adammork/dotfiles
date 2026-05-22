@@ -168,7 +168,7 @@ require("lazy").setup({
   -- TODO: consider nvim-spectre for dedicated search-and-replace UI
   {
     "nvim-telescope/telescope.nvim",
-    tag = "0.1.8",
+    tag = "v0.2.1",
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
       { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },

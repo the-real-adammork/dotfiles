@@ -4,7 +4,7 @@ default_permissions = "claude-like"
 web_search = "live"
 personality = "pragmatic"
 model = "gpt-5.5"
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
 approvals_reviewer = "user"
 
 [sandbox_workspace_write]
@@ -14,14 +14,13 @@ network_access = true
 "." = "write"
 ".env" = "none"
 ".env.local" = "none"
-"**/.env" = "none"
-"**/.env.local" = "none"
 
 [features]
-codex_hooks = true
+goals = true
 
 [notice]
 hide_full_access_warning = true
+hide_rate_limit_model_nudge = true
 
 [projects."/Users/adam/dots"]
 trust_level = "trusted"
@@ -38,28 +37,37 @@ trust_level = "trusted"
 [projects."/Users/adam/Desktop"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Projects/resume-2026"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/adversary-openemr"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/jobs"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/superbuilders-synthesis"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
-
-[[hooks.PermissionRequest]]
-matcher = "Bash|apply_patch|Edit|Write"
-
-[[hooks.PermissionRequest.hooks]]
-type = "command"
-command = "/Users/adam/.codex/hooks/notify.sh"
-timeout = 5
-
-[[hooks.Stop]]
-
-[[hooks.Stop.hooks]]
-type = "command"
-command = "/Users/adam/.codex/hooks/notify.sh"
-timeout = 5
 
 [plugins."superpowers@openai-curated"]
 enabled = true
 
 [plugins."figma@openai-curated"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
 enabled = true
 
 [mcp_servers.railway]
@@ -70,3 +78,13 @@ enabled = false
 command = "serena"
 args = ["start-mcp-server", "--context=codex", "--project-from-cwd"]
 enabled = false
+
+[marketplaces.openai-bundled]
+last_updated = "2026-05-18T15:15:28Z"
+source_type = "local"
+source = "/Users/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-05-18T01:41:17Z"
+source_type = "local"
+source = "/Users/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
