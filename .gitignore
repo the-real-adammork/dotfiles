@@ -1,5 +1,11 @@
 gh/.config/gh/hosts.yml
 
+# Codex workflow runtime state (not config)
+.codex/workflows/*.db
+.codex/workflows/*.db-*
+.codex/workflows/*.sqlite
+.codex/workflows/*.sqlite-*
+
 # Claude Code runtime state (not config)
 claude/.claude/.credentials.json
 claude/.claude/backups/

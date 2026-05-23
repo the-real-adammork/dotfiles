@@ -38,6 +38,7 @@ create_missing_labels = true
 handoff_dir = "docs/handoffs"
 run_log_dir = "docs/linear/runs"
 smoke_test_dir = "docs/linear/smoke-tests"
+human_review_dir = "docs/linear/reviews"
 
 status_todo = "Todo"
 status_in_progress = "In Progress"
@@ -51,6 +52,10 @@ branch_template = "codex/{feature}/{plan_slug}"
 merge_completed_plan_branches = true
 merge_target_branch = ""
 merge_target_worktree = ""
+remote_name = "origin"
+pr_provider = "gitlab"
+pr_create_command = ""
+pr_link_required_for_human_review = true
 
 poll_interval_minutes = 5
 human_review_timeout_minutes = 60
@@ -167,7 +172,8 @@ Append an `events` row and update the relevant current-state rows after every su
 - legacy orchestrator normalized, retired, dispatched, resumed, replaced, or returned when using legacy mode, including the stable agent name and host agent id/nickname;
 - worker/reviewer/fix-worker/merge-worker dispatch requested, started, returned, or failed, including the stable agent name, host agent id/nickname, and relevant plan id;
 - Linear project or issue status/assignee/comment changes;
-- task moved to `status_human_review`, including the smoke-test file path and Linear human-review comment link;
+- task branch pushed, pull/merge request created or updated, and PR/MR URL;
+- task moved to `status_human_review`, including the human-review packet path, PR/MR URL, and Linear human-review comment link;
 - every human-review state transition, including `next_poll_at` only when polling mode is enabled;
 - human feedback detected;
 - implementation commit, docs commit, plan merge commit, or consistency commit;
@@ -241,55 +247,115 @@ The supervisor owns the task loop for the active implementation plan. Do not spa
 For each task in the active plan:
 
 1. Read the implementation-plan task section, plan-level human TODOs, SQLite task row, and Linear issue.
-2. If a required human dependency is missing, assign the issue to the configured admin user, set status to `Blocked`, comment with the exact need, update SQLite, and continue only if dependencies allow another unblocked task.
-3. Create or verify the plan worktree and branch.
-4. Set the Linear issue to `status_in_progress` and update SQLite.
-5. Dispatch one `task-worker` sub-agent for this task only.
-6. When the worker returns, record changed files, verification, stdout-rich evidence, and task-satisfaction notes in SQLite or local artifacts. Keep any Linear worker comment compact.
-7. Set the Linear issue to `status_agentic_review`.
-8. Dispatch one `task-reviewer` sub-agent using `$task-implementation-review`.
-9. For High/Medium findings, dispatch one `fix-worker`, then rerun review. Repeat until blocking findings are fixed or the task is blocked.
-10. Commit implementation changes for the task from the supervisor after review passes.
-11. Write the repo smoke-test file under `smoke_test_dir`, then post a compact Linear human-review request comment pointing to that file.
-12. Set the Linear issue to `status_human_review`, assign it to the admin user, update SQLite, and enter Human Review Wait.
-13. If Linear status becomes `status_done`, update the implementation plan with actual-vs-planned notes, commit docs separately, run `$implementation-plan-task-consistency`, commit consistency docs separately, update SQLite, and continue.
+2. Identify required real dependencies for the task: credentials, accounts, services, databases, queues, external APIs, seed data, devices, browser access, paid services, and real network/data paths.
+3. Direct the worker to provision or start any dependency it can safely create locally or through available authenticated tooling, such as containers, local services, seeded databases, emulators, test tenants, or existing dev/staging resources.
+4. If a required dependency cannot be provisioned by the agent because it needs credentials, account access, paid setup, policy approval, or product steering, assign the issue to the configured admin user, set status to `Blocked`, comment with the exact dependency and unblock instructions, update SQLite, and continue only if dependencies allow another unblocked task.
+5. Create or verify the plan worktree and branch.
+6. Set the Linear issue to `status_in_progress` and update SQLite.
+7. Dispatch one `task-worker` sub-agent for this task only.
+8. When the worker returns, record changed files, verification, stdout-rich evidence, dependency provisioning attempts, and task-satisfaction notes in SQLite or local artifacts. Keep any Linear worker comment compact.
+9. Set the Linear issue to `status_agentic_review`.
+10. Dispatch one `task-reviewer` sub-agent using `$task-implementation-review`.
+11. For High/Medium findings, dispatch one `fix-worker`, then rerun review. Repeat until blocking findings are fixed or the task is blocked.
+12. Commit implementation changes for the task from the supervisor after review passes.
+13. Push the task branch and create or update a GitLab merge request or configured repository pull request.
+14. Write the repo human-review packet under `human_review_dir`, then post a compact Linear human-review request comment pointing to the packet and PR/MR.
+15. Set the Linear issue to `status_human_review`, assign it to the admin user, update SQLite, and enter Human Review Wait.
+16. If Linear status becomes `status_done`, update the implementation plan with actual-vs-planned notes, commit docs separately, run `$implementation-plan-task-consistency`, commit consistency docs separately, update SQLite, and continue.
 
 Worker and reviewer agents never commit, merge, advance Linear state, or update SQLite directly unless the supervisor explicitly delegates a narrow status/comment update. They return evidence to the supervisor.
 
-## Smoke Test Files
+## Automated Tests And Human Review Packets
 
-Before moving any Linear issue to `status_human_review`, the supervisor must write concrete smoke-test instructions to a repo file. Default path:
+Before moving any Linear issue to `status_human_review`, the supervisor must verify that the implementation includes automated tests appropriate to the task:
+
+- unit tests for isolated logic, validation, transformations, and edge cases;
+- integration tests for database, filesystem, service wiring, queues, CLIs, or internal API boundaries;
+- end-to-end tests when the task changes a user-visible workflow, cross-service behavior, or real-data path.
+
+The supervisor must not substitute manual smoke testing for missing automated tests. If a task truly cannot add automated coverage, the worker/reviewer must explain why, identify the closest executable check, and the reviewer must decide whether that gap is acceptable or blocking.
+
+## Real Dependency Gate
+
+Real dependencies required by the implementation plan, task wording, requirements, technical design, or production/dev behavior are mandatory for task verification. Do not downgrade them to optional smoke-test notes, optional review-packet commands, or "nice to have" follow-ups.
+
+The agent team must try to satisfy required real dependencies before blocking:
+
+- start local services, emulators, databases, queues, or test containers when available;
+- run existing setup, seed, migration, or fixture-loading scripts;
+- use already-authenticated CLIs or environment variables without printing secrets;
+- create temporary test tenants, resources, topics, buckets, schemas, or records when the repo's tooling supports it;
+- document cleanup for any created resources.
+
+Block the task instead of moving it to human review when a required real dependency cannot be satisfied because:
+
+- credentials, account access, private keys, paid services, allowlists, or approvals are missing;
+- the correct service/environment is ambiguous and product or engineering steering is needed;
+- provisioning would mutate production data or create cost/risk without explicit approval;
+- the required real service is unavailable and no approved local/test substitute exists.
+
+When blocking, assign the Linear issue to the configured admin user, set it to `status_blocked`, update SQLite, and leave one compact Linear comment with:
+
+- the exact dependency or decision needed;
+- what the agent already tried;
+- the command or setup step the human should run, if known;
+- where the workflow should resume after the dependency is available.
+
+Mocks, fixtures, recordings, and fakes are allowed only for task requirements that explicitly call for isolated/unit coverage, hard-to-trigger error paths, or as an additional fast test beside mandatory real-service verification. They do not satisfy a task that requires real service, real network, real database, or real-data proof unless the implementation plan explicitly places that real proof in a later task and the current task does not claim completion of the real integration.
+
+Workers and reviewers must explicitly disclose every test boundary mode:
+
+- `real-service`, `local-service`, `test-container`, `real-network`, or `real-data`;
+- `fixture`, `recording`, `mock`, or `fake`.
+
+When fixtures, recordings, mocks, or fakes are used, the supervisor must record why they are acceptable now and point to the later implementation-plan task that converts the boundary to a real service/data path or adds a larger real end-to-end test. If no later task exists and real coverage is required, block the task or update upcoming plans through the consistency workflow before proceeding. Future conversion is not enough when the current task is the integration task; the current task must verify the real dependency or block.
+
+After review passes and the supervisor commits the task, the supervisor must push the branch and create or update a remote pull/merge request:
+
+1. Use `remote_name` from config, default `origin`.
+2. Use `pr_provider`, default `gitlab`.
+3. If `pr_create_command` is configured, run it from the plan worktree after substituting known branch/title/body values when needed.
+4. Otherwise infer the repository host from `/usr/bin/git remote get-url <remote_name>` and use an available project CLI such as `glab` for GitLab when installed.
+5. If no PR/MR can be created because authentication, remote access, or tooling is missing, set the Linear issue to `Blocked` when `pr_link_required_for_human_review = true`; otherwise write the blocker and exact manual create command in the review packet.
+
+Before moving any Linear issue to `status_human_review`, the supervisor must write a human-review packet to a repo file. Default path:
 
 ```text
-docs/linear/smoke-tests/<plan-slug>/<issue-id>-<task-slug>.md
+docs/linear/reviews/<plan-slug>/<issue-id>-<task-slug>.md
 ```
 
-If `.codex/linear.toml` sets `smoke_test_dir`, use that directory instead.
+If `.codex/linear.toml` sets `human_review_dir`, use that directory instead. If only legacy `smoke_test_dir` is configured, use it as a compatibility fallback.
 
-The smoke-test file must include:
+The human-review packet must include:
 
 - task summary and exact branch/worktree/commit under review;
+- PR/MR URL and Linear issue URL;
 - implementation-plan path, task anchor, state DB path, run id, and plan id;
-- prerequisites, including required services, environment variables, credentials, seed data, browser/device, or accounts;
-- exact copy-pasteable shell commands in fenced `bash` blocks for all relevant automated checks;
-- expected successful output or observable behavior for each command;
-- manual smoke-test checklist for behavior that cannot be fully verified by commands;
-- cleanup/reset commands when the smoke test creates data, starts services, or changes local state;
-- known limitations or tests that cannot be run by the agent, with the reason.
+- automated tests added or updated, grouped as unit, integration, and end-to-end;
+- exact verification commands the agent ran, with concise stdout-rich evidence and pass/fail/skipped status;
+- required real dependencies, how they were provisioned or why the task was blocked before review;
+- why those tests prove the task is complete, mapped back to the task requirements;
+- fixture/mock/fake disclosure, including which tests use them, what real boundary they stand in for, and the future task or plan that replaces them with real service/data coverage;
+- CI/PR checks expected to run on the PR/MR, if known;
+- human review checklist focused on what to inspect in the PR: production code paths, test assertions, boundary-mode disclosures, missing real-service gaps, and whether the PR solves the real problem;
+- known limitations, residual risk, or tests that cannot be run by the agent, with the reason.
+
+The packet may include optional copy-pasteable commands for a human who wants to rerun checks locally, but local command execution is no longer the primary human-review mechanism. The primary review surface is the PR/MR plus the packet's test-proof explanation.
 
 After writing the file, post only a compact Linear comment:
 
 ```markdown
-Ready for human smoke testing.
+Ready for human review.
 
-Smoke test instructions: `<smoke-test-file-path>`
+PR/MR: <url>
+Review packet: `<human-review-packet-path>`
 Branch: `<branch>`
 Commit: `<sha>`
 
-When it passes, move this issue to `<status_done>`.
+When the PR and review packet look correct, move this issue to `<status_done>`.
 ```
 
-Do not put full smoke-test commands, expected output, or manual checklist in Linear.
+Do not put full test evidence, command output, PR body, or manual checklist in Linear.
 
 ## Plan Branch Merge
 
@@ -404,21 +470,22 @@ Prefer bounded, resumable work over long-lived idle agents.
 - After any task worker, fix worker, reviewer, merge worker, or commit helper returns, record its result in SQLite and close or retire the host agent when available. Do not keep completed child agents open as implicit memory.
 - Keep spawned prompts bounded to file paths, exact task anchors, ownership boundaries, and return contracts. Do not paste full plans, run logs, or reviews into child prompts unless the child cannot read the files directly.
 - Reuse verification evidence across worker, fix-worker, and reviewer loops. Reviewers should not rerun a slow full-suite command when the same command already passed for the same uncommitted diff and targeted inspection is enough.
-- Keep worker, fix-worker, reviewer, and human-review Linear comments compact. Detailed findings, fix notes, smoke-test commands, verification output, and command logs belong in SQLite events or repo artifacts such as local review artifacts and smoke-test files. Linear should get status pointers, blocking counts, and local file paths.
+- Keep worker, fix-worker, reviewer, and human-review Linear comments compact. Detailed findings, fix notes, verification output, PR/MR review notes, command logs, and human-review checklists belong in SQLite events or repo artifacts such as local review artifacts and human-review packets. Linear should get status pointers, blocking counts, PR/MR URLs, and local file paths.
 
 ## Human Review Wait
 
-The default human-review mode is event-driven. When the supervisor has moved a task to `status_human_review`, it records the waiting state, tells the user the exact Linear issue and smoke-test file, and stops active waiting until the user resumes or sends `human review approved <issue id>`.
+The default human-review mode is event-driven. When the supervisor has moved a task to `status_human_review`, it records the waiting state, tells the user the exact Linear issue, PR/MR URL, and human-review packet, and stops active waiting until the user resumes or sends `human review approved <issue id>`.
 
 Only use active polling when `.codex/linear.toml` explicitly sets `human_review_mode = "polling"`. In polling mode, treat normal human-review polling as active supervisor work until `human_review_timeout_minutes` elapses.
 
-Before accepting `status_human_review` as a valid waiting state, the supervisor must verify that it created a repo smoke-test file and posted a compact human-review request comment on the Linear issue that links to it:
+Before accepting `status_human_review` as a valid waiting state, the supervisor must verify that it created a repo human-review packet, created or updated the PR/MR when required, and posted a compact human-review request comment on the Linear issue that links to both:
 
 - exact branch, worktree, and commit under review;
-- smoke-test file path under `smoke_test_dir`;
-- enough status text to tell the user to open the file and mark the issue `status_done` when it passes.
+- PR/MR URL when `pr_link_required_for_human_review = true`;
+- human-review packet path under `human_review_dir` or legacy `smoke_test_dir`;
+- enough status text to tell the user to review the PR/MR and packet, then mark the issue `status_done` when approved.
 
-If the issue is in `status_human_review` but the smoke-test file is missing or the Linear comment does not point to it, treat it as a workflow error. Create the smoke-test file and post the compact pointer comment before continuing.
+If the issue is in `status_human_review` but the packet is missing, required PR/MR URL is missing, or the Linear comment does not point to both, treat it as a workflow error. Create the missing artifact/link and post the compact pointer comment before continuing.
 
 Human approval is communicated by moving the Linear issue to `status_done`. A separate approval comment is not required.
 
