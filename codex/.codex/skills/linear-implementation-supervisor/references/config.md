@@ -26,8 +26,8 @@ status_human_review = "In Review"
 status_done = "Completed"
 
 worktree_dir = ".worktrees"
-branch_template = "codex/{feature}/{plan_slug}"
-task_branch_template = "codex/{feature}/{plan_slug}/{issue_id}-{task_slug}"
+branch_template = "{plan_slug}"
+task_branch_template = "{task_number}-{task_slug}"
 merge_completed_plan_branches = true
 merge_target_branch = ""
 merge_target_worktree = ""

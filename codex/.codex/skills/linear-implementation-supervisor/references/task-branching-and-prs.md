@@ -12,6 +12,16 @@ Before dispatching the task worker, the supervisor must:
 4. Create the task branch from that exact base commit using `task_branch_template`.
 5. Record `task_branch`, `task_base_worktree`, `task_base_branch`, `task_base_commit`, and `pr_target_branch = task_base_branch` in SQLite before dispatch.
 
+The default task branch name is `{task_number}-{task_slug}`. Normalize the expanded branch name to lowercase hyphen-case:
+
+- use the implementation-plan task number, not the Linear issue id, for `{task_number}`;
+- use the task title slug for `{task_slug}`;
+- replace spaces and other separators with single dashes;
+- strip any leading `task-` prefix if the parsed task number includes the word `Task`;
+- do not add `codex`, feature, or plan path prefixes.
+
+Example: `Task 7A: Add Strike Orchestration` becomes `7a-add-strike-orchestration`.
+
 The task branch may live in the plan worktree if only one task is active, or in a separate task worktree under `worktree_dir` if the supervisor needs to keep the plan branch checked out. In both cases, worker, fix-worker, reviewer, commit, push, and PR/MR creation operate on the task branch, not directly on the plan branch.
 
 ## PR/MR Creation

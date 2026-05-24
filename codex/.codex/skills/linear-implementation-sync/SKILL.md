@@ -69,7 +69,8 @@ status_human_review = "In Review"
 status_done = "Completed"
 
 worktree_dir = ".worktrees"
-branch_template = "codex/{feature}/{plan_slug}"
+branch_template = "{plan_slug}"
+task_branch_template = "{task_number}-{task_slug}"
 poll_interval_minutes = 5
 human_review_timeout_minutes = 60
 assign_blocked_to_admin = true
@@ -99,7 +100,7 @@ Allowed keys:
 - `assignee`;
 - `initiative`;
 - status mapping keys: `status_todo`, `status_in_progress`, `status_blocked`, `status_agentic_review`, `status_human_review`, `status_done`;
-- execution keys: `worktree_dir`, `branch_template`, `poll_interval_minutes`, `human_review_timeout_minutes`, `assign_blocked_to_admin`, `assign_human_review_to_admin`, `block_on_existing_test_failures`, `context_handoff_threshold_percent`, `worker_dispatch`, `worker_model`, `reviewer_model`.
+- execution keys: `worktree_dir`, `branch_template`, `task_branch_template`, `poll_interval_minutes`, `human_review_timeout_minutes`, `assign_blocked_to_admin`, `assign_human_review_to_admin`, `block_on_existing_test_failures`, `context_handoff_threshold_percent`, `worker_dispatch`, `worker_model`, `reviewer_model`.
 
 Sync uses only the setup fields directly, but it should tolerate execution fields because the supervisor and orchestrator workflows use the same repo config.
 
