@@ -23,6 +23,57 @@ When creating or updating the PR/MR:
 - the target/base branch must be the branch for the worktree the task branch was based on, not `main`, `master`, or the remote default branch unless that branch is the recorded base;
 - custom `pr_create_command` templates must receive both source/head and target/base values, and the supervisor must verify the resulting PR/MR targets the recorded base branch;
 - default CLI creation must pass the provider-specific target/base option, such as `glab mr create --source-branch <task branch> --target-branch <pr_target_branch>` for GitLab.
+- PR/MR descriptions must be Markdown text with real newline characters. Never pass a JSON-style or shell-escaped string containing literal `\n` sequences as the description.
+
+Use this Markdown shape for the PR/MR description:
+
+```markdown
+Implements <issue id or task name>.
+
+## Summary
+
+- <change 1>
+- <change 2>
+- <change 3>
+
+## Verification
+
+- `<command 1>`
+- `<command 2>`
+
+Target branch: `<pr_target_branch>`
+```
+
+For GitLab, compose that body as a Markdown heredoc or temporary `.md` file, then pass the file contents quoted to `glab`:
+
+```bash
+body_file="$(mktemp -t codex-mr-body.XXXXXX.md)"
+cat >"$body_file" <<'MARKDOWN'
+Implements PEA-38.
+
+## Summary
+
+- Adds add-strike orchestration through the SDK addStrike builder and Task 7 transaction submitter.
+- Adds loadActiveMarkets export and registry boundary for LP bot consumption.
+- Adds markets:add-strike CLI parsing and dry-run output.
+
+## Verification
+
+- `mise exec node@24.14.1 -- corepack pnpm --filter @meridian/automation test -- src/tests/createMarkets.test.ts src/tests/cli.test.ts --run`
+- `mise exec node@24.14.1 -- corepack pnpm --filter @meridian/automation typecheck`
+
+Target branch: `codex/meridian-phoenix/automation-lifecycle-service-implementation-plan`
+MARKDOWN
+
+glab mr create \
+  --source-branch "$task_branch" \
+  --target-branch "$pr_target_branch" \
+  --title "$title" \
+  --description "$(/bin/cat "$body_file")" \
+  --yes
+```
+
+For an existing GitLab MR, use the same Markdown body file with `glab mr update <mr> --description "$(/bin/cat "$body_file")" --yes`.
 
 After review passes and the supervisor commits the task, push the task branch and create or update a remote pull/merge request:
 
