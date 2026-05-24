@@ -125,9 +125,32 @@ Default mapping:
 - each implementation-plan doc -> one Linear Project;
 - each `### Task N: <title>` section -> one Linear Issue;
 - also accept `## Task N: <title>` when present, because some generated plans use task headings one level higher;
+- each same-plan `**Depends On:**` task reference -> Linear issue blocking relation;
 - task checklist steps -> Markdown checklist in the issue body, not separate issues.
 
 Do not create Linear issues for every task step unless the user explicitly asks.
+Do not infer task dependencies from document order. Only explicit same-plan `**Depends On:**` references create Linear relations.
+
+## Task Dependency Mapping
+
+For each plan, build a task dependency graph before creating or updating Linear issues:
+
+- parse every task heading into a task map keyed by normalized task number, such as `1`, `2a`, or `7a`;
+- parse each task's `**Depends On:**` value;
+- treat `None`, `none`, empty after `None`, or `No dependencies` as no same-plan blockers;
+- accept comma-separated same-plan task references such as `Task 1, Task 2A`, `1`, or `2A`;
+- ignore cross-plan dependency text for automatic Linear relations, but report it in the dry run as a coordination note;
+- fail the per-plan dry run if a same-plan dependency references a missing task number;
+- fail the per-plan dry run if the same-plan dependency graph contains a cycle;
+- warn when a task is missing `**Depends On:**`; do not infer blockers for that task unless the user explicitly approves treating missing declarations as `None`.
+
+After all task issues for the selected plan exist, connect same-plan dependencies in Linear:
+
+- for each dependent task, add its prerequisite issues as `blockedBy` relations on the dependent issue, or equivalently add the dependent issue as `blocks` on the prerequisite issue;
+- use Linear issue identifiers or IDs from the desired-state manifest after create/update;
+- relation updates are append-only by default. Do not remove existing Linear relations unless the user explicitly requests dependency reconciliation;
+- before adding a relation, check existing issue relations when available and skip duplicates;
+- record created, skipped-existing, unresolved, and cross-plan dependency notes in SQLite events.
 
 ## Plan-at-a-Time Sync
 
@@ -136,10 +159,11 @@ When a slices document contains multiple implementation plans, process one plan 
 1. Build a local desired-state manifest for all plans first:
    - plan path, plan title, slice order, project sync key, source hash;
    - task anchors, issue titles, issue sync keys, source hashes;
+   - same-plan task dependency edges and cross-plan dependency notes;
    - create/update/skip prediction from SQLite state and Linear sync-key lookup.
 2. Present a compact overall summary and the first pending plan's dry-run details.
 3. Ask for approval to sync only that one plan.
-4. After approval, create or update that plan's Linear Project and its issues, then update SQLite.
+4. After approval, create or update that plan's Linear Project and issues, apply same-plan dependency relations, then update SQLite.
 5. Repeat with the next pending plan until all plans are synced or the user stops.
 
 Do not ask the user to approve a large all-plans mutation unless they explicitly request a batch sync. If the user requests batch sync, still apply mutations plan-by-plan internally and update SQLite after each plan so retries can resume safely.
@@ -160,7 +184,7 @@ The state DB is the local idempotency and handoff record. It must include or upd
 
 - `workflow_runs`: feature, input paths, config path, active state, restart action;
 - `plans`: plan path, order, title, slug, source hash, Linear project mapping, branch/worktree placeholders;
-- `tasks`: task source refs, task titles, source hashes, Linear issue mappings, status, assignee;
+- `tasks`: task source refs, task titles, source hashes, Linear issue mappings, status, assignee, same-plan dependency edges, and unresolved or cross-plan dependency notes;
 - `source_hashes`: normalized source hashes for plans and task sections;
 - `events`: append-only sync decisions, warnings, creates, updates, skips;
 - `artifacts`: optional generated snapshots, reports, and legacy import references.
@@ -191,6 +215,7 @@ Each Linear issue body should preserve the execution-critical parts of the local
 
 - source plan path and task anchor;
 - task goal/title;
+- dependency declaration and same-plan blockers, if any;
 - files list;
 - human-in-the-loop test;
 - test mode disclosure;
@@ -218,6 +243,9 @@ The per-plan dry run must list only the currently selected plan:
 - project to create or update;
 - issues to create;
 - issues to update;
+- same-plan dependency relations to create or already present;
+- tasks with `Depends On: None` that can start in parallel;
+- dependency warnings, including missing `Depends On`, missing referenced tasks, cycles, or cross-plan dependency notes;
 - source tasks skipped, with reasons;
 - effective config values used, excluding absent/defaulted values that do not affect the run;
 - missing team decisions;
@@ -237,7 +265,8 @@ After approval:
 4. If configured labels do not exist, create them only when `create_missing_labels = true` or the user approved label creation after the dry run. Otherwise skip missing labels and record the decision in SQLite.
 5. Leave issues unassigned when no assignee is configured or approved.
 6. Preserve current Linear status unless the issue is newly created or the user explicitly requests status changes.
-7. Update SQLite with Linear URLs, IDs, sync keys, source hashes, branch/worktree placeholders, and warnings.
+7. After all selected-plan issues exist, create same-plan Linear blocking relations from parsed task dependencies.
+8. Update SQLite with Linear URLs, IDs, sync keys, source hashes, dependency edges, branch/worktree placeholders, and warnings.
 
 Update SQLite immediately after each plan, not only at the end of the whole slices document. SQLite is the resume point for later plans.
 
@@ -251,6 +280,7 @@ Prepare for later implementation workflows by ensuring:
 
 - every issue has a stable `Codex-Sync-Key`;
 - every issue points back to the exact local task section;
+- Linear issue blocking relations mirror explicit same-plan `Depends On` declarations;
 - SQLite records source hashes so later workflows can detect drift;
 - Linear status is not treated as proof that local code changed;
 - local plans remain the source of implementation detail.
@@ -269,6 +299,7 @@ Before handoff:
 
 - every generated Linear project has a source marker;
 - every generated Linear issue has a source marker and source hash;
+- every explicit same-plan task dependency was created as a Linear blocking relation, skipped as already present, or reported as unresolved;
 - every local task is represented in SQLite as created, updated, skipped, or blocked;
 - no duplicate Linear objects were created for existing sync keys;
 - SQLite records source docs and Linear URLs;

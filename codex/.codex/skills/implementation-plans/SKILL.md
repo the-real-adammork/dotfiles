@@ -76,6 +76,8 @@ Each task should be small enough to review independently and should end with ver
 ````markdown
 ### Task N: <specific outcome>
 
+**Depends On:** <Task numbers this task depends on, or "None">
+
 **Files:**
 - Create: `exact/path`
 - Modify: `exact/path`
@@ -126,6 +128,14 @@ For documentation, config, or mechanical changes where TDD does not apply, repla
 
 Every task that includes tests must disclose whether the tests use fixtures/mocks or real service/dev production paths. Be specific: name the mocked dependency, fake service, real local service, or real external service.
 
+## Task Dependency Rules
+
+Every task must include `**Depends On:**`. Use task numbers from the same plan, such as `Task 1`, `Task 2A`, or `None`.
+
+Declare only implementation-order dependencies: a task should depend on another task when it requires code, schema, generated files, interfaces, fixtures, or verified behavior produced by that earlier task. Do not add dependencies merely because tasks appear earlier in the document. Tasks marked `Depends On: None` are expected to be parallelizable after plan setup and human-in-the-loop prerequisites are available.
+
+If a dependency crosses plan boundaries, name the external plan and task explicitly instead of using the same-plan shorthand. The Linear sync workflow only creates automatic Linear issue blocking relations for dependencies within the same implementation plan.
+
 Do not mark real service, credential, account, network, database, queue, storage, or real-data verification as optional when the task or design requires that integration. These dependencies are mandatory verification gates. If unavailable, the task should be blocked and assigned for human action rather than completed with an optional smoke-test note.
 
 Mocks are acceptable for early unit tests, fast failure isolation, and hard-to-trigger error paths. But if production code is temporarily wired to a mock, stub, fake service, fixture-only data source, no-op client, in-memory stand-in, or disabled network path, the plan must include a later task that replaces it with the real implementation.
@@ -159,6 +169,7 @@ Never leave:
 Before presenting the plan, check:
 
 - Every requirement maps to at least one task.
+- Every task includes `**Depends On:**`, with `None` for tasks that can start in parallel.
 - Every created or modified file appears in the file map.
 - Later tasks use names, types, paths, and commands defined earlier.
 - The plan can be executed task-by-task without reading unrelated parts of the repo.

@@ -46,7 +46,7 @@ Do not put full test evidence, command output, PR body, or manual checklist in L
 
 ## Wait
 
-The default human-review mode is event-driven. When the supervisor has moved a task to `status_human_review`, it records the waiting state, tells the user the exact Linear issue, PR/MR URL, and human-review packet, and stops active waiting until the user resumes or sends `human review approved <issue id>`.
+The default human-review mode is event-driven. When the supervisor has moved a task to `status_human_review`, it records that task's waiting state and tells the user the exact Linear issue, PR/MR URL, and human-review packet. The supervisor may continue other already-active tasks and dispatch other dependency-unblocked, non-overlapping tasks. It stops active waiting only when no other safe work remains until the user resumes, Linear already shows approval, or the user sends `human review approved <issue id>`.
 
 Only use active polling when `.codex/linear.toml` explicitly sets `human_review_mode = "polling"`. In polling mode, treat normal human-review polling as active supervisor work until `human_review_timeout_minutes` elapses.
 
