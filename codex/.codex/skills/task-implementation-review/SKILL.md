@@ -27,10 +27,13 @@ Check:
 
 - implementation satisfies the task goal and every required step;
 - files changed match the task's ownership boundaries;
-- tests cover the requested behavior;
+- automated tests cover the requested behavior at the right level: unit, integration, and/or end-to-end;
+- the worker explains why the tests prove the task is complete, mapped to the task requirements;
+- required real services, databases, network/API calls, real-data paths, and service integrations were actually provisioned and exercised when the task requires them;
 - tests disclose whether they use mocks, fixtures, fake services, real local services, or real network/services;
 - tests that cross service, network, database, queue, browser, CLI, filesystem, real-data, or end-to-end boundaries print enough stdout/stderr evidence to understand what passed without opening the test file;
-- mocks are not left in production or dev runtime paths unless the plan has a later real-service conversion task;
+- mocks, fixtures, recordings, or fakes are not left as the only proof for a boundary that needs real-service coverage unless the plan has a later real-service conversion task or larger real e2e test;
+- no required real dependency was downgraded to optional human smoke testing or optional local rerun instructions;
 - human-in-the-loop test requirements are preserved;
 - no unrelated changes were included;
 - focused verification evidence is credible.
@@ -45,13 +48,15 @@ Prefer reviewing the worker's exact verification evidence before rerunning slow 
 - Rerun a full suite only when the worker skipped required verification, output is missing or not credible, the diff changed after the worker ran it, the task touched shared behavior, or the task's required verification explicitly demands a reviewer rerun.
 - When reusing evidence, say so in `Verification run` with the original command and mark any not-rerun command as `reused`.
 - If an integration/e2e test crosses service, network, database, queue, browser, CLI, filesystem, real-data, or end-to-end boundaries but prints no useful observable facts, file a Medium finding even if the command passes.
+- If a task uses fixtures, recordings, mocks, or fakes without naming the future task that replaces them with real service/data coverage, file a Medium finding. Make it High when real-service proof is required for this task.
+- If the current task requires real service/data/integration verification and the implementation only provides mocks, fixtures, recordings, fakes, optional smoke-test notes, or optional rerun commands, file a High finding and recommend `blocked` when credentials or steering are required.
 
 ## Findings
 
 Classify findings:
 
-- `High`: task is incomplete, wrong, unsafe, breaks contract, or leaves production/dev path mocked without required conversion.
-- `Medium`: missing meaningful tests, important edge case missing, boundary mismatch, unclear integration risk, or integration/e2e tests that pass silently without useful observable stdout evidence.
+- `High`: task is incomplete, wrong, unsafe, breaks contract, leaves production/dev path mocked without required conversion, lacks required real-service/e2e proof, or marks required real dependency verification as optional.
+- `Medium`: missing meaningful tests, missing test-proof explanation, important edge case missing, boundary mismatch, unclear integration risk, missing fixture/mock/fake future-conversion mapping, or integration/e2e tests that pass silently without useful observable stdout evidence.
 - `Low`: cleanup, naming, small docs mismatch, or non-blocking improvement.
 
 High and Medium findings are blocking by default. Low findings may be noted or deferred.
@@ -86,6 +91,15 @@ Findings:
 
 Verification run:
 - `<command>` - <passed/failed/skipped/reused> - <key evidence or reuse reason>
+
+Test proof assessment:
+- <why the tests do or do not prove the task is complete>
+
+Dependency assessment:
+- <required real dependencies exercised, missing, or requiring human action>
+
+Boundary mode assessment:
+- <fixture/mock/fake/real-service disclosures and whether future conversion is covered>
 
 Recommendation:
 - <approve for human review | fix required | blocked>

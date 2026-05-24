@@ -1,6 +1,6 @@
 ---
 name: implementation-task-worker
-description: Use when a sub-agent is assigned to implement or fix exactly one task from an implementation plan, including code changes, focused tests, verification, and smoke-test evidence for the supervisor. Applies to task-worker and fix-worker roles in implementation-plan workflows.
+description: Use when a sub-agent is assigned to implement or fix exactly one task from an implementation plan, including code changes, focused automated tests, verification, and human-review evidence for the supervisor. Applies to task-worker and fix-worker roles in implementation-plan workflows.
 ---
 
 # Implementation Task Worker
@@ -31,18 +31,36 @@ If the task section, worktree, or ownership boundary is missing, stop and ask th
 - Use `/usr/bin/git` when git is needed.
 - Prefer existing project patterns, helpers, test utilities, and commands.
 - Keep changes inside the assigned ownership boundary unless the task cannot be completed without a boundary change; report any deviation.
-- If a required credential, service, account, private key, paid API, or external dependency is missing, stop and report the blocker.
+- Required real services, real databases, real network paths, real-data paths, and required integrations are mandatory verification gates. Do not label them optional or move them into human smoke-test notes.
+- If a required credential, service, account, private key, paid API, or external dependency is missing, first try safe agent-owned provisioning with existing repo/tooling. If it still requires human action or steering, stop and report the blocker.
 
 ## Workflow
 
 1. Read the task section, nearby plan context, and any reviewer findings.
 2. Inspect the target files and existing test patterns before editing.
 3. Check the worktree status and note unrelated changes.
-4. Implement the smallest coherent change that satisfies the task.
-5. Add or update focused tests for the behavior and integration boundary.
-6. Run the required verification commands, plus any focused tests needed for confidence.
-7. Prepare smoke-test evidence for the supervisor's repo smoke-test file.
-8. Return the required output and do not commit.
+4. Identify required real dependencies from the task, plan, requirements, code path, and test mode disclosure.
+5. Provision required dependencies when possible with safe local or authenticated tooling: containers, local services, emulators, seeded databases, migrations, test tenants, queues, topics, buckets, schemas, or dev/staging resources.
+6. If a required dependency cannot be provisioned without human credentials, account access, paid setup, approval, or steering, stop before implementing around it and return a blocker.
+7. Implement the smallest coherent change that satisfies the task.
+8. Add or update focused automated tests for the behavior and integration boundary.
+9. Run the required verification commands, plus any focused tests needed for confidence.
+10. Prepare test-proof evidence for the supervisor's repo human-review packet.
+11. Return the required output and do not commit.
+
+## Automated Test Requirements
+
+Every implementation task should add or update automated tests unless the task is documentation-only or the existing test suite already covers the exact changed behavior. Choose the level that matches the change:
+
+- unit tests for isolated logic, validation, transformations, and edge cases;
+- integration tests for database, filesystem, service wiring, queues, CLIs, or internal API boundaries;
+- end-to-end tests for user-visible workflows, cross-service behavior, or real-data paths.
+
+Do not rely on manual smoke testing as the main proof that the task is complete. If automated coverage cannot be added, explain why, provide the closest executable check, and flag the gap for the reviewer and supervisor.
+
+When the task requires a real service, real database, real network/API call, real-data path, or service integration, that real dependency is mandatory for task verification. Do not mark it optional. If you cannot satisfy it yourself, return a blocker with the exact human action needed so the supervisor can assign the Linear issue to the admin.
+
+Return a short proof statement that maps each important task requirement to the test or verification command that covers it.
 
 ## Test Output Requirements
 
@@ -51,7 +69,9 @@ Tests for service, network, database, queue, filesystem, browser, CLI, real-data
 When adding or modifying such tests:
 
 - Prefer real local services, test containers, seeded databases, recorded fixtures, or explicit integration-test modes when the plan requires end-to-end coverage.
+- For required real integrations, attempt real local/dev/staging provisioning before using fixtures, recordings, mocks, or fakes.
 - If mocks/fakes are used, label them clearly in the test name and output.
+- If fixtures, recordings, mocks, or fakes are used, identify what real boundary they replace and name the later implementation-plan task that converts the boundary to a real service/data path or adds a larger real end-to-end test. If no later task exists, state that explicitly. If the current task requires the real boundary, stop and report a blocker instead of treating the fake path as sufficient.
 - Print the important verification facts, such as:
   - service URL, database/schema, queue/topic, endpoint, or CLI command under test;
   - request method/path and sanitized identifiers;
@@ -90,17 +110,20 @@ For speed and reliable review handoff:
 
 If a command cannot be run, explain why and provide the closest runnable command for the supervisor or human reviewer.
 
-## Smoke-Test Evidence
+## Human-Review Evidence
 
-Return copy-pasteable commands and expected results the supervisor can put into the repo smoke-test file. Include:
+Return evidence the supervisor can put into the repo human-review packet. Include:
 
 - branch, worktree, and current commit if available;
-- prerequisites;
-- commands in fenced `bash` blocks;
-- expected output or observable behavior;
-- manual checklist items;
-- cleanup commands;
+- required real dependencies and how they were provisioned;
+- automated tests added or updated, grouped as unit, integration, and end-to-end;
+- commands run and concise observed output;
+- why the tests prove the task is complete;
+- fixture/mock/fake disclosures and future real-service conversion task, if applicable;
+- PR review checklist items for the human reviewer;
 - known limitations.
+
+Optional local rerun commands are useful, but the main output should help the supervisor justify the PR/MR and explain what the human should inspect in code and tests.
 
 ## Linear Comments
 
@@ -136,10 +159,22 @@ Ownership deviations:
 Verification run:
 - `<command>` - passed|failed|skipped - <key stdout/stderr evidence or reason>
 
+Dependency provisioning:
+- <required dependency> - provisioned|already available|blocked - <commands/resources used or exact human action needed>
+
+Test proof:
+- <requirement-to-test mapping and why this proves completion>
+
+Boundary mode disclosures:
+- <real-service/local-service/test-container/real-network/real-data/fixture/recording/mock/fake used, why, and future conversion task or "None">
+
 Test output notes:
 - <how tests disclose service/network/real-data mode and important observed values>
 
-Smoke-test file content for human review:
+Human review packet notes:
+- <what the human should inspect in the PR/MR code and tests>
+
+Optional local rerun:
 ```bash
 <copy-pasteable command>
 ```

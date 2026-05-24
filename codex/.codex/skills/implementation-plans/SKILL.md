@@ -67,6 +67,8 @@ Every plan starts with:
 
 This TODO table must include all human-required setup across the entire plan: API keys, accounts, service configuration, local dependencies, paid services, test data, manual approvals, device/browser access, credentials, and any environmental setup the agent cannot complete alone. If a human action only matters after a certain task lands, mark that dependency in `Needed By` and `When To Remind`.
 
+Required real dependencies are blocking, not optional. If a task needs a real service, real database, real network/API call, real-data path, or service integration to prove completion, the plan must say so in the task verification steps. The agent should attempt safe provisioning through repo tooling, containers, emulators, dev/staging resources, migrations, and seed scripts. If the agent cannot provision the dependency because credentials, account access, paid setup, approval, or product/engineering steering is required, the dependency belongs in the Human-In-The-Loop TODO table and the task must block until it is available.
+
 ## Task Format
 
 Each task should be small enough to review independently and should end with verification. Prefer TDD for behavior changes.
@@ -88,6 +90,8 @@ Each task should be small enough to review independently and should end with ver
 - Automated tests: <mocked fixtures | fake local service | real local service | real network/service | not applicable>
 - Production/dev path exercised: <yes/no and which path>
 - Mock-only risk: <what integration could still be broken, or "None">
+- Required real dependencies: <service/db/network/API/real-data path and how agent provisions it, or exact human blocker>
+- Blocking if unavailable: <yes/no and why>
 
 - [ ] Step 1: Write or update the failing test
 
@@ -122,6 +126,8 @@ For documentation, config, or mechanical changes where TDD does not apply, repla
 
 Every task that includes tests must disclose whether the tests use fixtures/mocks or real service/dev production paths. Be specific: name the mocked dependency, fake service, real local service, or real external service.
 
+Do not mark real service, credential, account, network, database, queue, storage, or real-data verification as optional when the task or design requires that integration. These dependencies are mandatory verification gates. If unavailable, the task should be blocked and assigned for human action rather than completed with an optional smoke-test note.
+
 Mocks are acceptable for early unit tests, fast failure isolation, and hard-to-trigger error paths. But if production code is temporarily wired to a mock, stub, fake service, fixture-only data source, no-op client, in-memory stand-in, or disabled network path, the plan must include a later task that replaces it with the real implementation.
 
 If production or dev runtime behavior depends on a mock and there is no later conversion task, the implementation plan is invalid and must fail review.
@@ -132,6 +138,7 @@ The conversion task must:
 - identify the real service, network call, persistence layer, or code path;
 - include automated verification against the most realistic available path;
 - include a human-in-the-loop test when external services, credentials, or local setup are required.
+- block instead of completing if that task is the point where real service/data integration is required and the dependency is not available.
 
 ## No Placeholders
 
@@ -145,6 +152,7 @@ Never leave:
 - Commands without expected results
 - "Mock for now" without a later real-service conversion task
 - "Manual test later" without a concrete Human-In-The-Loop Test section
+- "Optional" real service, credential, account, database, network, queue, storage, or real-data verification for a task that requires that dependency
 
 ## Self-Review
 
