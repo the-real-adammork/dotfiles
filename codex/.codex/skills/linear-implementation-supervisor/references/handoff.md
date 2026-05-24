@@ -16,7 +16,7 @@ If the supervisor cannot continue, write:
 docs/handoffs/YYYY-MM-DD-<feature>-linear-supervisor-handoff.md
 ```
 
-Include completed plans, active plan, worktree paths, branches, Linear project/issue state, commits, blocked tasks, pending human reviews, and exact restart instructions.
+Include completed plans, active plan, worktree paths, branches, Linear project/issue state, commits, blocked tasks, active tasks/agents, pending human reviews, pending task-consistency queue items, coordination findings, and exact restart instructions.
 
 Update SQLite first, set `status` and `restart_action`, append an event with the handoff path, and link the handoff from the run row. The handoff is a detailed snapshot; SQLite remains the entry point for restart.
 

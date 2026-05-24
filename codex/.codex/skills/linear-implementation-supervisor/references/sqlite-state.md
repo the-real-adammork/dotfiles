@@ -18,10 +18,13 @@ Update these SQLite records after every supervisor-owned transition:
 
 - `workflow_runs`: current status, active plan/task/agent, restart action;
 - `plans`: plan status, worktree, branch, source/base worktree and branch, Linear project, last commit;
-- `tasks`: supervisor-level task status summaries, task branch, task base worktree/branch/commit, PR/MR target branch, and merge-back status where relevant;
+- `tasks`: supervisor-level task status summaries, task branch, task base worktree/branch/commit, PR/MR target branch, merge-back status, and consistency eligibility where relevant;
 - `agents`: stable agent name to host agent id/nickname mapping;
 - `events`: append-only event log;
 - `human_reviews`: waiting, timeout, and approval state.
+- `consistency_queue`: pending batched task-consistency items, including plan id, task id, merge-back commit, actual summary, changed files, status, skipped active task notes, and consistency commit when resolved.
+
+When opening an existing SQLite state DB, ensure additive workflow tables such as `consistency_queue` exist before using the active task loop. Use `create table if not exists` style migrations; do not require destructive schema resets.
 
 Append an `events` row and update current-state rows after:
 
@@ -36,6 +39,7 @@ Append an `events` row and update current-state rows after:
 - every human-review state transition;
 - human feedback detected;
 - implementation commit, task branch merge-back, docs commit, plan merge commit, or consistency commit;
+- task-consistency item enqueued, batched, skipped because downstream tasks are active, applied, or deferred with coordination findings;
 - handoff written;
 - workflow completion.
 
@@ -77,6 +81,9 @@ Use $linear-implementation-supervisor to resume the Linear implementation run fr
 - active_task_base_branch: `<branch or none>`
 - active_task_base_commit: `<sha or none>`
 - active_plan_id: `<SQLite plan id or none>`
+- active_tasks: `<task ids/titles or none>`
+- active_agents: `<stable agent names or none>`
+- pending_consistency: `<task ids/merge commits waiting for batched reconciliation or none>`
 - pending_dispatch: `<kind or none>`
 - waiting_since: `<ISO timestamp or none>`
 - next_poll_at: `<ISO timestamp or none>`

@@ -307,6 +307,24 @@ def init_schema(conn: sqlite3.Connection) -> None:
           updated_at text not null
         );
 
+        create table if not exists consistency_queue (
+          id integer primary key autoincrement,
+          run_id text not null,
+          plan_id text,
+          task_id text,
+          linear_issue text,
+          task_number text,
+          merge_back_commit text,
+          actual_summary text,
+          changed_files_json text,
+          status text not null default 'pending',
+          skipped_active_tasks_json text,
+          coordination_findings_json text,
+          consistency_commit text,
+          created_at text not null,
+          updated_at text not null
+        );
+
         create table if not exists source_hashes (
           source_ref text primary key,
           source_hash text not null,

@@ -42,9 +42,10 @@ Load only the reference files needed for the current action:
 - Worker, reviewer, fix-worker, and merge-worker agents never commit, merge, advance Linear state, or update SQLite directly unless the supervisor delegates one narrow status/comment update.
 - Do not spawn a separate implementation-plan orchestrator by default. Normalize legacy orchestrator state into the supervisor-owned task loop.
 - Each implementation task uses a dedicated task branch based on the worktree/branch/commit it starts from.
+- Within a plan, dispatch all dependency-unblocked, non-overlapping tasks in parallel by default. Ask for user approval only when task dependencies, file ownership, runtime resources, or merge risk are ambiguous or overlapping.
 - A task PR/MR source/head is the task branch, and its target/base is the recorded task base branch. Never target `main`, `master`, or the remote default branch unless that is the recorded task base branch.
 - Do not move a Linear issue to human review unless required automated tests are present or an accepted coverage gap is documented, required real dependencies have been satisfied or the task is blocked, the PR/MR targets the recorded task base branch, and the repo human-review packet exists.
-- In default `event_driven` human-review mode, stop active work after moving a task to human review and resume only when the user resumes or Linear already shows approval.
+- In default `event_driven` human-review mode, pause that task after moving it to human review. Continue other already-active tasks and dispatch other dependency-unblocked, non-overlapping tasks unless no safe work remains.
 - Use `/usr/bin/git` for all git commands.
 
 ## Workflow
@@ -88,7 +89,7 @@ Before starting or resuming any task, load:
 4. `references/delegation.md`
 5. `references/human-review.md`
 
-The task loop must record the task base worktree, base branch, and base commit before creating the task branch. Task worker, fix-worker, reviewer, commit, push, and PR/MR creation operate on the task branch. After human approval, merge the task branch back into its recorded base worktree/branch before task-consistency docs or the next dependent task.
+The task loop must record the task base worktree, base branch, and base commit before creating the task branch. Task worker, fix-worker, reviewer, commit, push, and PR/MR creation operate on the task branch. Safe parallel tasks each run in their own task worktree. After human approval, merge the task branch back into its recorded base worktree/branch, enqueue task-consistency reconciliation, and run batched consistency before dispatching newly unblocked dependent tasks or completing the plan.
 
 ## Final Output
 

@@ -22,7 +22,9 @@ The default task branch name is `{task_number}-{task_slug}`. Normalize the expan
 
 Example: `Task 7A: Add Strike Orchestration` becomes `7a-add-strike-orchestration`.
 
-The task branch may live in the plan worktree if only one task is active, or in a separate task worktree under `worktree_dir` if the supervisor needs to keep the plan branch checked out. In both cases, worker, fix-worker, reviewer, commit, push, and PR/MR creation operate on the task branch, not directly on the plan branch.
+The task branch may live in the plan worktree only when exactly one task is active and no parallel dispatch is expected. When more than one task is active, or when another task may be dispatched before this task reaches human review, create a separate task worktree under `worktree_dir`, preferably `worktree_dir/tasks/<task-branch>`.
+
+Parallel task worktrees are mandatory. Each parallel task owns its own task worktree, task branch, worker edits, test runs, staged diff, commit, and PR/MR source branch. Workers, fix-workers, reviewers, commit, push, and PR/MR creation operate on the task branch/worktree, not directly on the plan branch.
 
 ## PR/MR Creation
 
@@ -99,7 +101,7 @@ If an existing PR/MR targets the wrong branch, retarget it before human review w
 
 ## Merge Back After Approval
 
-After human approval, merge the task branch back into the recorded base worktree/branch before updating task-consistency docs or starting the next dependent task.
+After human approval, merge the task branch back into the recorded base worktree/branch before enqueuing task-consistency reconciliation or starting the next dependent task.
 
 1. Verify the base worktree is clean.
 2. Verify the base worktree is checked out on `task_base_branch`.

@@ -46,7 +46,7 @@ Default DB path:
 .codex/workflows/state.sqlite
 ```
 
-The migration script creates the schema if needed. The SQLite DB is the canonical mutable workflow state after migration. Markdown requirements, technical designs, implementation plans, reviews, smoke-test files, and handoffs remain normal repo artifacts. Store paths, anchors, hashes, and status in SQLite rather than copying large document bodies into SQL.
+The migration script creates the schema if needed, including additive workflow tables such as `consistency_queue`. The SQLite DB is the canonical mutable workflow state after migration. Markdown requirements, technical designs, implementation plans, reviews, smoke-test files, and handoffs remain normal repo artifacts. Store paths, anchors, hashes, and status in SQLite rather than copying large document bodies into SQL.
 
 ## Workflow
 
@@ -106,7 +106,7 @@ Before declaring migration complete:
 
   ```bash
   sqlite3 .codex/workflows/state.sqlite \
-    "select 'plans', count(*) from plans union all select 'tasks', count(*) from tasks union all select 'events', count(*) from events;"
+    "select 'plans', count(*) from plans union all select 'tasks', count(*) from tasks union all select 'events', count(*) from events union all select 'consistency_queue', count(*) from consistency_queue;"
   ```
 
 - confirm legacy run logs and ledgers were archived if `--archive` was used;
