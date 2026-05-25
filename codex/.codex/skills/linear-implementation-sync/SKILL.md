@@ -184,7 +184,9 @@ The state DB is the local idempotency and handoff record. It must include or upd
 
 - `workflow_runs`: feature, input paths, config path, active state, restart action;
 - `plans`: plan path, order, title, slug, source hash, Linear project mapping, branch/worktree placeholders;
-- `tasks`: task source refs, task titles, source hashes, Linear issue mappings, status, assignee, same-plan dependency edges, and unresolved or cross-plan dependency notes;
+- `tasks`: task source refs, task titles, source hashes, Linear issue mappings, status, assignee, task branch/worktree placeholders, and unresolved or cross-plan dependency notes;
+- `task_dependencies`: same-plan dependency edges parsed from `Depends On`;
+- `task_dispatches`: initially empty dispatch history table for the supervisor's parallel task workers/reviewers/fixers;
 - `source_hashes`: normalized source hashes for plans and task sections;
 - `events`: append-only sync decisions, warnings, creates, updates, skips;
 - `artifacts`: optional generated snapshots, reports, and legacy import references.

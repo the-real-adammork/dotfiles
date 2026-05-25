@@ -4,6 +4,8 @@ The supervisor owns the task loop for the active implementation plan. Do not spa
 
 ## Parallel Task Dispatch
 
+Before selecting or resuming a dispatch wave, apply `sqlite-state.md` active frontier rules. In parallel mode, derive active and waiting work from `active_task_frontier`, not from `workflow_runs.active_task_id`.
+
 For each active plan, the supervisor should maintain a dispatch wave of all tasks that are safe to run now:
 
 1. Read the plan task dependency declarations, Linear issue blockers, SQLite task rows, active task rows, and pending consistency queue.

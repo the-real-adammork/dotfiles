@@ -247,7 +247,58 @@ def init_schema(conn: sqlite3.Connection) -> None:
           assignee text,
           source_hash text,
           last_commit text,
+          task_branch text,
+          task_worktree text,
+          task_base_worktree text,
+          task_base_branch text,
+          task_base_commit text,
+          pr_target_branch text,
+          pr_url text,
+          implementation_commit text,
+          merge_back_commit text,
+          merge_back_status text,
+          consistency_status text,
+          blocked_reason text,
+          dependency_notes text,
           legacy_source text,
+          created_at text not null,
+          updated_at text not null
+        );
+
+        create table if not exists task_dependencies (
+          id integer primary key autoincrement,
+          run_id text not null,
+          plan_id text not null,
+          task_id text not null,
+          depends_on_task_id text,
+          depends_on_task_number text,
+          dependency_type text not null default 'blocks',
+          source text,
+          status text,
+          notes text,
+          created_at text not null,
+          updated_at text not null,
+          unique(plan_id, task_id, depends_on_task_id, depends_on_task_number)
+        );
+
+        create table if not exists task_dispatches (
+          id integer primary key autoincrement,
+          run_id text not null,
+          plan_id text,
+          task_id text,
+          dispatch_wave text,
+          kind text,
+          stable_agent_name text,
+          host_agent_id text,
+          worktree text,
+          branch text,
+          base_worktree text,
+          base_branch text,
+          base_commit text,
+          status text,
+          started_at text,
+          completed_at text,
+          result_summary text,
           created_at text not null,
           updated_at text not null
         );
@@ -299,6 +350,11 @@ def init_schema(conn: sqlite3.Connection) -> None:
           linear_issue text,
           status text,
           smoke_test_path text,
+          pr_url text,
+          review_packet_path text,
+          branch text,
+          target_branch text,
+          commit_sha text,
           waiting_since text,
           timeout_at text,
           approved_at text,
@@ -331,6 +387,214 @@ def init_schema(conn: sqlite3.Connection) -> None:
           kind text,
           updated_at text not null
         );
+
+        create table if not exists schema_migrations (
+          id text primary key,
+          description text,
+          applied_at text not null
+        );
+
+        """
+    )
+
+    additive_columns = {
+        "tasks": {
+            "task_branch": "text",
+            "task_worktree": "text",
+            "task_base_worktree": "text",
+            "task_base_branch": "text",
+            "task_base_commit": "text",
+            "pr_target_branch": "text",
+            "pr_url": "text",
+            "implementation_commit": "text",
+            "merge_back_commit": "text",
+            "merge_back_status": "text",
+            "consistency_status": "text",
+            "blocked_reason": "text",
+            "dependency_notes": "text",
+        },
+        "human_reviews": {
+            "pr_url": "text",
+            "review_packet_path": "text",
+            "branch": "text",
+            "target_branch": "text",
+            "commit_sha": "text",
+        },
+        "consistency_queue": {
+            "linear_issue": "text",
+            "task_number": "text",
+            "merge_back_commit": "text",
+            "actual_summary": "text",
+            "changed_files_json": "text",
+            "skipped_active_tasks_json": "text",
+            "coordination_findings_json": "text",
+            "consistency_commit": "text",
+        },
+    }
+    for table, columns in additive_columns.items():
+        existing = {row[1] for row in conn.execute(f"pragma table_info({table})")}
+        for column, column_type in columns.items():
+            if column not in existing:
+                conn.execute(f"alter table {table} add column {column} {column_type}")
+
+    conn.executescript(
+        """
+        create index if not exists idx_tasks_plan_status
+          on tasks(plan_id, status);
+        create index if not exists idx_task_dispatches_run_task_status
+          on task_dispatches(run_id, task_id, status);
+        create index if not exists idx_agents_run_task_status
+          on agents(run_id, task_id, status);
+        create index if not exists idx_human_reviews_run_task_status
+          on human_reviews(run_id, task_id, status);
+        create index if not exists idx_consistency_queue_run_task_status
+          on consistency_queue(run_id, task_id, status);
+
+        drop view if exists active_task_frontier;
+        create view active_task_frontier as
+        with active_tasks as (
+          select
+            p.run_id,
+            t.plan_id,
+            t.id as task_id,
+            t.task_number,
+            t.task_title,
+            t.linear_issue,
+            t.status as task_status,
+            t.task_branch,
+            t.task_worktree,
+            t.pr_url,
+            'task_status' as active_reason
+          from tasks t
+          join plans p on p.id = t.plan_id
+          where lower(coalesce(t.status, '')) in (
+            'in progress',
+            'in_progress',
+            'agentic review',
+            'agentic_review',
+            'fixing',
+            'in review',
+            'human review',
+            'human_review',
+            'blocked',
+            'consistency_pending',
+            'consistency pending'
+          )
+        ),
+        active_dispatches as (
+          select
+            td.run_id,
+            td.plan_id,
+            td.task_id,
+            null as task_number,
+            null as task_title,
+            null as linear_issue,
+            td.status as task_status,
+            td.branch as task_branch,
+            td.worktree as task_worktree,
+            null as pr_url,
+            'dispatch_status' as active_reason
+          from task_dispatches td
+          where lower(coalesce(td.status, '')) in (
+            'pending',
+            'running',
+            'in progress',
+            'in_progress',
+            'agentic review',
+            'agentic_review',
+            'fixing',
+            'reviewing'
+          )
+        ),
+        active_agents as (
+          select
+            a.run_id,
+            a.plan_id,
+            a.task_id,
+            null as task_number,
+            null as task_title,
+            null as linear_issue,
+            a.status as task_status,
+            null as task_branch,
+            null as task_worktree,
+            null as pr_url,
+            'agent_status' as active_reason
+          from agents a
+          where lower(coalesce(a.status, '')) in (
+            'pending',
+            'running',
+            'in progress',
+            'in_progress',
+            'agentic review',
+            'agentic_review',
+            'fixing',
+            'reviewing'
+          )
+        ),
+        active_reviews as (
+          select
+            hr.run_id,
+            null as plan_id,
+            hr.task_id,
+            null as task_number,
+            null as task_title,
+            hr.linear_issue,
+            hr.status as task_status,
+            hr.branch as task_branch,
+            null as task_worktree,
+            hr.pr_url,
+            'human_review_status' as active_reason
+          from human_reviews hr
+          where lower(coalesce(hr.status, '')) in ('waiting', 'timeout')
+        ),
+        active_consistency as (
+          select
+            cq.run_id,
+            cq.plan_id,
+            cq.task_id,
+            cq.task_number,
+            null as task_title,
+            cq.linear_issue,
+            cq.status as task_status,
+            null as task_branch,
+            null as task_worktree,
+            null as pr_url,
+            'consistency_status' as active_reason
+          from consistency_queue cq
+          where lower(coalesce(cq.status, '')) in (
+            'pending',
+            'consistency_pending',
+            'consistency pending',
+            'deferred',
+            'blocked'
+          )
+        )
+        select * from active_tasks
+        union all select * from active_dispatches
+        union all select * from active_agents
+        union all select * from active_reviews
+        union all select * from active_consistency;
+
+        drop view if exists workflow_active_summary;
+        create view workflow_active_summary as
+        select
+          run_id,
+          count(distinct task_id) as active_task_count,
+          group_concat(distinct task_id) as active_task_ids,
+          group_concat(distinct linear_issue) as active_linear_issues,
+          group_concat(distinct active_reason) as active_reasons
+        from active_task_frontier
+        group by run_id;
+
+        insert into schema_migrations (id, description, applied_at)
+        values (
+          '2026-05-24-parallel-active-frontier',
+          'Add parallel task resume tables, indexes, and active frontier views',
+          strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        )
+        on conflict(id) do update set
+          description = excluded.description,
+          applied_at = excluded.applied_at;
         """
     )
 
