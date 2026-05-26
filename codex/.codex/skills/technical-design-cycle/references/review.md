@@ -1,15 +1,8 @@
----
-name: technical-design-review
-description: Use when the user wants a technical design reviewed against its original requirements, spec, PRD, issue, or approved design brief.
----
+# Technical Design Review Reference
 
-# Technical Design Review
-
-Review a technical design against the requirements document it was created from. The goal is traceability and sufficiency: every requirement should map to a place in the technical design, and the design decision there should be capable of satisfying the requirement completely at the design level.
+Use this reference to review a technical design against the requirements document it was created from. The goal is traceability and sufficiency: every requirement should map to a place in the technical design, and the design decision there should be capable of satisfying the requirement completely at the design level.
 
 ## Start
-
-Announce: "I'm using the technical-design-review skill to check requirements coverage."
 
 Read both documents:
 

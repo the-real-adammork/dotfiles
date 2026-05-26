@@ -1,15 +1,8 @@
----
-name: technical-design
-description: Use when the user wants a higher-level technical design, architecture strategy, implementation approach, or responsibility map before detailed task planning.
----
+# Technical Design Drafting Reference
 
-# Technical Design
-
-Write the intermediary design layer between requirements and task-level implementation plans. A technical design explains the implementation goals, architecture, ownership boundaries, integration points, sequencing, risks, and validation strategy without expanding into a full task checklist.
+Use this reference when drafting the intermediary design layer between requirements and task-level implementation plans. A technical design explains the implementation goals, architecture, ownership boundaries, integration points, sequencing, risks, and validation strategy without expanding into a full task checklist.
 
 ## Start
-
-Announce: "I'm using the technical-design skill to define the implementation strategy."
 
 Inspect enough of the repo to understand current patterns, relevant files, tests, commands, and constraints. Use `/usr/bin/git` when git is needed.
 
@@ -23,7 +16,7 @@ User instructions about design location override this default.
 
 ## When To Use
 
-Use this skill when:
+Use this reference when:
 
 - The desired behavior is known but the implementation shape is not.
 - Multiple modules, services, UI surfaces, or data flows need to mesh cleanly.

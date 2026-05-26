@@ -1,4 +1,4 @@
 interface:
   display_name: "Linear Implementation Supervisor"
   short_description: "Supervise plan execution in Linear"
-  default_prompt: "Use $linear-implementation-supervisor to execute or resume the synced implementation plans in slice order."
+  default_prompt: "Use $linear-implementation-supervisor to execute or resume the synced implementation plans in phase order."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Implementation Plans Consistency"
-  short_description: "Update upcoming plans after a plan completes"
-  default_prompt: "Use $implementation-plans-consistency to reconcile upcoming implementation plans."

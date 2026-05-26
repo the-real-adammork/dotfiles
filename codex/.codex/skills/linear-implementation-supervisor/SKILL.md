@@ -1,6 +1,6 @@
 ---
 name: linear-implementation-supervisor
-description: Use when implementing Linear-synced implementation plans from SQLite workflow state across one or more ordered plan slices.
+description: Use when implementing Linear-synced implementation plans from SQLite workflow state across one or more ordered phase plans.
 ---
 
 # Linear Implementation Supervisor
@@ -13,12 +13,12 @@ Announce: "I'm using the linear-implementation-supervisor skill to supervise imp
 
 Inputs:
 
-- slices document path;
+- phases document path;
 - state DB path, default `.codex/workflows/state.sqlite`;
 - `.codex/linear.toml` config;
 - optional technical design and requirements paths.
 
-If the slices document or state DB is missing, ask for it. If only legacy Markdown run logs or sync ledgers exist, require `$linear-implementation-state-migration` before resuming. If Linear mappings are missing from SQLite, run or request `$linear-implementation-sync` first.
+If the phases document or state DB is missing, ask for it. If only legacy Markdown run logs or sync ledgers exist, require `$linear-implementation-state-migration` before resuming. If Linear mappings are missing from SQLite, run or request `$linear-implementation-sync` first.
 
 ## Reference Loading
 
@@ -52,17 +52,17 @@ Load only the reference files needed for the current action:
 
 1. Load `references/config.md` and read `.codex/linear.toml`.
 2. Load `references/sqlite-state.md`, then create or resume the durable SQLite workflow run.
-3. Read the slices document and determine implementation-plan execution order.
+3. Read the phases document and determine implementation-plan execution order.
 4. Verify every plan/task has Linear mappings.
 5. Resolve the admin user from `admin_user_email`.
 6. For each plan in order, create or resume its worktree/branch and run the supervisor-owned active task loop using `references/active-task-loop.md`.
 7. Stop only for a true blocker, event-driven human-review wait, timeout handoff, context handoff, or explicit user stop.
 8. After a plan completes, load `references/plan-merge.md` and merge the completed plan branch into the target worktree/branch.
-9. Run `$implementation-plans-consistency` against upcoming plans after the plan branch is merged.
+9. Run `$implementation-plans` with `references/cross-plan-consistency.md` against upcoming plans after the plan branch is merged.
 10. Commit cross-plan consistency docs separately.
 11. Continue to the next plan only after the merge and consistency updates are complete.
 
-Do not run later plans before earlier plan dependencies are complete unless the slices document explicitly says they are independent and the user approves parallelism.
+Do not run later plans before earlier plan dependencies are complete unless the phases document explicitly says they are independent and the user approves parallelism.
 
 ## Resume
 

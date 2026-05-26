@@ -15,14 +15,14 @@ Announce: "I'm using the linear-implementation-sync skill to map local implement
 
 Inputs:
 
-- slices document path, preferred;
-- one or more implementation-plan paths, if no slices document is available;
+- phases document path, preferred;
+- one or more implementation-plan paths, if no phases document is available;
 - optional requirements or technical-design path for back-reference context;
 - optional config path, default `.codex/linear.toml`;
 - optional state DB path, default `.codex/workflows/state.sqlite`;
 - optional Linear team, initiative, project naming prefix, labels, assignee, and dry-run preference.
 
-If neither a slices document nor plan paths are provided and they cannot be inferred from `docs/plans/`, ask for the missing path.
+If neither a phases document nor plan paths are provided and they cannot be inferred from `docs/plans/`, ask for the missing path.
 
 ## Project Config
 
@@ -54,7 +54,7 @@ create_missing_labels = false
 handoff_dir = "docs/handoffs"
 run_log_dir = "docs/linear/runs"
 smoke_test_dir = "docs/linear/smoke-tests"
-project_name_template = "{prefix} - {slice_name}"
+project_name_template = "{prefix} - {phase_name}"
 issue_title_template = "{task_number}: {task_title}"
 task_heading_levels = [2, 3]
 
@@ -121,7 +121,7 @@ Do not ask the user for Linear API keys unless the MCP OAuth flow is unavailable
 Default mapping:
 
 - technical design or requirements doc -> back-reference only, unless the user requests an Initiative;
-- slices document -> sync index and source of approved plan paths;
+- phases document -> sync index and source of approved plan paths;
 - each implementation-plan doc -> one Linear Project;
 - each `### Task N: <title>` section -> one Linear Issue;
 - also accept `## Task N: <title>` when present, because some generated plans use task headings one level higher;
@@ -154,10 +154,10 @@ After all task issues for the selected plan exist, connect same-plan dependencie
 
 ## Plan-at-a-Time Sync
 
-When a slices document contains multiple implementation plans, process one plan at a time by default.
+When a phases document contains multiple implementation plans, process one plan at a time by default.
 
 1. Build a local desired-state manifest for all plans first:
-   - plan path, plan title, slice order, project sync key, source hash;
+   - plan path, plan title, phase order, project sync key, source hash;
    - task anchors, issue titles, issue sync keys, source hashes;
    - same-plan task dependency edges and cross-plan dependency notes;
    - create/update/skip prediction from SQLite state and Linear sync-key lookup.
@@ -263,14 +263,14 @@ After approval:
 
 1. Create or update the Linear Project for the currently selected implementation plan.
 2. Create or update Linear issues for each task in that plan.
-3. Apply labels such as `codex`, `implementation-plan`, feature slug, and slice slug when available.
+3. Apply labels such as `codex`, `implementation-plan`, feature slug, and phase slug when available.
 4. If configured labels do not exist, create them only when `create_missing_labels = true` or the user approved label creation after the dry run. Otherwise skip missing labels and record the decision in SQLite.
 5. Leave issues unassigned when no assignee is configured or approved.
 6. Preserve current Linear status unless the issue is newly created or the user explicitly requests status changes.
 7. After all selected-plan issues exist, create same-plan Linear blocking relations from parsed task dependencies.
 8. Update SQLite with Linear URLs, IDs, sync keys, source hashes, dependency edges, branch/worktree placeholders, and warnings.
 
-Update SQLite immediately after each plan, not only at the end of the whole slices document. SQLite is the resume point for later plans.
+Update SQLite immediately after each plan, not only at the end of the whole phases document. SQLite is the resume point for later plans.
 
 Never delete Linear projects or issues during sync. If a local task disappears, mark it in SQLite as missing from source and ask the user before any archival action.
 

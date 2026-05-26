@@ -207,7 +207,7 @@ After the worker returns:
 7. Write a smoke-test file using the Smoke Test Instructions below, then post a compact human-review request comment that points to that file.
 8. Set status to `status_human_review` and assign to admin for human smoke testing.
 9. Enter the Human Review Wait.
-10. If status becomes `status_done`, update the implementation plan with actual-vs-planned notes, commit docs separately, run `$implementation-plan-task-consistency`, and commit consistency docs separately.
+10. If status becomes `status_done`, update the implementation plan with actual-vs-planned notes, commit docs separately, run `$implementation-plans` with `references/task-consistency.md`, and commit consistency docs separately.
 11. Continue to the next task.
 
 ## Smoke Test Instructions

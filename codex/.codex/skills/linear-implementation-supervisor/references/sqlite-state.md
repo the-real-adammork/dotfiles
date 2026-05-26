@@ -235,7 +235,7 @@ Use $linear-implementation-supervisor to resume the Linear implementation run fr
 
 ## Inputs
 
-- slices_document: `<path>`
+- phases_document: `<path>`
 - state_db: `<path>`
 - config: `.codex/linear.toml`
 - technical_design: `<path or none>`

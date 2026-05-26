@@ -11,6 +11,13 @@ Orchestrate a complete design loop from requirements to reviewed technical desig
 
 Announce: "I'm using the technical-design-cycle skill to coordinate the design draft, review, and issue walkthrough."
 
+## Bundled References
+
+Load these files from this skill as needed:
+
+- `references/drafting.md` before identifying design decision gates, drafting a technical design, or dispatching a design-drafting subagent.
+- `references/review.md` before reviewing a technical design or dispatching a design-review subagent.
+
 Inputs:
 
 - Requirements document path, issue, PRD, spec, or approved brief.
@@ -75,13 +82,14 @@ Keep files as the source of truth. Pass document paths to subagents by default; 
 ## Phase 1: Requirements And Decision Gates
 
 1. Read the requirements source.
-2. Identify likely architecture/design decision gates using `$technical-design` rules.
-3. For each major decision that cannot be safely inferred:
+2. Load `references/drafting.md`.
+3. Identify likely architecture/design decision gates using the drafting reference.
+4. For each major decision that cannot be safely inferred:
    - Present 2-3 options.
    - Recommend one.
    - Ask one focused question.
    - Wait for the user's answer.
-4. Keep a short `Human Decisions` list to pass into the drafting subagent.
+5. Keep a short `Human Decisions` list to pass into the drafting subagent.
 
 Skip questions for obvious local conventions or choices that can safely be deferred to `$implementation-plans`.
 
@@ -94,7 +102,7 @@ Use a prompt with this structure:
 ```text
 agent_name: design-drafter: <feature-slug> / <requirements id>
 
-Use $technical-design to draft a technical design.
+Use $technical-design-cycle and load `references/drafting.md` to draft a technical design.
 
 Requirements source:
 <path>
@@ -115,7 +123,7 @@ If context pressure reaches roughly 70%, save a handoff under `docs/handoffs/` a
 
 The parent agent reviews the draft and fixes obvious formatting or instruction violations.
 
-If the draft contains `Open Questions` that affect architecture, product behavior, data shape, migration risk, security/privacy posture, operational complexity, future extensibility, or requirement completeness, stop before review. Ask the human to resolve those questions, patch or rerun the design draft, and only then continue to `$technical-design-review`.
+If the draft contains `Open Questions` that affect architecture, product behavior, data shape, migration risk, security/privacy posture, operational complexity, future extensibility, or requirement completeness, stop before review. Ask the human to resolve those questions, patch or rerun the design draft, and only then continue to review using `references/review.md`.
 
 ## Phase 3: Review Subagent
 
@@ -126,7 +134,7 @@ Use a prompt with this structure:
 ```text
 agent_name: design-reviewer: <feature-slug> / <requirements id>
 
-Use $technical-design-review to review the technical design against the requirements.
+Use $technical-design-cycle and load `references/review.md` to review the technical design against the requirements.
 
 Requirements document:
 <path>
@@ -168,7 +176,7 @@ Patch the design only for accepted or revised findings.
 
 ## Phase 5: Optional Review Loop
 
-After patching accepted/revised findings, ask whether to rerun `$technical-design-review`.
+After patching accepted/revised findings, ask whether to rerun the review using `references/review.md`.
 
 Rerun when:
 

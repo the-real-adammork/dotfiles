@@ -47,9 +47,9 @@ Task branch merge-back is per task, but implementation-plan consistency is batch
 After a task branch is merged back:
 
 1. Record the merge-back SHA, completed task number, Linear issue, actual implementation summary, changed files, and any known follow-up impact in SQLite `consistency_queue` with status `pending`.
-2. Do not immediately run `$implementation-plan-task-consistency` when other tasks in the same plan are active, under agentic review, in fix, or waiting for human review, unless the completed task introduced a blocker that invalidates their active work.
+2. Do not immediately run `$implementation-plans` with `references/task-consistency.md` when other tasks in the same plan are active, under agentic review, in fix, or waiting for human review, unless the completed task introduced a blocker that invalidates their active work.
 3. Before dispatching any new task, before dispatching a task whose dependency just became satisfied, before declaring the plan complete, or when no active task work remains in the plan, coalesce all pending consistency items for that plan into one consistency pass.
-4. Run `$implementation-plan-task-consistency` with the full batch of completed task summaries and commit references.
+4. Run `$implementation-plans` with `references/task-consistency.md` and the full batch of completed task summaries and commit references.
 5. Limit consistency edits to tasks that are not active, not under review, not waiting for human review, and not already completed.
 6. If the consistency pass identifies changes that would affect an active or human-review task, do not silently patch that task section. Record a coordination finding in SQLite and either let the active task finish, restart it from the refreshed plan section, or dispatch a fix-worker after human/supervisor decision.
 7. Commit consistency-doc updates separately from implementation merge-back notes and update SQLite with the consistency commit SHA, affected task numbers, skipped active tasks, and any coordination findings.
