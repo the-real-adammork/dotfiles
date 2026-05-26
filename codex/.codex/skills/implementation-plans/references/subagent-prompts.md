@@ -80,7 +80,7 @@ Implementation phases document:
 <path>
 
 Phase:
-<phase name, goal, builds on, app surface included, smoke test, output path>
+<phase name, goal, builds on, app surface included, smoke test, E2E automation, output path>
 
 Requirements source:
 <path or "not provided">
@@ -88,6 +88,9 @@ Requirements source:
 Constraints:
 - Stay within this phase boundary.
 - Include the UI/API/CLI/jobs/data work needed for this phase's smoke-testable outcome.
+- End the plan with a mandatory phase-final E2E QA automation task that duplicates the human smoke test using the appropriate platform harness.
+- For web phases, use Playwright to verify browser behavior and API/service wiring unless the repo has an explicit different browser E2E standard.
+- For app phases, use simulator/emulator automation appropriate to the platform.
 - Mention dependencies on earlier phases, but do not plan their tasks.
 - Do not turn the phase into a horizontal backend-only or frontend-only layer unless the approved phase explicitly says the whole product increment is that layer.
 - Use exact file paths and verification commands.
@@ -134,6 +137,9 @@ Check for:
 - horizontal backend-first/frontend-later splits that prevent the app from coming to life phase by phase;
 - missing or unclear cross-plan dependencies;
 - verification gaps;
+- missing or weak phase-final E2E automation tasks;
+- web phase plans that do not use Playwright or an explicitly established browser E2E equivalent;
+- app phase plans that do not use simulator/emulator automation or an explicitly established app E2E equivalent;
 - plan tasks that escaped their phase boundary.
 
 Return Findings, Coverage Matrix, Phase Boundary Review, and Recommended Plan Edits. Do not modify files. Do not implement code.

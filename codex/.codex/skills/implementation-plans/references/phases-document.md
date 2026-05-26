@@ -32,9 +32,9 @@ For a custom plan output directory, put review artifacts in `<plan output direct
 
 ## Phase Proposal
 
-| Phase | Goal | Builds On | App Surface Included | Smoke Test | Planned Output |
-| --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | App Surface Included | Smoke Test | E2E Automation | Planned Output |
+| --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase or none> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <Playwright/simulator/CLI/service harness> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 
@@ -52,9 +52,9 @@ Review artifact: `docs/plans/reviews/YYYY-MM-DD-<feature>-phase-breakup-review.m
 
 ## Approved Phase Boundaries
 
-| Phase | Final Smoke-Testable Outcome | Builds On | Later Phases Can Assume | Out Of Scope | Plan Document |
-| --- | --- | --- | --- | --- | --- |
-| <name> | <working behavior> | <dependency> | <verified capability> | <excluded work> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Final Smoke-Testable Outcome | E2E Automation | Builds On | Later Phases Can Assume | Out Of Scope | Plan Document |
+| --- | --- | --- | --- | --- | --- | --- |
+| <name> | <working behavior> | <platform harness and command intent> | <dependency> | <verified capability> | <excluded work> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Execution Order
 
@@ -79,9 +79,9 @@ Present this summary to the user before generating plan documents:
 ```markdown
 ## Proposed Implementation Plan Phases
 
-| Phase | Goal | Builds On | App Surface Included | Smoke Test | Plan Path |
-| --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | App Surface Included | Smoke Test | E2E Automation | Plan Path |
+| --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase or none> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <Playwright/simulator/CLI/service harness> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 
@@ -89,6 +89,7 @@ Present this summary to the user before generating plan documents:
 - Sections intentionally deferred:
 - Risks in this phasing:
 - Horizontal stack splits avoided:
+- Phase-final E2E automation:
 
 Approve these phases, or tell me what to merge/split/rename?
 ```

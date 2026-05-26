@@ -53,6 +53,8 @@ Every plan starts with:
 
 **Smoke-Testable Outcome:** <specific working behavior available after this phase>
 
+**Phase-Final E2E:** <platform automation and command that will duplicate the human smoke test>
+
 ## Human-In-The-Loop TODOs
 
 | Needed By | Task | Human Action | Why It Is Needed | When To Remind |
@@ -69,6 +71,28 @@ Required real dependencies are blocking, not optional. If a task needs a real se
 ## Task Format
 
 Each task should be small enough to review independently and should end with verification. Tasks inside a phase may touch different layers of the stack, but together they must complete the phase's smoke-testable outcome. Prefer TDD for behavior changes.
+
+## Required Phase-Final E2E Task
+
+Every implementation plan must end with a final task dedicated to end-to-end QA automation for the whole phase. This task is mandatory even when earlier tasks include unit, integration, or narrow UI tests.
+
+The final E2E task must:
+
+- duplicate the human smoke test with automation;
+- verify the complete phase behavior through the real user/runtime surface, not only isolated internals;
+- exercise the wiring between UI/CLI/app surface, API/service layer, persistence, background jobs, and external/local integrations that are in scope for the phase;
+- use the appropriate platform automation for the project;
+- be blocked, not skipped, if the required automation environment cannot run and the phase cannot be honestly smoke tested.
+
+Choose the QA automation by platform:
+
+- Web apps: use Playwright to drive the browser and verify the page behavior, network/API interaction, service effects, and visible result.
+- Mobile apps: use the platform simulator/emulator automation available in the repo, such as XCUITest, XCTest UI tests, Maestro, Detox, Appium, or Android instrumentation.
+- Desktop apps: use the repo's desktop UI automation or platform test harness, such as Playwright for Electron, XCTest UI automation, WinAppDriver, or Appium where appropriate.
+- CLI/TUI tools: use an end-to-end command/session test that runs the built command against realistic files/services and verifies filesystem, process, and output effects.
+- Backend-only services: use an end-to-end API/service test that starts the service with realistic dependencies and verifies request, persistence, downstream service, and observable response behavior.
+
+If the repo has no appropriate E2E harness yet, the phase-final E2E task must include creating the minimal harness required for that platform, then using it to verify the phase smoke test.
 
 ````markdown
 ### Task N: <specific outcome>
@@ -121,6 +145,41 @@ Suggested message: `<type>[optional scope]: <description>`
 
 For documentation, config, or mechanical changes where TDD does not apply, replace the failing-test step with the smallest meaningful validation step, such as syntax validation, config parse, render check, or dry run.
 
+The final task in every plan must use this shape:
+
+````markdown
+### Task N: Phase-final E2E QA automation
+
+**Depends On:** <all tasks required for the phase behavior>
+
+**Files:**
+- Create/Modify/Test: <platform E2E test files and supporting fixtures/config>
+
+**Human-In-The-Loop Test:**
+- <same smoke test the automation duplicates>
+- Requires: <browser/simulator/device/server/services/test data>
+- Expected result: <observable phase behavior>
+
+**Test Mode Disclosure:**
+- Automated tests: <Playwright | simulator automation | CLI E2E | service E2E | other platform harness>
+- Production/dev path exercised: yes - <specific UI/API/service/persistence/integration path>
+- Mock-only risk: <remaining mocked boundary, or "None">
+- Required real dependencies: <services/data/dev server/simulator/browser and how agent provisions them, or exact human blocker>
+- Blocking if unavailable: yes - phase cannot be accepted without automated E2E coverage of the smoke test
+
+- [ ] Step 1: Add or update the platform E2E test that duplicates the phase smoke test
+- [ ] Step 2: Run the E2E test and confirm it fails before missing wiring is complete, when practical
+- [ ] Step 3: Complete any missing harness/config/test-data wiring required for the E2E path
+- [ ] Step 4: Run the E2E command
+
+Run: `<exact command>`
+Expected: `<specific pass condition proving the phase smoke test works through the real app surface>`
+
+- [ ] Step 5: Commit this task
+
+Suggested message: `test(e2e): cover <phase behavior>`
+````
+
 ## Mock And Real-Service Rules
 
 Every task that includes tests must disclose whether the tests use fixtures/mocks or real service/dev production paths. Be specific: name the mocked dependency, fake service, real local service, or real external service.
@@ -160,6 +219,7 @@ Never leave:
 - "Mock for now" without a later real-service conversion task
 - "Manual test later" without a concrete Human-In-The-Loop Test section
 - "Optional" real service, credential, account, database, network, queue, storage, or real-data verification for a task that requires that dependency
+- A phase plan whose final task is not dedicated to automated E2E QA for the phase smoke test
 
 ## Self-Review
 
@@ -168,6 +228,8 @@ Before presenting the plan, check:
 - Every requirement maps to at least one task.
 - The plan represents one substantial vertical phase, not a horizontal stack layer.
 - The plan has a concrete smoke-testable outcome available after completion.
+- The final task is a phase-final E2E QA automation task using the appropriate platform harness.
+- The phase-final E2E task duplicates the human smoke test and verifies wiring across the phase's app surface, APIs/services, persistence, jobs, and integrations.
 - Later planned phases can build on this plan's verified behavior.
 - Every task includes `**Depends On:**`, with `None` for tasks that can start in parallel.
 - Every created or modified file appears in the file map.

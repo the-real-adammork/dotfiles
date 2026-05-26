@@ -71,7 +71,10 @@ Every phase must state:
 - what app behavior works at the end;
 - what earlier phase behavior it builds on;
 - what smoke test proves it;
+- what platform E2E automation will duplicate the smoke test at the end of the phase;
 - what later phases can safely assume.
+
+Every generated phase plan must end with a phase-final E2E QA automation task. For web work, this means Playwright unless the repo already standardizes on another browser automation framework. For mobile or app work, use simulator/emulator automation appropriate to the platform. For service, CLI, desktop, or worker-only phases, use the closest true end-to-end harness that exercises the phase through its real runtime boundary.
 
 ## Workflow
 
@@ -84,6 +87,7 @@ Every phase must state:
 7. After approval, run a phase breakup review against the technical design:
    - all major responsibilities, integration points, sequencing items, risk mitigations, and verification areas map to phases;
    - each phase has a coherent smoke-testable outcome;
+   - each phase names the E2E automation that will duplicate the smoke test;
    - dependencies, build-on assumptions, and deferred work are explicit.
    Save detailed phase review artifacts under the review output directory. Keep only the summary/disposition table and review links in the phases document.
 8. Walk the user through phase-level findings. Patch the phases document for accepted/revised findings. Do not generate plan docs until High/Medium phase issues are resolved or explicitly deferred.
@@ -102,6 +106,7 @@ Before handoff:
 
 - phases document exists, links back to the technical design, and links forward to every generated plan;
 - every approved phase has a plan file at the reported path;
+- every approved phase plan ends with a phase-final E2E QA automation task;
 - review artifacts are stored under the review output directory, not mixed with implementation plan files;
 - coverage check maps technical design sections to phases;
 - phase breakup review ran before plan generation;
