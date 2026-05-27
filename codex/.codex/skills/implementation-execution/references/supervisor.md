@@ -208,7 +208,8 @@ Before merging:
 4. Confirm the phase worktree is clean or only contains explicitly expected state artifacts already committed on the phase branch.
 5. Confirm the base branch from `run.yaml` is clean.
 6. Confirm the base branch is an ancestor of the phase branch. This proves the phase was built on the current base and can be fast-forwarded.
-7. Confirm the phase branch contains the accepted phase commit recorded in the inbox or acceptance packet.
+7. Resolve and validate the accepted phase commit from the inbox or acceptance packet. It must be a full 40-character commit hash that exists as a commit object.
+8. Confirm the phase branch contains the accepted phase commit.
 
 Default merge sequence:
 
@@ -216,6 +217,8 @@ Default merge sequence:
 base_branch='<run.yaml branches.base>'
 phase_branch='<phase.yaml branch>'
 accepted_commit='<phase completion commit>'
+printf '%s\n' "$accepted_commit" | rg --quiet '^[0-9a-f]{40}$'
+/usr/bin/git cat-file -e "$accepted_commit^{commit}"
 /usr/bin/git switch "$base_branch"
 /usr/bin/git status --short
 /usr/bin/git merge-base --is-ancestor "$base_branch" "$phase_branch"
@@ -233,6 +236,15 @@ After merging:
 - start the next phase orchestrator from the updated base branch, not from the previous phase worktree.
 
 If the base branch has diverged, the fast-forward fails, or post-merge verification fails, do not advance `run.yaml`. Stop with a supervisor escalation/handoff or restart a focused fix workflow. Do not silently create a merge commit, rebase the phase branch, or chain the next phase from the previous phase branch.
+
+If the inbox or acceptance packet contains an abbreviated, malformed, or manually typed commit value, do not use it directly. Resolve it only when Git can unambiguously expand it and the resolved commit is contained in the phase branch:
+
+```sh
+resolved_commit="$(/usr/bin/git rev-parse --verify "${accepted_commit}^{commit}")"
+/usr/bin/git merge-base --is-ancestor "$resolved_commit" "$phase_branch"
+```
+
+Patch the state file that had the malformed value to the full 40-character hash, commit that state repair on the phase branch, and then continue transition validation from the repaired state. If resolution fails, is ambiguous, or points outside the phase branch, stop with `restart_needed` or a supervisor escalation.
 
 ## Compact Inbox Contract
 
@@ -264,7 +276,7 @@ request:
 phase_completion:
   phase_yaml: "docs/implementation-runs/<run-id>/phases/<phase>.yaml"
   acceptance_packet: null
-  commit: null
+  commit: null # full 40-character commit hash when populated
 ```
 
 The supervisor should not poll detailed phase internals. On `phase_completion`, it may run the narrow transition verification listed in the execution flow.

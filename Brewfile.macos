@@ -13,6 +13,7 @@ brew "terminal-notifier"  # macOS notifications from scripts
 # -----------------------------------------------------------------------------
 cask "ghostty"
 cask "font-monaspace"
+cask "font-symbols-only-nerd-font"
 
 # -----------------------------------------------------------------------------
 # Creative suite

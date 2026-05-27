@@ -1,0 +1,4 @@
+[mgr]
+prepend_keymap = [
+	{ on = [ "y", "p" ], run = "copy path --hovered", desc = "Copy hovered path" },
+]

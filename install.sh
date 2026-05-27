@@ -63,6 +63,12 @@ if command -v brew &>/dev/null; then
         info "Installing macOS tools from Brewfile.macos..."
         brew bundle --file="$DOTS_DIR/Brewfile.macos"
     fi
+    for formula in ffmpeg-full imagemagick-full; do
+        if brew list --formula "$formula" &>/dev/null; then
+            info "Linking $formula..."
+            brew link "$formula" -f --overwrite
+        fi
+    done
 else
     warn "Homebrew not available, skipping package installation."
 fi

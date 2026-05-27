@@ -127,7 +127,7 @@ Set:
 - `startup.acknowledged: true`, expected manifest path, pane id, and best-effort Codex session id/path at startup.
 - `request.type: escalation` only for allowed escalations the supervisor must surface or preserve.
 - `request.type: restart_needed` when the orchestrator cannot continue safely.
-- `request.type: phase_completion` only after phase acceptance passed and the acceptance packet exists.
+- `request.type: phase_completion` only after phase acceptance passed, the acceptance packet exists, and `phase_completion.commit` is a quoted full 40-character commit hash resolved with `/usr/bin/git rev-parse HEAD^{commit}`.
 - `request.type: graceful_exit` when the supervisor should close the pane after state is safely written.
 
 ## Integration Checkpoint

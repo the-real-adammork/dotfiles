@@ -91,6 +91,7 @@ Load only the module needed for the current action:
 - Do not accept mock-only completion for service wiring that requires real integration proof.
 - Do not ban useful mocks/fixtures during implementation; track them in the mock/fixture ledger and reconcile them before phase completion.
 - Do not mark a phase complete until the phase acceptance gate passes and the acceptance packet exists.
+- Do not write abbreviated, malformed, manually typed, or unvalidated commit hashes into workflow state; resolve full 40-character hashes with `/usr/bin/git rev-parse ...^{commit}` and validate them before transition handling.
 - Do not advance to the next phase before the supervisor fast-forwards the accepted phase branch/worktree back into the run base branch and records the resulting base commit.
 - Do not silently chain the next phase from the previous phase branch when the run base branch has not advanced.
 - Do not stop after a phase completes while `run.yaml` points at another phase, unless execution scope is explicitly `single-phase`, an allowed escalation blocks progress, context handoff is required, or the user stops the workflow.

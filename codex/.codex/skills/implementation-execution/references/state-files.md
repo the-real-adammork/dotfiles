@@ -50,8 +50,8 @@ phase_order:
 completed_phases:
   phase-1:
     phase_branch: "impl/phase-1"
-    base_commit_after_merge: "def456"
-    accepted_phase_commit: "abc123"
+    base_commit_after_merge: "def456def456def456def456def456def456def456def4"
+    accepted_phase_commit: "abc123abc123abc123abc123abc123abc123abc123abc1"
     acceptance_packet: "docs/qa/phase-acceptance/phase-1.md"
 branches:
   base: "main"
@@ -125,7 +125,7 @@ tasks:
   "4":
     status: done
     lane: "write-path"
-    commit: "abc123"
+    commit: "abc123abc123abc123abc123abc123abc123abc123abc1"
     verification:
       - command: "pnpm test:e2e -- user-write-flow"
         result: pass
@@ -185,7 +185,7 @@ request:
 phase_completion:
   phase_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
   acceptance_packet: null
-  commit: null
+  commit: null # full 40-character commit hash when populated
 ```
 
 Do not store worker dispatch details, active lane details, review text, full command output, or phase implementation logs in the supervisor inbox.
@@ -207,6 +207,42 @@ handled: false
 ```
 
 The resumed supervisor transition handler must mark the trigger handled, append a compact event, and then either complete the phase transition, restart the orchestrator, or record the escalation/blocker.
+
+## Commit Hash Fields
+
+Every commit-like field in `run.yaml`, `phase.yaml`, worker result YAML, the supervisor inbox, trigger YAML, and acceptance packets must use a quoted full 40-character Git commit hash.
+
+Do not write abbreviated hashes, copied terminal text, branch names, or manually typed hashes into commit fields. Resolve commit values from Git immediately before writing state:
+
+```sh
+accepted_commit="$(/usr/bin/git rev-parse HEAD^{commit})"
+/usr/bin/git cat-file -e "$accepted_commit^{commit}"
+```
+
+For a phase completion request, the orchestrator must write the accepted phase commit from the phase branch after acceptance state and packet commits are complete:
+
+```yaml
+phase_completion:
+  phase_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
+  acceptance_packet: "docs/qa/phase-acceptance/phase-2.md"
+  commit: "abc123abc123abc123abc123abc123abc123abc123abc1"
+```
+
+The supervisor transition handler must validate commit fields with:
+
+```sh
+printf '%s\n' "$accepted_commit" | rg --quiet '^[0-9a-f]{40}$'
+/usr/bin/git cat-file -e "$accepted_commit^{commit}"
+```
+
+If a legacy or malformed commit field is encountered, the supervisor may resolve it only when it is an unambiguous object on the phase branch:
+
+```sh
+resolved_commit="$(/usr/bin/git rev-parse --verify "${malformed_commit}^{commit}")"
+/usr/bin/git merge-base --is-ancestor "$resolved_commit" "$phase_branch"
+```
+
+After resolving, patch the malformed state field to the full hash and commit that state repair before merging the phase. If the value is ambiguous, missing, or not contained in the phase branch, stop with `restart_needed` or a supervisor escalation instead of treating the typo as valid.
 
 ## Execution Manifest
 
