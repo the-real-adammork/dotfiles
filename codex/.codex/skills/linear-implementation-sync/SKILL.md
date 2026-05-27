@@ -5,7 +5,7 @@ description: Use when local implementation-plan documents need to be mapped into
 
 # Linear Implementation Sync
 
-Map local implementation planning artifacts into Linear without making Linear the source of truth. Local Markdown documents remain canonical for architecture, task details, human-in-the-loop tests, and verification. Linear becomes the execution tracker for assignment, status, discussion, and later implementation workflow updates.
+Map local implementation planning artifacts into Linear without making Linear the source of truth. Local Markdown documents remain canonical for architecture, task details, agent-run acceptance, service wiring, phase acceptance packets, and verification. Linear becomes the execution tracker for assignment, status, discussion, and later implementation workflow updates.
 
 SQLite is the canonical mutable workflow state. Legacy Markdown sync ledgers are migration inputs or optional generated snapshots only; do not patch them as the live state store.
 
@@ -121,7 +121,7 @@ Do not ask the user for Linear API keys unless the MCP OAuth flow is unavailable
 Default mapping:
 
 - technical design or requirements doc -> back-reference only, unless the user requests an Initiative;
-- phases document -> sync index and source of approved plan paths;
+- phases document -> sync index and source of ready plan paths;
 - each implementation-plan doc -> one Linear Project;
 - each `### Task N: <title>` section -> one Linear Issue;
 - also accept `## Task N: <title>` when present, because some generated plans use task headings one level higher;
@@ -219,14 +219,15 @@ Each Linear issue body should preserve the execution-critical parts of the local
 - task goal/title;
 - dependency declaration and same-plan blockers, if any;
 - files list;
-- human-in-the-loop test;
+- agent-run acceptance;
+- service wiring coverage when present;
 - test mode disclosure;
 - task steps/checklist;
 - verification commands and expected results;
 - suggested commit message;
 - link or reference back to the state DB run id or generated sync snapshot.
 
-If a task section is missing human-in-the-loop test or test mode disclosure, flag it in the dry run. Do not silently omit the gap.
+If a task section is missing agent-run acceptance or test mode disclosure, flag it in the dry run. Do not silently omit the gap.
 
 ## Dry Run First
 
@@ -305,7 +306,7 @@ Before handoff:
 - every local task is represented in SQLite as created, updated, skipped, or blocked;
 - no duplicate Linear objects were created for existing sync keys;
 - SQLite records source docs and Linear URLs;
-- sync warnings and required human decisions are explicit.
+- sync warnings and unresolved escalations are explicit.
 
 ## Handoff
 

@@ -25,16 +25,16 @@ For a custom plan output directory, put review artifacts in `<plan output direct
 
 **Technical Design:** `<path-to-technical-design>`
 **Requirements:** `<path-to-requirements>` or `Not provided`
-**Status:** Draft | Approved | Plans Generated | Reviewed
+**Status:** Draft | Ready | Plans Generated | Reviewed
 **Last Updated:** YYYY-MM-DD
 
 ---
 
 ## Phase Proposal
 
-| Phase | Goal | Builds On | App Surface Included | Smoke Test | E2E Automation | Planned Output |
-| --- | --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <Playwright/simulator/CLI/service harness> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | Phase Owner Scope | Sub-Agent Lanes | App Surface Included | Smoke Test | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Planned Output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase or none> | <long-running owner responsibility> | <parallel/serialized lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 
@@ -50,38 +50,38 @@ For a custom plan output directory, put review artifacts in `<plan output direct
 
 Review artifact: `docs/plans/reviews/YYYY-MM-DD-<feature>-phase-breakup-review.md`
 
-## Approved Phase Boundaries
+## Ready Phase Boundaries
 
-| Phase | Final Smoke-Testable Outcome | E2E Automation | Builds On | Later Phases Can Assume | Out Of Scope | Plan Document |
-| --- | --- | --- | --- | --- | --- | --- |
-| <name> | <working behavior> | <platform harness and command intent> | <dependency> | <verified capability> | <excluded work> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Final Smoke-Testable Outcome | Phase Owner Scope | Sub-Agent Lanes | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Builds On | Later Phases Can Assume | Out Of Scope | Plan Document |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <working behavior> | <long-running owner responsibility> | <parallel/serialized lanes> | <matrix summary> | <harness/setup expectation> | <platform harness and command intent> | <packet path> | <dependency> | <verified capability> | <excluded work> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Execution Order
 
 1. <phase>
 2. <phase>
 
-## Deferred Work
+## Deferred Work And Escalations
 
-- <deferred work or "None">
+- <deferred work, allowed escalation, or "None">
 
 ## Generated Implementation Plans
 
 - `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` - <phase goal>
 ```
 
-Before user approval, `Approved Phase Boundaries` and `Generated Implementation Plans` may show planned paths. After plans are generated, update them with final paths.
+Before phase boundaries are ready, `Ready Phase Boundaries` and `Generated Implementation Plans` may show planned paths. After plans are generated, update them with final paths.
 
-## User Proposal Summary
+## Proposal Summary
 
-Present this summary to the user before generating plan documents:
+Present this summary before generating plan documents when the user asks for a planning checkpoint. If the user has delegated autonomous planning, record assumptions and proceed once High/Medium phase issues are resolved or explicitly deferred with rationale.
 
 ```markdown
 ## Proposed Implementation Plan Phases
 
-| Phase | Goal | Builds On | App Surface Included | Smoke Test | E2E Automation | Plan Path |
-| --- | --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <Playwright/simulator/CLI/service harness> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | Phase Owner Scope | Sub-Agent Lanes | App Surface Included | Smoke Test | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Plan Path |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase or none> | <long-running owner responsibility> | <parallel/serialized lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 
@@ -89,18 +89,19 @@ Present this summary to the user before generating plan documents:
 - Sections intentionally deferred:
 - Risks in this phasing:
 - Horizontal stack splits avoided:
-- Phase-final E2E automation:
-
-Approve these phases, or tell me what to merge/split/rename?
+- Long-running phase ownership:
+- Sub-agent lanes and serialized resources:
+- Phase acceptance automation:
+- Acceptance packet expectations:
 ```
 
 ## Lifecycle Updates
 
 - Set status to `Draft` when the phases document is first created.
-- Set status to `Approved` once the user approves phase boundaries.
+- Set status to `Ready` once phase boundaries have passed phase breakup review or the user has explicitly accepted them.
 - Save detailed phase review artifacts under `<plan output directory>/reviews/`.
 - Record only summary findings, dispositions, and review artifact links in `Phase Breakup Review`.
-- Update `Approved Phase Boundaries`, `Coverage Check`, and `Execution Order` when accepted/revised findings change the phase sequence.
+- Update `Ready Phase Boundaries`, `Coverage Check`, and `Execution Order` when accepted/revised findings change the phase sequence.
 - After each implementation plan is created, update `Generated Implementation Plans`.
 - Set status to `Plans Generated` once all plan docs exist.
 - Save consolidated plan reviews and reruns under `<plan output directory>/reviews/`.

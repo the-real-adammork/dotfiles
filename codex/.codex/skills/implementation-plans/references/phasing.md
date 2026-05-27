@@ -1,6 +1,6 @@
 # Implementation Phase Planning Reference
 
-Turn an approved technical design into a sequence of smoke-testable implementation phase plans. Each generated implementation plan is one phase. Phases build on each other so the app comes to life over time, instead of building isolated horizontal stack layers.
+Turn an approved technical design into a sequence of smoke-testable implementation phase plans. Each generated implementation plan is one long-running phase task owned by a phase agent. Phases build on each other so the app comes to life over time, instead of building isolated horizontal stack layers.
 
 ## Start
 
@@ -18,9 +18,9 @@ If the technical design path is missing and cannot be inferred, ask for it.
 
 Keep files as the source of truth. Do not paste full technical designs, phases documents, implementation plans, or review artifacts into the parent conversation unless the user asks.
 
-- Pass file paths to subagents whenever possible.
-- Plan-writing subagents return only path, phase name, 3-5 bullet summary, human TODO count, blockers, and phase-boundary deviations.
-- Reviewer subagents write reviews to the review output directory and return only path, top findings, severity counts, and blocking status.
+- Pass file paths to planning agents whenever possible.
+- Plan-writing agents return only path, phase name, 3-5 bullet summary, escalation count, blockers, and phase-boundary deviations.
+- Reviewer agents write reviews to the review output directory and return only path, top findings, severity counts, and blocking status.
 - Parent reads targeted file sections only when patching, resolving a finding, or answering a user question.
 - If there are more than 5 phases, or any plan exceeds roughly 500 lines, require a file-based consolidated review.
 
@@ -29,30 +29,30 @@ Keep files as the source of truth. Do not paste full technical designs, phases d
 Keep plan generation bounded and idempotent.
 
 - Maintain a small dispatch table in the phases document or parent notes before starting plan writers: phase name, output path, stable `agent_name`, host agent id/nickname, status, and result path.
-- Do not dispatch a plan-writing subagent when its output plan already exists and matches the approved phase unless the user explicitly requests regeneration.
+- Do not dispatch a plan-writing agent when its output plan already exists and matches the ready phase unless the user explicitly requests regeneration.
 - Do not dispatch a replacement for an active or recently completed phase writer until you have checked the dispatch table, output path, and any handoff path.
 - Use stable agent names in the format `phase-plan-writer: <feature-slug> / <phase-slug>` and `phase-plan-reviewer: <feature-slug> / consolidated`.
 - Prefer sequential dispatch because later phase plans should build on earlier phase plans. Dispatch phase plan writers in parallel only when phases are explicitly independent and do not need to inherit decisions, APIs, or smoke-test results from earlier phases.
 
-## Subagent Context Handoff
+## Planning Agent Context Handoff
 
-Subagents must self-monitor context pressure. If a subagent estimates it is at or above roughly 70% context usage, or it cannot confidently finish within the remaining context, it must stop normal work, save a handoff document under `docs/handoffs/`, and return only the handoff path plus current artifact paths.
+Planning agents must self-monitor context pressure. If an agent estimates it is at or above roughly 70% context usage, or it cannot confidently finish within the remaining context, it must stop normal work, save a handoff document under `docs/handoffs/`, and return only the handoff path plus current artifact paths.
 
 Handoff documents must include:
 
-- original subagent goal and assigned phase/review scope;
+- original agent goal and assigned phase/review scope;
 - progress made;
 - in-progress documents and their current status;
 - remaining work;
 - blockers or decisions needed;
 - exact completion criteria;
-- recommended prompt for a replacement subagent.
+- recommended prompt for a replacement agent.
 
-When this happens, the parent dispatches a replacement subagent using the handoff document and the original source paths. Do not ask the replacement to infer state from chat history.
+When this happens, the parent dispatches a replacement agent using the handoff document and the original source paths. Do not ask the replacement to infer state from chat history.
 
 ## Phase Criteria
 
-Each phase should become its own implementation plan when it delivers a substantial logical increment that can be smoke tested after completion and used as the foundation for later phases.
+Each phase should become its own implementation plan when it delivers a substantial logical increment that can be smoke tested after completion and used as the foundation for later phases. A phase should be large enough to justify a long-running phase owner, but bounded enough that one owner can maintain coherent context and integrate a small number of sub-agent lanes efficiently.
 
 Prefer fewer coherent phase plans over many thin plans. Do not split just because the design has multiple sections.
 
@@ -71,42 +71,81 @@ Every phase must state:
 - what app behavior works at the end;
 - what earlier phase behavior it builds on;
 - what smoke test proves it;
-- what platform E2E automation will duplicate the smoke test at the end of the phase;
+- what long-running phase owner is responsible for;
+- what sub-agent lanes are safe or unsafe to run in parallel;
+- what service wiring rows must be proven across surface, service, persistence, jobs, and integrations;
+- what E2E harness is needed early in the phase;
+- what platform E2E automation will prove the smoke test through the phase acceptance gate;
+- what acceptance packet must exist before phase completion;
 - what later phases can safely assume.
 
-Every generated phase plan must end with a phase-final E2E QA automation task. For web work, this means Playwright unless the repo already standardizes on another browser automation framework. For mobile or app work, use simulator/emulator automation appropriate to the platform. For service, CLI, desktop, or worker-only phases, use the closest true end-to-end harness that exercises the phase through its real runtime boundary.
+## Codex Efficiency Model
+
+Optimize phase plans for Codex execution efficiency:
+
+- Use fewer, substantial phases rather than many thin phases that force repeated setup, sync, and review overhead.
+- Keep each phase coherent enough for one long-running owner to hold the working context.
+- Identify a small number of sub-agent lanes only where parallelism or bounded specialization is valuable.
+- Do not turn every task into a delegated sub-agent by default; phase-owner work is cheaper for glue, integration, coordination, and small edits.
+- Prefer sequential phase execution unless phases are truly independent, because later phases should reuse verified behavior and acceptance packets from earlier phases.
+- Make the phases document a routing map, not a second implementation plan.
+
+Every generated phase plan must include a phase acceptance gate with E2E or equivalent end-to-end automation and a required acceptance packet. This is a completion gate, not a task-position requirement. For web work, use Playwright unless the repo already standardizes on another browser automation framework. For mobile or app work, use simulator/emulator automation appropriate to the platform. For service, CLI, desktop, or worker-only phases, use the closest true end-to-end harness that exercises the phase through its real runtime boundary.
+
+## Autonomy Model
+
+The workflow is designed for long-running agent teams without routine operator oversight. External involvement is an exception path, not a task format.
+
+Agents should proceed using repo evidence, requirements, technical designs, local tooling, containers, emulators, seed scripts, and dev/staging resources. Escalate only for:
+
+- credentials, secrets, or private account access;
+- paid account setup, billing, quota purchase, or vendor approval;
+- product, legal, privacy, security, or compliance decisions not already answered by source docs;
+- destructive production actions, real customer data access, or irreversible external side effects;
+- unavailable physical devices, entitlements, or external services after a documented agent-owned attempt.
+
+Record escalations in the phase plan's `Autonomy And Escalation` table. Do not add optional non-automated checks or manual verification gates.
 
 ## Workflow
 
 1. Read the technical design and any referenced requirements.
-2. Inspect enough repo context to understand ownership boundaries, test commands, and existing patterns.
+2. Inspect enough repo context to understand ownership boundaries, test commands, E2E harnesses, and existing patterns.
 3. Identify sequential phases by smoke-testable app state and build-on relationship.
 4. Create or update the phases document. Read `references/phases-document.md` for the required format and lifecycle.
-5. Present the phase proposal summary to the user and ask for approval or corrections.
-6. If the user revises the phases, update the phases document and ask again when needed.
-7. After approval, run a phase breakup review against the technical design:
+5. Present the phase proposal summary when the user asks for a planning checkpoint; otherwise record planning assumptions in the phases document and proceed when the design is sufficient.
+6. Run a phase breakup review against the technical design:
    - all major responsibilities, integration points, sequencing items, risk mitigations, and verification areas map to phases;
    - each phase has a coherent smoke-testable outcome;
-   - each phase names the E2E automation that will duplicate the smoke test;
+   - each phase can be owned by one long-running phase agent without losing coherence;
+   - each phase names a small number of likely sub-agent lanes and shared-resource risks;
+   - each phase avoids delegation churn from overly tiny tasks;
+   - each phase names the service wiring that must be proven;
+   - each phase names early E2E harness needs and phase acceptance automation;
+   - each phase names the acceptance packet expected before phase completion;
    - dependencies, build-on assumptions, and deferred work are explicit.
    Save detailed phase review artifacts under the review output directory. Keep only the summary/disposition table and review links in the phases document.
-8. Walk the user through phase-level findings. Patch the phases document for accepted/revised findings. Do not generate plan docs until High/Medium phase issues are resolved or explicitly deferred.
-9. Create or update the plan-writer dispatch table, then dispatch one plan-writing subagent per approved phase that does not already have a valid plan output. Read `references/subagent-prompts.md` for the required prompt and return contract.
-10. Update the phases document after each plan is created, then set status to `Plans Generated` once all plan docs exist.
-11. Dispatch one consolidated reviewer subagent. Use `references/subagent-prompts.md`.
-12. Walk the user through reviewer findings. Patch plan docs and/or the phases document only for accepted/revised findings.
-13. Rerun consolidated review when High/Medium findings were patched, phase boundaries changed, or the user asks. Save each rerun as a separate artifact in the review output directory; do not overwrite prior review files.
-14. Final local check and handoff.
+7. Patch the phases document for accepted or internally resolved findings. Do not generate plan docs until High/Medium phase issues are resolved, explicitly deferred with rationale, or recorded as allowed escalations.
+8. Create or update the plan-writer dispatch table, then dispatch one plan-writing agent per ready phase that does not already have a valid plan output. Read `references/planning-agent-prompts.md` for the required prompt and return contract.
+9. Update the phases document after each plan is created, then set status to `Plans Generated` once all plan docs exist.
+10. Dispatch one consolidated reviewer agent. Use `references/planning-agent-prompts.md`.
+11. Patch plan docs and/or the phases document for accepted or internally resolved reviewer findings.
+12. Rerun consolidated review when High/Medium findings were patched, phase boundaries changed, or the user asks. Save each rerun as a separate artifact in the review output directory; do not overwrite prior review files.
+13. Final local check and handoff.
 
-Do not create detailed task checklists until the user approves the phase proposal. Do not begin implementation unless the user chooses an execution option.
+Do not begin implementation unless the user chooses an execution option. Planning does not require a manual approval checkpoint when the user has already delegated the workflow and the source documents are sufficient.
 
 ## Final Checks
 
 Before handoff:
 
 - phases document exists, links back to the technical design, and links forward to every generated plan;
-- every approved phase has a plan file at the reported path;
-- every approved phase plan ends with a phase-final E2E QA automation task;
+- every ready phase has a plan file at the reported path;
+- every phase has a smoke-testable outcome, phase-owner responsibility, sub-agent lane summary, service wiring summary, E2E harness readiness note, phase acceptance automation, and expected acceptance packet;
+- every phase plan includes `Autonomy And Escalation` with only allowed exception categories;
+- every phase plan includes a `Phase Execution Contract` for long-running phase ownership, delegation, integration checkpoints, and handoff;
+- every phase plan includes a `Service Wiring Matrix`;
+- every phase plan brings E2E automation in early enough to verify integrations during phase development;
+- every phase plan includes a `Phase Acceptance Gate` and does not reserve E2E work for a late QA-only task;
 - review artifacts are stored under the review output directory, not mixed with implementation plan files;
 - coverage check maps technical design sections to phases;
 - phase breakup review ran before plan generation;
@@ -114,7 +153,8 @@ Before handoff:
 - accepted/revised findings were applied;
 - every technical design responsibility maps to one or more phases;
 - horizontal stack splits have been rejected unless explicitly justified;
-- build-on dependencies, deferred work, and verification gaps are resolved or explicitly noted;
+- phase and sub-agent lane counts are efficient for Codex: substantial enough to amortize context setup, bounded enough to avoid context loss;
+- build-on dependencies, deferred work, verification gaps, and escalations are resolved or explicitly noted;
 - no implementation work was performed.
 
 ## Handoff
@@ -142,7 +182,5 @@ Then offer:
 
 ```text
 Next options:
-1. Execute plans in order.
-2. Dispatch subagents per plan.
-3. Stop here and keep the plans as handoff artifacts.
+1. Run the orchestrated implementation workflow in phase order, with one long-running phase owner per phase.
 ```
