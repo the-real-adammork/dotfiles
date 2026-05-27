@@ -57,23 +57,23 @@ Every plan starts with:
 
 ## Phase Execution Contract
 
-**Execution Model:** One long-running phase owner agent owns the phase from kickoff through acceptance. Sub-agents may implement bounded tasks, but the phase owner remains responsible for sequencing, integration, verification, the acceptance packet, and downstream assumptions.
+**Execution Model:** The supervisor launches one top-level phase orchestrator for this phase. Worker agents implement bounded substantial tasks; the orchestrator remains responsible for sequencing, integration, verification, the acceptance packet, and downstream assumptions.
 
-**Phase Owner Responsibilities:**
+**Phase Orchestrator Responsibilities:**
 - Maintain the phase branch/worktree and current understanding of completed work.
-- Dispatch only tasks with clear file/resource boundaries and explicit dependencies.
-- Integrate sub-agent results promptly, run the relevant verification, and update downstream task instructions when implementation reality changes.
+- Dispatch only worker tasks with clear file/resource boundaries and explicit dependencies.
+- Integrate worker results promptly, run the relevant verification, and update downstream task instructions when implementation reality changes.
 - Keep the phase acceptance packet current enough that a context handoff can resume from files, not chat history.
 - Block only for allowed escalations.
 
-**Sub-Agent Delegation Map:**
+**Worker Delegation Map:**
 | Lane | Task(s) | Delegation Decision | Can Run In Parallel With | Shared Resources / Collision Risk | Integration Checkpoint |
-| --- | --- | --- | --- | --- |
-| <lane name> | <Task N-N> | <phase-owner | one sub-agent | sub-agent wave> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence phase owner runs after return> |
+| --- | --- | --- | --- | --- | --- |
+| <lane name> | <Task N-N> | <orchestrator orchestration/glue, serial worker, or parallel worker> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence orchestrator runs after return> |
 
 **Long-Running Handoff:**
-- Handoff path: `docs/handoffs/YYYY-MM-DD-<feature>-phase-<n>-handoff.md`
-- Required contents: current task status, branch/worktree, sub-agent results, verification evidence, service-wiring coverage, acceptance packet status, blockers/escalations, and exact restart instructions.
+- Handoff path: `docs/implementation-runs/<run-id>/handoffs/YYYY-MM-DD-HHMM-<phase>.md`
+- Required contents: current task status, branch/worktree, worker results, verification evidence, service-wiring coverage, acceptance packet status, event log paths, blockers/escalations, and exact restart instructions.
 
 ## Implementation Execution Handoff
 
@@ -81,7 +81,9 @@ This phase is intended to be run by `$implementation-execution` after planning a
 
 - Run state: `docs/implementation-runs/<run-id>/run.yaml`
 - Phase state: `docs/implementation-runs/<run-id>/phases/<phase-slug>.yaml`
+- Execution manifest: `docs/implementation-runs/<run-id>/manifests/<phase-slug>.yaml`
 - Worker result YAML: `docs/implementation-runs/<run-id>/workers/<lane>-<timestamp>.yaml`
+- Event logs: `docs/implementation-runs/<run-id>/events/`
 - Acceptance packet: `docs/qa/phase-acceptance/YYYY-MM-DD-<feature>-phase-<n>.md`
 - QA artifacts: `docs/qa/artifacts/<phase-slug>/`
 
@@ -89,14 +91,33 @@ This phase is intended to be run by `$implementation-execution` after planning a
 
 Optimize the plan for the fewest coordination turns that still preserve reviewability and safe parallelism.
 
-- Prefer one long-running phase owner with a small number of substantial delegated lanes over many tiny sub-agent tasks.
-- Delegate only work that is bounded, independently verifiable, and large enough to justify sub-agent startup/context cost.
-- Keep glue work, cross-cutting integration, final wiring decisions, consistency edits, and acceptance packet ownership with the phase owner.
+- Prefer one phase orchestrator with a small number of substantial worker lanes over many tiny worker tasks.
+- Delegate only work that is bounded, independently verifiable, and large enough to justify worker startup/context cost.
+- Keep orchestration, cross-cutting integration decisions, tiny glue, consistency edits, and acceptance packet ownership with the orchestrator.
+- Do not use the orchestrator as the default implementation worker. Substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior belongs in a worker lane even when it must run serially.
 - Group closely related files and behaviors into one task when splitting would create extra handoffs without meaningful parallelism.
 - Split tasks when they touch independent surfaces, can run in parallel without shared resources, or need separate review because of risk.
 - Avoid repeating the same context in every task. Put phase-wide rules in the file map, service wiring matrix, execution contract, and acceptance gate; task sections should reference those names.
 - Make every delegated lane return compact evidence: changed files, commands run, pass/fail output summary, service-wiring rows covered, risks, and follow-up edits needed.
-- For behavior changes in delegated lanes, require the worker to complete a test proposal/approval loop before implementation: write or update tests first, run them to show the expected failure, return test intent and failure evidence to the phase owner, wait for phase-owner approval that the tests satisfy the task, then implement and make the approved tests pass.
+- For behavior changes in delegated lanes, require the worker to complete a test proposal/approval loop before implementation: write or update tests first, run them to show the expected failure, return test intent and failure evidence to the orchestrator, wait for orchestrator approval that the tests satisfy the task, then implement and make the approved tests pass.
+
+## Orchestrator Work Limits
+
+The orchestrator is an integrator and scheduler, not the default implementer.
+
+Orchestrator-owned tasks are allowed only for:
+
+- sequencing and active-frontier decisions;
+- shared contract approval before workers start;
+- tiny glue or mechanical edits where a worker lane would be larger than the change;
+- run/phase state, handoff, acceptance packet, and plan consistency updates;
+- post-worker integration fixes that are small, local, and do not add new behavior.
+
+Substantial implementation must be a worker lane even when it is serial, context-heavy, or unsafe to parallelize. This includes runtime code, service/API behavior, persistence, migrations, schemas, parser logic, frontend behavior, E2E/integration tests, and shared contracts consumed by downstream tasks.
+
+Do not write ambiguous ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`. Choose one owner. If substantial work cannot run in parallel, write `worker lane: <lane>; parallel with none`.
+
+Every task marked `orchestrator` must include an `Owner-Only Justification` field explaining why the task is orchestration, glue, state, acceptance, or plan consistency rather than substantial implementation.
 
 ## Autonomy And Escalation
 
@@ -151,14 +172,16 @@ Choose QA automation by platform:
 
 Each task should be small enough to review independently and should end with verification. Tasks inside a phase may touch different layers of the stack, but together they must complete the phase's smoke-testable outcome. Prefer TDD for behavior changes.
 
-Tasks are potential sub-agent work units, not automatic sub-agent work units. A task is suitable for delegation only when its dependencies, files, runtime resources, acceptance evidence, and integration checkpoint are explicit enough that a bounded worker can complete it without inferring phase-level intent. If delegation would cost more coordination than implementation, mark it `phase-owner`.
+Tasks are potential worker units, not automatic worker units. A task is suitable for delegation only when its dependencies, files, runtime resources, acceptance evidence, and integration checkpoint are explicit enough that a bounded worker can complete it without inferring phase-level intent. Use `orchestrator` only for orchestration, tiny glue, state, acceptance, and plan consistency work. Substantial implementation that is not safe to parallelize is still a serial worker lane.
 
 ````markdown
 ### Task N: <specific outcome>
 
 **Depends On:** <Task numbers this task depends on, or "None">
 
-**Execution:** <phase-owner | sub-agent lane: lane name>; parallel with <task/lane or "none">; checkpoint <command/evidence>
+**Execution:** <orchestrator orchestration/glue | worker lane: lane name>; parallel with <task/lane or "none">; checkpoint <command/evidence>
+
+**Owner-Only Justification:** <required if Execution is orchestrator; otherwise "not applicable">
 
 **Files:**
 - Create: `exact/path`
@@ -183,8 +206,8 @@ Tasks are potential sub-agent work units, not automatic sub-agent work units. A 
 **TDD Approval Gate:** <required for delegated behavior work | not applicable with reason>
 - Worker writes or updates tests first.
 - Worker runs focused tests and records the expected failure.
-- Worker returns test intent, covered requirements, command, expected failure, and affected files to the phase owner.
-- Phase owner approves that the tests satisfy the task requirements before implementation starts.
+- Worker returns test intent, covered requirements, command, expected failure, and affected files to the orchestrator.
+- Orchestrator approves that the tests satisfy the task requirements before implementation starts.
 - Worker implements only after approval, then reruns the approved tests until green.
 
 - [ ] Step 1: Write or update the failing test
@@ -198,10 +221,10 @@ Tasks are potential sub-agent work units, not automatic sub-agent work units. A 
 Run: `<exact command>`
 Expected: `<specific failure or missing behavior>`
 
-- [ ] Step 3: For delegated behavior work, return the test proposal and expected-failure evidence to the phase owner for approval
+- [ ] Step 3: For delegated behavior work, return the test proposal and expected-failure evidence to the orchestrator for approval
 
-Approval evidence: `<worker result YAML path or phase-owner note path>`
-Expected: `<phase owner approves the tests as sufficient for this task before implementation>`
+Approval evidence: `<worker result YAML path or orchestrator note path>`
+Expected: `<orchestrator approves the tests as sufficient for this task before implementation>`
 
 - [ ] Step 4: Implement the smallest change
 
@@ -219,7 +242,7 @@ Expected: `<specific pass condition>`
 Suggested message: `<type>[optional scope]: <description>`
 ````
 
-For phase-owner work, documentation, config, or mechanical changes where TDD approval does not apply, mark `TDD Approval Gate` as not applicable with a concrete reason and replace the failing-test step with the smallest meaningful validation step, such as syntax validation, config parse, render check, or dry run.
+For orchestrator-owned work, documentation, config, or mechanical changes where TDD approval does not apply, mark `TDD Approval Gate` as not applicable with a concrete reason and replace the failing-test step with the smallest meaningful validation step, such as syntax validation, config parse, render check, or dry run.
 
 ## Phase E2E And Acceptance Gate
 
@@ -282,13 +305,13 @@ If a dependency crosses plan boundaries, name the external plan and task explici
 
 ## Dependency And Parallelism Consistency
 
-Before finalizing a plan, verify every task's `Depends On` and `Execution` line against the sub-agent delegation map.
+Before finalizing a plan, verify every task's `Depends On` and `Execution` line against the worker delegation map.
 
 - A task cannot be marked parallel with any task it depends on.
 - A task cannot be marked parallel with any task that depends on it.
 - Parallel lanes must share no required sequential contract unless the plan names the contract handoff point, such as "after shared contract exports are approved" or "after API fixture route exists."
 - If two tasks share files, schema, API contracts, package/config, migrations, generated fixtures, browser harness setup, or long-lived runtime resources, either serialize them or name the precise handoff/checkpoint that makes parallel execution safe.
-- If the safe parallel point is conditional, write it in both the `Execution` line and the `Sub-Agent Delegation Map`; do not rely on task order alone.
+- If the safe parallel point is conditional, write it in both the `Execution` line and the `Worker Delegation Map`; do not rely on task order alone.
 
 Do not mark real service, credential, account, network, database, queue, storage, or real-data verification as optional when the task or design requires that integration. These dependencies are mandatory verification gates. If unavailable, the task should be blocked and recorded as an escalation only when it fits an allowed escalation category.
 
@@ -327,6 +350,9 @@ Never leave:
 - "Optional" real service, credential, account, database, network, queue, storage, or real-data verification for a task that requires that dependency
 - A phase plan without a `Phase Execution Contract`
 - A task without a compact `Execution` line
+- Ambiguous ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`
+- An orchestrator-owned task without an `Owner-Only Justification`
+- An orchestrator-owned task that includes substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior
 - A phase plan without `Autonomy And Escalation`, `Service Wiring Matrix`, E2E harness readiness coverage, and a `Phase Acceptance Gate`
 - A task that touches service wiring but does not name the service-wiring rows it covers
 
@@ -337,9 +363,11 @@ Before presenting the plan, check:
 - Every requirement maps to at least one task.
 - The plan represents one substantial vertical phase, not a horizontal stack layer.
 - The plan has a concrete smoke-testable outcome available after completion.
-- The `Phase Execution Contract` defines the long-running phase owner, sub-agent delegation map, integration checkpoints, and handoff path.
+- The `Phase Execution Contract` defines the supervisor-launched phase orchestrator, worker delegation map, integration checkpoints, and handoff path.
 - The `Codex Efficiency Rules` are followed: substantial lanes, minimal coordination, no tiny delegation churn.
 - Every task includes a compact `Execution` line, with safe parallelism and integration checkpoint stated.
+- No task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`.
+- Every substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract change is assigned to a worker lane, even when serial.
 - The plan includes a `Service Wiring Matrix`, and every row is covered by task-level evidence or the phase acceptance gate.
 - E2E automation appears early enough to verify integrations during phase development.
 - Tasks that introduce service wiring include `Service Wiring Rows Covered`.

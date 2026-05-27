@@ -1,12 +1,12 @@
 # Lessons
 
-Use lessons to prevent future agents from rediscovering the same repo-specific failure mode. The phase owner decides what becomes a lesson.
+Use lessons to prevent future agents from rediscovering the same repo-specific failure mode. The orchestrator decides what becomes a lesson.
 
 ## Roles
 
 - Workers may return `lesson_candidate` in worker result YAML.
 - Reviewers may return `lesson_candidate` when repeated review/fix failures reveal a durable rule.
-- Phase owner promotes proven candidates into repo lessons.
+- Orchestrator promotes proven candidates into repo lessons.
 - Supervisor verifies promoted lesson paths are recorded in phase state and handoff/acceptance artifacts when relevant.
 
 ## Promotion Criteria

@@ -32,7 +32,8 @@ For future tasks, check:
 - file paths, names, APIs, schemas, and commands still match reality;
 - dependencies and sequencing remain correct;
 - task execution lines, delegation lanes, safe parallelism, shared-resource risks, and integration checkpoints still match reality;
-- delegation remains efficient: no tiny sub-agent work should be preserved if the phase owner can handle it more cheaply;
+- delegation remains efficient: no tiny worker work should be preserved if the orchestrator can handle it more cheaply, but substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract work must stay in a worker lane even when serial;
+- no future task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`;
 - tests still target the right behavior;
 - agent-run acceptance commands, expected results, and evidence fields are still accurate;
 - escalation entries are still allowed, necessary, and not routine agent-owned setup;

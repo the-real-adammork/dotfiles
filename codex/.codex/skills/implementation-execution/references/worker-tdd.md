@@ -2,6 +2,8 @@
 
 Workers are bounded executors. They do not spawn workers, schedule sibling work, update run state, or infer phase-level intent beyond the assigned lane.
 
+Workers receive the execution manifest path plus the selected task section from the phase plan. They should not read the whole phase plan unless the assigned task section is missing or ambiguous. If extra plan context is required, read only the specific referenced section and record why in the worker result.
+
 ## Adaptive TDD Contract
 
 Use full two-stage TDD for high-risk or integration-sensitive behavior:
@@ -19,12 +21,12 @@ Two-stage flow:
 1. Worker writes tests first.
 2. Worker runs the tests and confirms they fail for the expected reason.
 3. Worker returns a test proposal result without production implementation.
-4. Phase owner or reviewer approves the tests.
+4. Orchestrator or reviewer approves the tests.
 5. Worker implements only after test approval.
 6. Worker runs focused tests and required integration/E2E checks.
 7. Worker writes or returns worker result YAML.
 
-For low-risk isolated behavior, the phase owner may allow inline test-first implementation in one worker goal. The worker must still write tests before production code, show the expected failing test or explain why a pre-implementation failure was not practical, and return enough evidence for reviewer validation.
+For low-risk isolated behavior, the orchestrator may allow inline test-first implementation in one worker goal. The worker must still write tests before production code, show the expected failing test or explain why a pre-implementation failure was not practical, and return enough evidence for reviewer validation.
 
 For docs, config, or mechanical changes where TDD is not meaningful, replace test-first with the smallest meaningful validation command and explain why.
 
@@ -35,6 +37,7 @@ Return compact YAML or a compact message containing:
 ```yaml
 status: test_proposed
 task: "Task N"
+execution_manifest: "docs/implementation-runs/<run-id>/manifests/<phase>.yaml"
 test_files:
   - "test/path"
 commands:
@@ -69,14 +72,16 @@ The result must include:
 - recommended downstream plan edits;
 - blockers or escalations.
 - secret handling fields from `$secrets` when secret material changed.
+- compact event log path when the worker wrote `events/worker-<lane>-<timestamp>.jsonl`.
 
 ## Restrictions
 
 - Do not broaden scope.
+- Do not read or paste the whole phase plan by default; use the selected task section and manifest.
 - Do not rewrite the phase plan unless assigned.
 - Do not update `run.yaml` or `phase.yaml` unless assigned.
 - Do not hide failing tests.
-- Do not satisfy service wiring with mocks when real wiring is required; if a mock/fixture/fake is useful during implementation, disclose it and make sure it can be reconciled by the phase owner's mock/fixture ledger.
+- Do not satisfy service wiring with mocks when real wiring is required; if a mock/fixture/fake is useful during implementation, disclose it and make sure it can be reconciled by the orchestrator's mock/fixture ledger.
 - Do not spawn other agents.
 - Do not generate, write, reveal, hide, stage, or commit secret material without following `$secrets`.
 

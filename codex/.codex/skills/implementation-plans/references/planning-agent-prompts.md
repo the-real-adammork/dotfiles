@@ -1,6 +1,6 @@
 # Planning Agent Prompts
 
-Use this reference when dispatching phase plan-writing or consolidated-review agents during planning. These prompts are for planning artifacts only; execution handoff should use the orchestrated implementation workflow with one long-running phase owner per phase and bounded sub-agent delegation inside that phase.
+Use this reference when dispatching phase plan-writing or consolidated-review agents during planning. These prompts are for planning artifacts only; execution handoff should use the orchestrated implementation workflow with one supervisor-launched phase orchestrator per phase and bounded worker delegation inside that phase.
 
 ## Context Handoff Protocol
 
@@ -24,7 +24,7 @@ Handoff document template:
 **Scope:** <phase/review scope>
 **Source Documents:**
 - Technical design: `<path>`
-- Phases document: `<path>`
+- SLICES document: `<path>`
 - Requirements: `<path or "not provided">`
 
 ## Progress Made
@@ -78,11 +78,11 @@ Use $implementation-plans and load `references/plan-writing.md` to write a detai
 Technical design:
 <path>
 
-Implementation phases document:
+Implementation SLICES document:
 <path>
 
 Phase:
-<phase name, goal, builds on, phase owner scope, sub-agent lanes, app surface included, smoke test, service wiring, E2E readiness, phase acceptance automation, acceptance packet, output path>
+<phase name, goal, builds on, orchestrator scope, worker lanes, app surface included, smoke test, service wiring, E2E readiness, phase acceptance automation, acceptance packet, output path>
 
 Requirements source:
 <path or "not provided">
@@ -90,13 +90,16 @@ Requirements source:
 Constraints:
 - Stay within this phase boundary.
 - Include the UI/API/CLI/jobs/data work needed for this phase's smoke-testable outcome.
-- Include a `Phase Execution Contract` for a long-running phase owner, a small sub-agent delegation map, integration checkpoints, and handoff path.
-- Include an `Implementation Execution Handoff` section that points to `$implementation-execution` state and evidence locations: `run.yaml`, `phase.yaml`, worker result YAML, acceptance packet, and QA artifact paths.
-- Include a compact `Execution` line for every task so the execution workflow can decide phase-owner work vs bounded sub-agent lane without extra analysis.
+- Include a `Phase Execution Contract` for a supervisor-launched phase orchestrator, a small worker delegation map, integration checkpoints, and handoff path.
+- Include an `Implementation Execution Handoff` section that points to `$implementation-execution` state and evidence locations: `run.yaml`, `phase.yaml`, execution manifest, worker result YAML, event JSONL, acceptance packet, and QA artifact paths.
+- Include a compact `Execution` line for every task so the execution workflow can distinguish orchestrator-owned orchestration/glue from bounded worker lanes without extra analysis.
+- Do not use ambiguous task ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`; choose one owner.
+- Use orchestrator ownership only for orchestration, tiny glue, state, acceptance, and plan consistency work. Every orchestrator-owned task must include `Owner-Only Justification`.
+- Assign substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior to a worker lane even when the lane must run serially.
 - Keep `Execution` parallelism consistent with `Depends On`: a task cannot be parallel with a task it depends on or with a task that depends on it. Parallel lanes that share a required sequential contract must name the handoff point in both the task and delegation map.
 - Optimize for Codex efficiency: avoid tiny delegated tasks, minimize repeated context, and group related implementation work when splitting would add coordination cost without parallelism.
-- Mark tasks as `phase-owner only` when they are integration-heavy, context-heavy, or unsafe to delegate.
-- For delegated behavior work, include a `TDD Approval Gate`: worker writes tests first, runs the focused test to record expected failure, returns test intent/evidence to the phase owner, waits for phase-owner approval that tests satisfy requirements, then implements and makes the approved tests pass.
+- When substantial work is integration-heavy, context-heavy, or unsafe to parallelize, mark it as a serial worker lane rather than orchestrator-owned work.
+- For delegated behavior work, include a `TDD Approval Gate`: worker writes tests first, runs the focused test to record expected failure, returns test intent/evidence to the orchestrator, waits for orchestrator approval that tests satisfy requirements, then implements and makes the approved tests pass.
 - Include `Autonomy And Escalation` and escalate only for credentials/secrets, paid/vendor setup, product/legal/security decisions, destructive production actions, real customer data access, or unavailable devices/services after an agent-owned attempt.
 - Include a `Service Wiring Matrix` that names the phase flows across surface, service, persistence, jobs, and integrations.
 - Include `Service Wiring Rows Covered` for every task that touches surface/service/persistence/jobs/integrations.
@@ -133,7 +136,7 @@ Use $implementation-plans and load `references/phasing.md` plus this `references
 Original technical design:
 <path>
 
-Implementation phases document:
+Implementation SLICES document:
 <path>
 
 Plan documents:
@@ -150,13 +153,16 @@ Check for:
 - gaps between ready phases and their generated plans;
 - phase boundary mismatches or duplicate work across plans;
 - horizontal backend-first/frontend-later splits that prevent the app from coming to life phase by phase;
-- phases too large or too vague for one long-running phase owner to maintain coherent context;
+- phases too large or too vague for one phase orchestrator to maintain coherent context;
 - missing or weak `Phase Execution Contract`;
-- missing `Implementation Execution Handoff` for `$implementation-execution` state/evidence paths;
+- missing `Implementation Execution Handoff` for `$implementation-execution` state/manifest/event/evidence paths;
 - missing task-level `Execution` lines;
+- ambiguous task ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`;
+- orchestrator-owned tasks without `Owner-Only Justification`;
+- orchestrator-owned tasks that contain substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior;
 - too many tiny delegated tasks that create coordination overhead without parallelism;
 - repeated context pasted into many tasks instead of captured once in phase-level sections;
-- unsafe parallelism or missing shared-resource/collision risks in sub-agent scopes;
+- unsafe parallelism or missing shared-resource/collision risks in worker scopes;
 - `Execution` lines that mark a task parallel with a task it depends on or with a task that depends on it;
 - parallel lanes that share a required sequential contract without naming the handoff point;
 - missing integration checkpoints after delegated work;

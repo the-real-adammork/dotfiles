@@ -7,10 +7,22 @@ YAML is the durable machine state. Markdown is the narrative checkpoint. Artifac
 ```text
 docs/implementation-runs/<run-id>/
   run.yaml
+  supervisor-inbox/
+    <phase-slug>.yaml
   phases/
     <phase-slug>.yaml
+  manifests/
+    <phase-slug>.yaml
+  watchdogs/
+    <phase-slug>.sh
+    <phase-slug>.pid
+    <phase-slug>-trigger.yaml
   workers/
     <lane>-<timestamp>.yaml
+  events/
+    supervisor.jsonl
+    orchestrator-<phase-slug>.jsonl
+    worker-<lane>-<timestamp>.jsonl
   handoffs/
     <timestamp>.md
 
@@ -29,16 +41,49 @@ Tracks run-level state only:
 ```yaml
 run_id: "YYYY-MM-DD-feature"
 status: running # running | blocked | complete
-phases_document: "docs/plans/YYYY-MM-DD-feature-implementation-phases.md"
+slices_document: "docs/plans/SLICES.md"
+phases_document: "docs/plans/SLICES.md"
 current_phase: "phase-2"
 phase_order:
   - phase-1
   - phase-2
+completed_phases:
+  phase-1:
+    phase_branch: "impl/phase-1"
+    base_commit_after_merge: "def456"
+    accepted_phase_commit: "abc123"
+    acceptance_packet: "docs/qa/phase-acceptance/phase-1.md"
 branches:
   base: "main"
   current: "impl/phase-2"
+orchestrator:
+  phase: "phase-2"
+  status: running # starting | running | blocked | acceptance_ready | complete | failed | exiting | invalid
+  spawn_method: tmux-pane # tmux-pane | inline_fallback
+  tmux_pane: "%12"
+  inbox: "docs/implementation-runs/YYYY-MM-DD-feature/supervisor-inbox/phase-2.yaml"
+  fallback_reason: null
+  launch_command: "codex --dangerously-bypass-approvals-and-sandbox ..."
+  codex_session:
+    id: "019e..."
+    path: "/Users/example/.codex/sessions/YYYY/MM/DD/session.jsonl"
+    role: "phase-orchestrator"
+    discovered_at: "YYYY-MM-DDTHH:MM:SSZ"
+  validation:
+    checked_at: "YYYY-MM-DDTHH:MM:SSZ"
+    status: valid # valid | invalid | unknown
+    reason: null
+supervisor_watchdog:
+  status: running # starting | running | stopped | failed | disabled
+  pid: 12345
+  script: "docs/implementation-runs/YYYY-MM-DD-feature/watchdogs/phase-2.sh"
+  trigger: "docs/implementation-runs/YYYY-MM-DD-feature/watchdogs/phase-2-trigger.yaml"
+  interval_seconds: 120
+  wake_method: tmux-pane # tmux-pane | codex-cli | disabled
+  last_checked_at: "YYYY-MM-DDTHH:MM:SSZ"
 paths:
   run_dir: "docs/implementation-runs/YYYY-MM-DD-feature"
+  events: "docs/implementation-runs/YYYY-MM-DD-feature/events"
   qa_artifacts: "docs/qa/artifacts"
   acceptance_packets: "docs/qa/phase-acceptance"
 escalations: []
@@ -55,20 +100,27 @@ status: running # not_started | running | blocked | acceptance | complete
 plan: "docs/plans/YYYY-MM-DD-feature-phase-2.md"
 branch: "impl/phase-2"
 worktree: ".worktrees/impl-phase-2"
+execution_manifest: "docs/implementation-runs/YYYY-MM-DD-feature/manifests/phase-2.yaml"
 active_lanes:
   - lane: "write-path"
     status: agentic_review
     worker: "worker-write-path-1"
     branch: "impl/phase-2/write-path"
     worktree: ".worktrees/impl-phase-2-write-path"
-role_separation:
-  supervisor: "supervisor"
-  phase_owner: "phase-owner-phase-2"
-  phase_owner_dispatch_available: true
-  phase_owner_spawned: true
-  phase_owner_inline_reason: null
-  worker_dispatch_available: true
-  worker_dispatch_fallback_reason: null
+orchestrator:
+  supervisor_inbox: "docs/implementation-runs/YYYY-MM-DD-feature/supervisor-inbox/phase-2.yaml"
+  spawn_method: tmux-pane # tmux-pane | inline_fallback
+  tmux_pane: "%12"
+  fallback_reason: null
+  codex_session:
+    id: "019e..."
+    path: "/Users/example/.codex/sessions/YYYY/MM/DD/session.jsonl"
+    role: "phase-orchestrator"
+    discovered_at: "YYYY-MM-DDTHH:MM:SSZ"
+  validation:
+    checked_at: "YYYY-MM-DDTHH:MM:SSZ"
+    status: valid # valid | invalid | unknown
+    reason: null
 tasks:
   "4":
     status: done
@@ -109,16 +161,139 @@ blockers: []
 updated_at: "YYYY-MM-DDTHH:MM:SSZ"
 ```
 
+## Supervisor Inbox YAML
+
+The detached watchdog polls one compact inbox file for the active phase. The supervisor reads it only during launch validation or transition handling. This file is lifecycle state only, not worker or task detail.
+
+```yaml
+phase: "phase-2"
+orchestrator_status: running # starting | running | blocked | acceptance_ready | complete | failed | exiting
+updated_at: "YYYY-MM-DDTHH:MM:SSZ"
+heartbeat_expires_at: "YYYY-MM-DDTHH:MM:SSZ"
+tmux:
+  pane_id: "%12"
+codex_session:
+  id: "019e..."
+  path: "/Users/example/.codex/sessions/YYYY/MM/DD/session.jsonl"
+startup:
+  acknowledged: true
+  manifest: "docs/implementation-runs/YYYY-MM-DD-feature/manifests/phase-2.yaml"
+request:
+  type: none # none | escalation | phase_completion | graceful_exit | restart_needed
+  reason: null
+  artifact: null
+phase_completion:
+  phase_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
+  acceptance_packet: null
+  commit: null
+```
+
+Do not store worker dispatch details, active lane details, review text, full command output, or phase implementation logs in the supervisor inbox.
+
+## Watchdog Trigger YAML
+
+The detached supervisor watchdog writes a trigger file when the supervisor needs to resume as a transition handler. The trigger is compact lifecycle state, not an implementation report.
+
+```yaml
+phase: "phase-2"
+triggered_at: "YYYY-MM-DDTHH:MM:SSZ"
+reason: phase_completion # phase_completion | escalation | restart_needed | heartbeat_expired | pane_dead | orchestrator_failed
+inbox: "docs/implementation-runs/YYYY-MM-DD-feature/supervisor-inbox/phase-2.yaml"
+run_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/run.yaml"
+phase_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
+tmux_pane: "%12"
+event_log: "docs/implementation-runs/YYYY-MM-DD-feature/events/supervisor.jsonl"
+handled: false
+```
+
+The resumed supervisor transition handler must mark the trigger handled, append a compact event, and then either complete the phase transition, restart the orchestrator, or record the escalation/blocker.
+
+## Execution Manifest
+
+The supervisor creates `docs/implementation-runs/<run-id>/manifests/<phase-slug>.yaml` before launching or resuming the phase orchestrator. The manifest is a compact routing index derived from the approved phase plan. It is not the full plan and is not worker evidence.
+
+The orchestrator schedules from the manifest plus `phase.yaml`. Before dispatching a worker, it reads only the selected task section from the full phase plan using the manifest's `plan_section_anchor`. Workers never edit the manifest.
+
+Example:
+
+```yaml
+phase: "phase-2"
+plan: "docs/plans/YYYY-MM-DD-feature-phase-2.md"
+generated_from_commit: "abc123"
+generated_by: "supervisor"
+tasks:
+  "4":
+    title: "Implement write path"
+    depends_on:
+      - "Task 3"
+    execution: "worker lane: write-path; parallel with none"
+    files:
+      modify:
+        - "src/path/file.ts"
+      test:
+        - "tests/path/file.test.ts"
+    service_wiring_rows:
+      - "create-record"
+    checkpoint: "pnpm test user-flow"
+    tdd_gate: required
+    plan_section_anchor: "### Task 4: Implement write path"
+acceptance:
+  packet: "docs/qa/phase-acceptance/phase-2.md"
+  commands:
+    - "pnpm test:e2e -- user-write-flow"
+```
+
+The manifest may store task title, dependencies, execution lane, declared file scope, service-wiring rows, checkpoint commands, TDD requirement, and the exact heading/anchor to the full task section.
+
+Do not store copied task bodies, code snippets, full design rationale, full acceptance text, full command output, or copied plan sections in the manifest.
+
+Regenerate or patch the manifest only when a consistency update changes future inactive tasks. Record the regeneration in `events/supervisor.jsonl` or `events/orchestrator-<phase>.jsonl`, depending on who made the plan update.
+
+## Event JSONL
+
+Use compact structured events for timing, communication volume, and workflow debugging. Events are observability, not canonical state.
+
+Default paths:
+
+```text
+docs/implementation-runs/<run-id>/events/supervisor.jsonl
+docs/implementation-runs/<run-id>/events/orchestrator-<phase-slug>.jsonl
+docs/implementation-runs/<run-id>/events/worker-<lane>-<timestamp>.jsonl
+```
+
+Event shape:
+
+```json
+{"ts":"YYYY-MM-DDTHH:MM:SSZ","role":"orchestrator","phase":"phase-2","event":"worker_dispatched","lane":"write-path","artifact":"docs/implementation-runs/<run-id>/workers/write-path-20260527T120000Z.yaml"}
+```
+
+Useful events:
+
+- run created or resumed;
+- manifest created, patched, or regenerated;
+- orchestrator launched, startup acknowledged, validated, restarted, stopped, or marked invalid;
+- worker dispatched, test proposed, tests approved, implementation complete, reviewed, fixed, or integrated;
+- command started and ended, with duration, result, and artifact path;
+- inbox request written or handled;
+- phase acceptance started, passed, failed, or merged to base;
+- escalation opened or cleared.
+
+Do not put full prompts, full stdout, full diffs, full review text, screenshots, traces, videos, or copied plan sections in JSONL events. Store artifact paths and short summaries only.
+
 ## State Ownership
 
-Only the supervisor or phase owner edits `run.yaml` and `phase.yaml`.
+Only the supervisor edits `run.yaml`. Only the orchestrator edits `phase.yaml` during normal phase execution. The supervisor owns initial manifest creation before launch. The orchestrator may patch or regenerate the manifest only as part of a batched consistency update for future inactive tasks.
 
-Workers write worker result YAML and code/test changes only. They must not edit canonical state files unless explicitly assigned a narrow state-repair task.
+The supervisor may initialize `supervisor-inbox/<phase-slug>.yaml` before spawning the orchestrator and may write the tmux pane id immediately after spawn. After that, the orchestrator writes compact lifecycle requests there. The watchdog polls that inbox and wakes a short supervisor transition handler for phase transitions, escalations, restarts, and completion. The supervisor transition handler reads the inbox and updates `run.yaml`.
+
+Workers write worker result YAML, compact worker event JSONL, and code/test changes only. They must not edit canonical state files unless explicitly assigned a narrow state-repair task.
 
 State updates must happen immediately after these transitions:
 
 - run created or resumed;
 - phase started, blocked, accepted, or completed;
+- execution manifest created, patched, or regenerated;
+- supervisor watchdog started, triggered, stopped, or failed;
 - worker lane dispatched;
 - worker result integrated;
 - task status changed;
@@ -126,11 +301,11 @@ State updates must happen immediately after these transitions:
 - acceptance command run;
 - escalation opened or cleared.
 
-Do not let multiple agents edit the same YAML state file concurrently. When parallel workers run, each worker writes a separate result YAML; the phase owner serially merges those results into `phase.yaml`.
+Do not let multiple agents edit the same YAML state file concurrently. When parallel workers run, each worker writes a separate result YAML; the orchestrator serially merges those results into `phase.yaml`.
 
 ## Worker Result YAML
 
-Workers write or return compact result YAML. The phase owner merges relevant fields into `phase.yaml`.
+Workers write or return compact result YAML. The orchestrator merges relevant fields into `phase.yaml`.
 
 ```yaml
 worker_id: "worker-write-path-1"
@@ -187,7 +362,7 @@ blockers: []
 
 Mocks, fixtures, fake services, placeholder handlers, generated test data, and temporary runtime stand-ins are allowed during implementation when they make the work faster or safer. They must not silently become completion evidence.
 
-The phase owner maintains `mock_fixture_ledger` in `phase.yaml` by merging every worker's `mocks_or_fixtures` entries. Track any fake that touches runtime behavior, service wiring, acceptance evidence, or test data used to prove a phase. Pure unit-test-only fixtures may be tracked compactly when they matter for service-wiring interpretation.
+The orchestrator maintains `mock_fixture_ledger` in `phase.yaml` by merging every worker's `mocks_or_fixtures` entries. Track any fake that touches runtime behavior, service wiring, acceptance evidence, or test data used to prove a phase. Pure unit-test-only fixtures may be tracked compactly when they matter for service-wiring interpretation.
 
 Every ledger entry must have one disposition before phase completion:
 
@@ -219,6 +394,6 @@ Do not put these in YAML or markdown:
 - copied plan sections;
 - repeated task instructions;
 - screenshots, videos, or traces inline;
-- chat-style event streams.
+- raw Codex logs or chat-style event streams.
 
 Store artifact paths and short summaries instead.

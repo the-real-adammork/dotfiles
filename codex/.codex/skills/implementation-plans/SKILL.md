@@ -17,9 +17,9 @@ Before writing or updating plans, inspect the repo enough to know existing patte
 
 Load only the reference needed for the current planning mode:
 
-- `references/plan-writing.md` - write one concrete implementation plan from a spec, requirements document, issue, approved design, or ready phase, including the long-running phase-owner and sub-agent execution contract.
-- `references/phasing.md` - decompose an approved technical design into sequential smoke-testable phase plans, with phase proposal, long-running phase ownership, sub-agent lane planning, review, plan-writing agents, and consolidated review.
-- `references/phases-document.md` - required format and lifecycle for the phase-planning workflow's phases document.
+- `references/plan-writing.md` - write one concrete implementation plan from a spec, requirements document, issue, approved design, or ready phase, including the phase orchestrator and worker execution contract.
+- `references/phasing.md` - decompose an approved technical design into sequential smoke-testable phase plans, with phase proposal, phase orchestrator scope, worker lane planning, review, plan-writing agents, and consolidated review.
+- `references/phases-document.md` - required format and lifecycle for the phase-planning workflow's canonical `docs/plans/SLICES.md` document.
 - `references/planning-agent-prompts.md` - required prompts and return contracts for phase plan-writer and consolidated-review planning agents.
 - `references/task-consistency.md` - update future inactive tasks in one implementation plan after one or more completed tasks changed reality.
 - `references/cross-plan-consistency.md` - update upcoming implementation plans after a completed plan changed APIs, schemas, behavior, ownership boundaries, verification commands, or sequencing assumptions.
@@ -52,7 +52,7 @@ Use `references/cross-plan-consistency.md` when:
 
 ## Planning Agent Prompts
 
-When the user asks `$implementation-plans` to decompose a design into phase plans, that request authorizes the workflow to use planning agents for drafting and review. Do not ask for a separate "sub-agent approval" just to dispatch plan-writing or review agents. If agent dispatch tools are unavailable, continue locally and state that limitation.
+When the user asks `$implementation-plans` to decompose a design into phase plans, that request authorizes the workflow to use planning agents for drafting and review. Do not ask for separate planning-agent approval just to dispatch plan-writing or review agents. If agent dispatch tools are unavailable, continue locally and state that limitation.
 
 When dispatching plan-writing agents from the phase workflow, prompt them to use this skill and load the plan-writing reference:
 
@@ -70,4 +70,4 @@ Do not dispatch or invoke standalone implementation-plan phasing or consistency 
 
 ## Handoff
 
-After creating or updating plans, report the artifact paths, unresolved escalations, and the next available execution or review options. In the phasing workflow, pause after the reviewed phases document, generate an HTML preview with `pandoc`, serve it on localhost, share the URL, and wait for explicit user approval before writing individual phase plan documents. If `pandoc` is unavailable, tell the human to run `brew install pandoc` and rerun the preview step. Do not begin implementation unless the user explicitly chooses an execution option.
+After creating or updating plans, report the artifact paths, unresolved escalations, and the next available execution or review options. In the phasing workflow, write the reviewed slices index to `docs/plans/SLICES.md`, generate `docs/plans/SLICES.html` with `pandoc`, serve it on localhost, share the URL, and wait for explicit user approval before writing individual phase plan documents. If `pandoc` is unavailable, tell the human to run `brew install pandoc` and rerun the preview step. Do not begin implementation unless the user explicitly chooses an execution option.

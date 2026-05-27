@@ -6,7 +6,7 @@ Review a completed implementation plan against upcoming implementation plan docu
 
 - completed implementation-plan path;
 - summary of actual implementation;
-- phases document path;
+- SLICES document path, default `docs/plans/SLICES.md`;
 - upcoming implementation-plan paths;
 - optional technical design, requirements, sync ledger, and commit range.
 
@@ -27,7 +27,7 @@ For upcoming plans, verify:
 - dependencies on the completed plan match what was actually shipped;
 - file paths, APIs, schema names, data contracts, flags, and commands are current;
 - future tasks do not repeat completed work;
-- sub-agent lanes, task execution lines, shared-resource risks, integration checkpoints, and delegation efficiency reflect the actual completed implementation;
+- worker lanes, task execution lines, shared-resource risks, integration checkpoints, and delegation efficiency reflect the actual completed implementation;
 - future tasks include new integration or migration work made necessary by the completed plan;
 - mock-to-real conversion tasks still exist where required;
 - service wiring matrix rows reflect actual completed behavior and planned downstream integrations;

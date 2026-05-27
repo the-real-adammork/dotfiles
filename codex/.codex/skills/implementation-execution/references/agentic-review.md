@@ -1,6 +1,6 @@
 # Agentic Review
 
-Review happens without routine human involvement. Use reviewer and fix-worker agents as bounded workers under the phase owner.
+Review happens without routine human involvement. Use reviewer and fix-worker agents as bounded workers under the orchestrator.
 
 ## Test Proposal Review
 
@@ -79,4 +79,4 @@ lesson_candidate:
 
 Store large logs as artifacts and reference paths.
 
-Reviewers may suggest lesson candidates when a repeated failure mode appears in test proposals, implementation reviews, or fix loops. The phase owner decides whether to promote the candidate into a repo lesson.
+Reviewers may suggest lesson candidates when a repeated failure mode appears in test proposals, implementation reviews, or fix loops. The orchestrator decides whether to promote the candidate into a repo lesson.

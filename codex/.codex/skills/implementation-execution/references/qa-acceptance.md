@@ -58,7 +58,7 @@ Run a lightweight repository scan before acceptance to catch untracked fake usag
 rg -n --hidden --glob '!node_modules' --glob '!.git' --glob '!docs/qa/artifacts/**' --glob '!docs/implementation-runs/**' 'mock|fixture|fake|stub|noop|no-op|placeholder|TODO.*real|temporary.*fake|fixture-only|disabled network' .
 ```
 
-The phase owner must review matches that touch runtime code, service wiring, E2E acceptance evidence, or production/dev configuration. Each relevant match must either already appear in `mock_fixture_ledger` or be added with a valid disposition before acceptance. It is acceptable for the artifact to contain irrelevant test helper matches as long as the packet summarizes why they are not runtime/service-wiring fakes.
+The orchestrator must review matches that touch runtime code, service wiring, E2E acceptance evidence, or production/dev configuration. Each relevant match must either already appear in `mock_fixture_ledger` or be added with a valid disposition before acceptance. It is acceptable for the artifact to contain irrelevant test helper matches as long as the packet summarizes why they are not runtime/service-wiring fakes.
 
 Every ledger entry must be one of:
 
@@ -81,7 +81,7 @@ Acceptance fails when:
 
 ## Completion Rule
 
-The phase owner may mark a phase complete only when:
+The orchestrator may mark a phase complete only when:
 
 - all required tasks are done or explicitly deferred outside the phase boundary;
 - no active worker lanes remain;
@@ -110,4 +110,4 @@ acceptance:
 completed_at: "YYYY-MM-DDTHH:MM:SSZ"
 ```
 
-Then update `run.yaml` to the next phase or `status: complete` when no phases remain.
+Then write `request.type: phase_completion` to the supervisor inbox with the `phase.yaml`, acceptance packet, and accepted phase commit/artifact pointers. The supervisor verifies the transition gate, fast-forwards the phase branch into the run base branch, records the resulting base commit, and only then updates `run.yaml` to the next phase or `status: complete` when no phases remain.

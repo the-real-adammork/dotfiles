@@ -11,10 +11,12 @@ Run consistency when:
 - a worker result changes a future task assumption;
 - a task completes and unblocks dependent work;
 - a phase is about to be accepted;
-- the phase owner is about to hand off;
+- the orchestrator is about to hand off;
 - the supervisor is about to move to the next phase.
 
 Update only future inactive task instructions. Do not rewrite completed task history except for compact actual-vs-planned notes when useful.
+
+When a consistency update changes future inactive tasks, update the compact execution manifest for those tasks in the same batch. Record only routing/index fields in the manifest and append a compact `manifest_patched` event.
 
 ## Actual-Vs-Planned Notes
 
@@ -35,7 +37,7 @@ Write a markdown handoff only when:
 - the user stops the workflow;
 - a different agent must resume.
 
-Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, update `run.yaml`, record the completed phase evidence, and continue with the next phase owner/orchestrator.
+Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, fast-forward the accepted phase branch into the run base branch, update `run.yaml`, record the completed phase evidence and resulting base commit, close or replace the completed orchestrator pane, and continue with the next phase orchestrator from the updated base branch.
 
 Default path:
 
@@ -47,10 +49,15 @@ Required contents:
 
 - run id and current phase;
 - `run.yaml` and `phase.yaml` paths;
+- execution manifest path;
+- orchestrator pane id or inline fallback reason;
+- supervisor inbox path;
+- watchdog script, PID, trigger path, and wake method;
 - branch/worktree;
 - active lanes and worker result paths;
 - completed tasks and commits;
 - verification artifact paths;
+- event log paths;
 - service-wiring coverage status;
 - acceptance packet status;
 - promoted lesson paths and pending lesson candidates;
@@ -72,6 +79,14 @@ Completed phases:
 
 Current phase:
 - `<phase>` - <status> - `<phase.yaml>`
+
+Orchestrator:
+- pane: `<tmux pane id or inline fallback>`
+- inbox: `<supervisor inbox path>`
+
+Watchdog:
+- pid: `<pid or disabled>`
+- trigger: `<watchdog trigger path>`
 
 Next action:
 - <continuing to next phase | stopped because single-phase scope | blocked | complete>

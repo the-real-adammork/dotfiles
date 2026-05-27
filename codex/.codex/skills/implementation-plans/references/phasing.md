@@ -10,7 +10,9 @@ Inputs:
 - optional requirements path;
 - optional plan output directory, default `docs/plans/`;
 - optional review output directory, default `<plan output directory>/reviews/`;
-- optional phases document path, default `docs/plans/YYYY-MM-DD-<feature>-implementation-phases.md`.
+- optional SLICES document path, default `docs/plans/SLICES.md`.
+
+`docs/plans/SLICES.md` is the canonical phase/slices index for every repo. Do not create feature-dated `*-implementation-phases.md` files unless the user explicitly overrides the path. This stable path lets `$implementation-execution` discover the approved phase order without the human passing a slices document path.
 
 If the technical design path is missing and cannot be inferred, ask for it.
 
@@ -55,7 +57,7 @@ When this happens, the parent dispatches a replacement agent using the handoff d
 
 ## Phase Criteria
 
-Each phase should become its own implementation plan when it delivers a substantial logical increment that can be smoke tested after completion and used as the foundation for later phases. A phase should be large enough to justify a long-running phase owner, but bounded enough that one owner can maintain coherent context and integrate a small number of sub-agent lanes efficiently.
+Each phase should become its own implementation plan when it delivers a substantial logical increment that can be smoke tested after completion and used as the foundation for later phases. A phase should be large enough to justify a supervisor-launched phase orchestrator, but bounded enough that one orchestrator can maintain coherent context and integrate a small number of worker lanes efficiently.
 
 Prefer fewer coherent phase plans over many thin plans. Do not split just because the design has multiple sections.
 
@@ -74,8 +76,8 @@ Every phase must state:
 - what app behavior works at the end;
 - what earlier phase behavior it builds on;
 - what smoke test proves it;
-- what long-running phase owner is responsible for;
-- what sub-agent lanes are safe or unsafe to run in parallel;
+- what the phase orchestrator is responsible for, limited to orchestration, integration decisions, state, acceptance, and tiny glue;
+- what substantial worker lanes are safe or unsafe to run in parallel, including serial lanes for work that cannot parallelize;
 - what service wiring rows must be proven across surface, service, persistence, jobs, and integrations;
 - what E2E harness is needed early in the phase;
 - what platform E2E automation will prove the smoke test through the phase acceptance gate;
@@ -87,9 +89,9 @@ Every phase must state:
 Optimize phase plans for Codex execution efficiency:
 
 - Use fewer, substantial phases rather than many thin phases that force repeated setup, sync, and review overhead.
-- Keep each phase coherent enough for one long-running owner to hold the working context.
-- Identify a small number of sub-agent lanes only where parallelism or bounded specialization is valuable.
-- Do not turn every task into a delegated sub-agent by default; phase-owner work is cheaper for glue, integration, coordination, and small edits.
+- Keep each phase coherent enough for one phase orchestrator to hold the working context.
+- Identify a small number of worker lanes only where parallelism or bounded specialization is valuable.
+- Do not turn every task into a delegated worker by default, but keep orchestrator-owned work limited to orchestration, tiny glue, integration decisions, state, acceptance, and plan consistency. Substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior must become a worker lane even when it is serial.
 - Prefer sequential phase execution unless phases are truly independent, because later phases should reuse verified behavior and acceptance packets from earlier phases.
 - Make the phases document a routing map, not a second implementation plan.
 
@@ -114,13 +116,13 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
 1. Read the technical design and any referenced requirements.
 2. Inspect enough repo context to understand ownership boundaries, test commands, E2E harnesses, and existing patterns.
 3. Identify sequential phases by smoke-testable app state and build-on relationship.
-4. Create or update the phases document. Read `references/phases-document.md` for the required format and lifecycle.
+4. Create or update the SLICES document at `docs/plans/SLICES.md`. Read `references/phases-document.md` for the required format and lifecycle.
 5. Present the phase proposal summary when the user asks for a planning checkpoint; otherwise record planning assumptions in the phases document and proceed when the design is sufficient.
 6. Run a phase breakup review against the technical design:
    - all major responsibilities, integration points, sequencing items, risk mitigations, and verification areas map to phases;
    - each phase has a coherent smoke-testable outcome;
    - each phase can be owned by one long-running phase agent without losing coherence;
-   - each phase names a small number of likely sub-agent lanes and shared-resource risks;
+   - each phase names a small number of likely worker lanes and shared-resource risks;
    - each phase avoids delegation churn from overly tiny tasks;
    - each phase names the service wiring that must be proven;
    - each phase names early E2E harness needs and phase acceptance automation;
@@ -131,7 +133,7 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
 8. Generate an HTML approval preview from the reviewed phases document and serve it on localhost:
    - Preferred converter: `pandoc`, installed with `brew install pandoc`.
    - If `pandoc` is unavailable, stop and tell the human to install it, then rerun this preview step.
-   - Write the preview next to the phases document using the same basename and `.html`, for example `docs/plans/YYYY-MM-DD-<feature>-implementation-phases.html`.
+   - Write the preview next to the SLICES document using the same basename and `.html`, normally `docs/plans/SLICES.html`.
    - Use a local server such as `python3 -m http.server <port> --bind 127.0.0.1 --directory <plan output directory>`.
    - Prefer port `4173`; if it is busy, choose the next available port.
    - Record the HTML path and localhost URL in the phases document's `HTML Approval Preview` section.
@@ -149,14 +151,14 @@ Do not begin implementation unless the user chooses an execution option. Do not 
 
 Before handoff:
 
-- phases document exists, links back to the technical design, and links forward to every generated plan;
-- phases document has an HTML approval preview generated from the current markdown and served on localhost before requesting approval;
+- SLICES document exists at `docs/plans/SLICES.md`, links back to the technical design, and links forward to every generated plan;
+- SLICES document has an HTML approval preview generated from the current markdown and served on localhost before requesting approval;
 - individual phase plan documents were generated only after explicit approval of the reviewed phases document;
 - every ready phase has a plan file at the reported path;
-- every phase has a smoke-testable outcome, phase-owner responsibility, sub-agent lane summary, service wiring summary, E2E harness readiness note, phase acceptance automation, and expected acceptance packet;
+- every phase has a smoke-testable outcome, orchestrator responsibility, worker lane summary, service wiring summary, E2E harness readiness note, phase acceptance automation, and expected acceptance packet;
 - every phase plan includes `Autonomy And Escalation` with only allowed exception categories;
-- every phase plan includes a `Phase Execution Contract` for long-running phase ownership, delegation, integration checkpoints, and handoff;
-- every phase plan includes an `Implementation Execution Handoff` with `$implementation-execution` state and evidence paths;
+- every phase plan includes a `Phase Execution Contract` for supervisor-launched phase orchestration, worker delegation, integration checkpoints, and handoff;
+- every phase plan includes an `Implementation Execution Handoff` with `$implementation-execution` state, manifest, event, and evidence paths;
 - every phase plan includes a `Service Wiring Matrix`;
 - every phase plan brings E2E automation in early enough to verify integrations during phase development;
 - every phase plan includes a `Phase Acceptance Gate` and does not reserve E2E work for a late QA-only task;
@@ -167,8 +169,10 @@ Before handoff:
 - accepted/revised findings were applied;
 - every technical design responsibility maps to one or more phases;
 - horizontal stack splits have been rejected unless explicitly justified;
-- phase and sub-agent lane counts are efficient for Codex: substantial enough to amortize context setup, bounded enough to avoid context loss;
+- phase and worker lane counts are efficient for Codex: substantial enough to amortize context setup, bounded enough to avoid context loss;
 - task `Execution` parallelism is consistent with task dependencies and any shared sequential contract handoff points are named explicitly;
+- no task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`;
+- substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior is assigned to worker lanes even when serial;
 - delegated behavior tasks include a TDD test proposal/approval gate before implementation;
 - build-on dependencies, deferred work, verification gaps, and escalations are resolved or explicitly noted;
 - no implementation work was performed.
@@ -183,8 +187,8 @@ Created implementation plans:
 - `<path>` - <phase goal>
 - `<path>` - <phase goal>
 
-Phases document:
-- `<path>`
+SLICES document:
+- `docs/plans/SLICES.md`
 
 HTML approval preview:
 - `<html path>`
@@ -202,5 +206,5 @@ Then offer:
 
 ```text
 Next options:
-1. Run `$implementation-execution` in phase order, with one long-running phase owner per phase.
+1. Run `$implementation-execution` in phase order, with the supervisor launching one phase orchestrator per phase.
 ```

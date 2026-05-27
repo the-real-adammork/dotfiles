@@ -1,6 +1,5 @@
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
-default_permissions = "claude-like"
 web_search = "live"
 personality = "pragmatic"
 model = "gpt-5.5"
@@ -10,15 +9,8 @@ approvals_reviewer = "user"
 [sandbox_workspace_write]
 network_access = true
 
-[permissions.claude-like.filesystem.":project_roots"]
-"." = "write"
-".env" = "none"
-".env.local" = "none"
-"**/.env" = "none"
-"**/.env.local" = "none"
-
 [features]
-codex_hooks = true
+hooks = true
 
 [notice]
 hide_full_access_warning = true
@@ -38,6 +30,12 @@ trust_level = "trusted"
 [projects."/Users/adam/Desktop"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Projects/agentview"]
+trust_level = "trusted"
+
+[projects."/Users/adam/dotfiles"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
@@ -55,6 +53,16 @@ timeout = 5
 type = "command"
 command = "/Users/adam/.codex/hooks/notify.sh"
 timeout = 5
+
+[hooks.state]
+
+[hooks.state."/Users/adam/.codex/config.toml:permission_request:0:0"]
+trusted_hash = "sha256:77bade0cd8b8bec17e98ff66021c6c031a77a976605a8dedbf27299eb60c9418"
+enabled = true
+
+[hooks.state."/Users/adam/.codex/config.toml:stop:0:0"]
+trusted_hash = "sha256:1a7ccdf1880db27d715c984a54db8fbff1a3d019198251cad942c6ddafd7c96d"
+enabled = true
 
 [plugins."superpowers@openai-curated"]
 enabled = true
