@@ -325,5 +325,5 @@ After saving the plan, say where it is and offer execution options:
 Plan saved to `docs/plans/<filename>.md`.
 
 Execution options:
-1. Run the orchestrated implementation workflow for this phase.
+1. Run `$implementation-execution` for this phase.
 ```

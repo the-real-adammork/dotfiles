@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implementation Execution"
+  short_description: "Run phase plans with YAML state"
+  default_prompt: "Use $implementation-execution to run approved implementation phase plans with a long-running phase owner, bounded workers, TDD gates, YAML state, and phase acceptance evidence."

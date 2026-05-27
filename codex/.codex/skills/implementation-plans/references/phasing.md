@@ -182,5 +182,5 @@ Then offer:
 
 ```text
 Next options:
-1. Run the orchestrated implementation workflow in phase order, with one long-running phase owner per phase.
+1. Run `$implementation-execution` in phase order, with one long-running phase owner per phase.
 ```
