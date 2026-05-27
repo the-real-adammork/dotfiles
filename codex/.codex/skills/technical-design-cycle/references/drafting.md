@@ -9,7 +9,7 @@ Inspect enough of the repo to understand current patterns, relevant files, tests
 Save designs to:
 
 ```text
-docs/designs/YYYY-MM-DD-<short-feature-name>.md
+docs/architecture/TECHNICAL_DESIGN.md
 ```
 
 User instructions about design location override this default.

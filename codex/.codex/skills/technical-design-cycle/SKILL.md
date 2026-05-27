@@ -26,7 +26,7 @@ Inputs:
 - Optional target design path. Default:
 
 ```text
-docs/designs/YYYY-MM-DD-<short-feature-name>.md
+docs/architecture/TECHNICAL_DESIGN.md
 ```
 
 If the requirements source is missing and cannot be inferred, ask for it before proceeding.

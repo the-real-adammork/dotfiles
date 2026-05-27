@@ -6,7 +6,7 @@ Turn an approved technical design into a sequence of smoke-testable implementati
 
 Inputs:
 
-- approved technical design path;
+- approved technical design path, default `docs/architecture/TECHNICAL_DESIGN.md`;
 - optional requirements path;
 - optional plan output directory, default `docs/plans/`;
 - optional review output directory, default `<plan output directory>/reviews/`;
@@ -16,7 +16,7 @@ If the technical design handoff includes an `Approved Specialist Implementation 
 
 `docs/plans/SLICES.md` is the canonical phase/slices index for every repo. Do not create feature-dated `*-implementation-phases.md` files unless the user explicitly overrides the path. This stable path lets `$implementation-execution` discover the approved phase order without the human passing a slices document path.
 
-If the technical design path is missing and cannot be inferred, ask for it.
+If the technical design path is missing from the request, look for `docs/architecture/TECHNICAL_DESIGN.md` first. If that file does not exist and the path cannot be inferred, ask for it.
 
 ## Context Budget Rules
 
