@@ -35,6 +35,8 @@ Write a markdown handoff only when:
 - the user stops the workflow;
 - a different agent must resume.
 
+Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, update `run.yaml`, record the completed phase evidence, and continue with the next phase owner/orchestrator.
+
 Default path:
 
 ```text
@@ -70,6 +72,9 @@ Completed phases:
 
 Current phase:
 - `<phase>` - <status> - `<phase.yaml>`
+
+Next action:
+- <continuing to next phase | stopped because single-phase scope | blocked | complete>
 
 Blocked or escalated:
 - <item or "None">

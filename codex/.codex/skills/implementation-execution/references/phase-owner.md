@@ -1,6 +1,8 @@
 # Phase Owner
 
-The phase owner is the long-running orchestrator for one phase. It owns the phase branch/worktree, active frontier, worker dispatch, integration, verification, `phase.yaml`, and phase acceptance packet.
+The phase owner is the long-running orchestrator for one phase. It owns the phase branch/worktree, active frontier, worker dispatch requests, integration, verification, `phase.yaml`, and phase acceptance packet.
+
+The phase owner should normally be a spawned orchestrator agent when agent dispatch is available. In runtimes where sub-agents cannot spawn sub-agents, the phase owner does not directly spawn workers. It prepares worker dispatch requests for the supervisor, including worker goal, branch/worktree, result YAML path, allowed files, service-wiring rows, commands, and artifact paths. The supervisor performs the actual spawn and routes worker results back to the phase-owner integration flow.
 
 ## Active Frontier
 
@@ -12,7 +14,7 @@ Build the frontier from:
 - active worker lanes;
 - pending consistency updates that could affect future tasks.
 
-Dispatch only substantial independent lanes. Keep small edits, glue code, integration, consistency updates, and acceptance packet ownership with the phase owner.
+Request workers for substantial bounded implementation lanes, including serial lanes where only one task can safely run right now. Keep small edits, glue code, integration, consistency updates, state updates, and acceptance packet ownership with the phase owner.
 
 Use this selection order:
 
@@ -20,22 +22,24 @@ Use this selection order:
 2. Exclude tasks whose `Depends On` entries are not complete.
 3. Exclude tasks affected by pending consistency updates.
 4. Group remaining tasks by shared files, schemas, migrations, generated files, services, databases, queues, ports, devices, and external dependencies.
-5. Prefer the smallest set of substantial non-overlapping lanes that can make progress.
+5. Prefer the smallest set of substantial non-overlapping worker lanes that can make progress.
 6. Cap concurrent worker lanes to what the repo can safely isolate; default to one worker lane unless independence is clear.
-7. Keep integration-heavy or context-heavy work with the phase owner.
+7. Request at least one worker for substantial code/test/runtime implementation, even when the active frontier is serial.
+8. Keep integration-heavy decisions, context-heavy orchestration, state updates, and tiny glue edits with the phase owner.
 
 ## Worker Count
 
-Decide worker count after reading the phase plan and state. Prefer a small number of lanes:
+Decide worker count after reading the phase plan and state. Prefer a small number of lanes, but do not collapse substantial implementation into the phase owner merely because only one lane is currently unblocked.
 
 - Good lanes: isolated UI workflow, isolated service/API path, E2E harness setup, migration plus repository layer, focused review/fix lane.
-- Bad lanes: tiny one-file edits, glue/integration work, unclear ownership, tasks requiring constant phase context, tasks touching the same schema/API/runtime resource as another active lane.
+- Good serial worker lanes: foundational scaffold, contract/test harness, first persistence adapter, first E2E harness, or any task likely to consume enough context that preserving phase-owner headroom matters.
+- Bad lanes: tiny one-file edits, state file edits, acceptance packet edits, glue/integration decisions, unclear ownership, tasks requiring constant phase context, tasks touching the same schema/API/runtime resource as another active lane.
 
-Do not spawn a worker just because a task exists.
+Use zero workers only when the next work is genuinely small orchestration/glue/state work. Otherwise request one worker for serial implementation, and more workers only when independence and resource isolation are clear.
 
 ## `/goal` Usage
 
-Use `/goal` only after the phase owner has selected the next lane and is ready to dispatch the worker.
+Use `/goal` only after the phase owner has selected the next lane and is ready to ask the supervisor to dispatch the worker.
 
 Every worker goal must include:
 
@@ -49,6 +53,24 @@ Every worker goal must include:
 - required commands and artifact directory;
 - explicit instruction not to update `run.yaml` or `phase.yaml`;
 - return contract.
+
+Return each worker dispatch request to the supervisor in compact form:
+
+```yaml
+dispatch_request:
+  lane: "<lane-slug>"
+  task: "Task N"
+  worker_result: "docs/implementation-runs/<run-id>/workers/<lane>-<timestamp>.yaml"
+  branch: "impl/<phase>/<lane>"
+  worktree: ".worktrees/impl-<phase>-<lane>"
+  goal: "<test-only or implementation goal>"
+  allowed_paths:
+    - "src/..."
+  service_wiring_rows:
+    - "<row>"
+  commands:
+    - "<focused command>"
+```
 
 For behavior tasks, use two goals:
 
@@ -83,11 +105,31 @@ After every worker result:
 2. Run the task/lane checkpoint from the implementation plan.
 3. Run any affected integration or E2E commands needed for service-wiring rows.
 4. Merge compact evidence into `phase.yaml`.
-5. Review worker/reviewer `lesson_candidate` entries and promote only proven recurring fixes.
-6. Record downstream plan updates only when reality changed.
-7. Dispatch fix worker or reviewer when needed.
+5. Merge every worker `mocks_or_fixtures` entry into `phase.yaml` `mock_fixture_ledger`.
+6. Reconcile ledger entries against service-wiring rows:
+   - mark pure test fixtures as `test-only`;
+   - mark approved fixture-backed phase deliverables as `intentional-phase-boundary`;
+   - mark replaced fakes as `converted` only after real runtime evidence exists;
+   - require a concrete later phase/task for `deferred-with-conversion-task`;
+   - keep unavailable real dependencies as `blocked` only when they match allowed escalation rules.
+7. Dispatch a fix worker or plan-consistency update when a runtime fake lacks a valid disposition.
+8. Review worker/reviewer `lesson_candidate` entries and promote only proven recurring fixes.
+9. Record downstream plan updates only when reality changed.
+10. Dispatch fix worker or reviewer when needed.
 
 Workers do not update `run.yaml` or `phase.yaml` directly unless explicitly assigned a narrow state-edit task.
+
+## Mock/Fixture Ledger Ownership
+
+The phase owner is responsible for keeping the mock/fixture ledger accurate. Do not rely on reviewers or final QA to discover all fake usage.
+
+Use the ledger to preserve useful temporary mocks while preventing fake completion:
+
+- temporary fakes may be introduced during TDD or parallel work;
+- every fake that affects runtime behavior, service wiring, or acceptance evidence must be tracked;
+- service-wiring rows that require real integration cannot be marked covered by mock-only evidence;
+- before phase acceptance, run the mock/fixture audit scan from `qa-acceptance.md` and reconcile relevant matches;
+- phase acceptance cannot pass with `unresolved`, untracked, or improperly deferred runtime fakes.
 
 ## Lesson Promotion
 

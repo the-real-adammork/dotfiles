@@ -75,6 +75,16 @@ Every plan starts with:
 - Handoff path: `docs/handoffs/YYYY-MM-DD-<feature>-phase-<n>-handoff.md`
 - Required contents: current task status, branch/worktree, sub-agent results, verification evidence, service-wiring coverage, acceptance packet status, blockers/escalations, and exact restart instructions.
 
+## Implementation Execution Handoff
+
+This phase is intended to be run by `$implementation-execution` after planning approval.
+
+- Run state: `docs/implementation-runs/<run-id>/run.yaml`
+- Phase state: `docs/implementation-runs/<run-id>/phases/<phase-slug>.yaml`
+- Worker result YAML: `docs/implementation-runs/<run-id>/workers/<lane>-<timestamp>.yaml`
+- Acceptance packet: `docs/qa/phase-acceptance/YYYY-MM-DD-<feature>-phase-<n>.md`
+- QA artifacts: `docs/qa/artifacts/<phase-slug>/`
+
 ## Codex Efficiency Rules
 
 Optimize the plan for the fewest coordination turns that still preserve reviewability and safe parallelism.
@@ -86,6 +96,7 @@ Optimize the plan for the fewest coordination turns that still preserve reviewab
 - Split tasks when they touch independent surfaces, can run in parallel without shared resources, or need separate review because of risk.
 - Avoid repeating the same context in every task. Put phase-wide rules in the file map, service wiring matrix, execution contract, and acceptance gate; task sections should reference those names.
 - Make every delegated lane return compact evidence: changed files, commands run, pass/fail output summary, service-wiring rows covered, risks, and follow-up edits needed.
+- For behavior changes in delegated lanes, require the worker to complete a test proposal/approval loop before implementation: write or update tests first, run them to show the expected failure, return test intent and failure evidence to the phase owner, wait for phase-owner approval that the tests satisfy the task, then implement and make the approved tests pass.
 
 ## Autonomy And Escalation
 
@@ -169,6 +180,13 @@ Tasks are potential sub-agent work units, not automatic sub-agent work units. A 
 - Required real dependencies: <service/db/network/API/real-data path and how agent provisions it, or exact escalation blocker>
 - Blocking if unavailable: <yes/no and why>
 
+**TDD Approval Gate:** <required for delegated behavior work | not applicable with reason>
+- Worker writes or updates tests first.
+- Worker runs focused tests and records the expected failure.
+- Worker returns test intent, covered requirements, command, expected failure, and affected files to the phase owner.
+- Phase owner approves that the tests satisfy the task requirements before implementation starts.
+- Worker implements only after approval, then reruns the approved tests until green.
+
 - [ ] Step 1: Write or update the failing test
 
 ```<language>
@@ -180,23 +198,28 @@ Tasks are potential sub-agent work units, not automatic sub-agent work units. A 
 Run: `<exact command>`
 Expected: `<specific failure or missing behavior>`
 
-- [ ] Step 3: Implement the smallest change
+- [ ] Step 3: For delegated behavior work, return the test proposal and expected-failure evidence to the phase owner for approval
+
+Approval evidence: `<worker result YAML path or phase-owner note path>`
+Expected: `<phase owner approves the tests as sufficient for this task before implementation>`
+
+- [ ] Step 4: Implement the smallest change
 
 ```<language>
 <actual code shape, function signatures, or concrete edit>
 ```
 
-- [ ] Step 4: Run focused verification
+- [ ] Step 5: Run focused verification
 
 Run: `<exact command>`
 Expected: `<specific pass condition>`
 
-- [ ] Step 5: Commit this task
+- [ ] Step 6: Commit this task
 
 Suggested message: `<type>[optional scope]: <description>`
 ````
 
-For documentation, config, or mechanical changes where TDD does not apply, replace the failing-test step with the smallest meaningful validation step, such as syntax validation, config parse, render check, or dry run.
+For phase-owner work, documentation, config, or mechanical changes where TDD approval does not apply, mark `TDD Approval Gate` as not applicable with a concrete reason and replace the failing-test step with the smallest meaningful validation step, such as syntax validation, config parse, render check, or dry run.
 
 ## Phase E2E And Acceptance Gate
 
@@ -241,7 +264,7 @@ Packet contents:
 - service wiring matrix with covered evidence for each row;
 - commands run, exact results, and timestamps where available;
 - E2E artifacts such as Playwright traces, screenshots, videos, simulator logs, API logs, database assertions, or CLI output paths;
-- known mocked boundaries or residual risks;
+- mock/fixture ledger summary with disposition for any tracked mock, fixture, fake service, placeholder, generated data source, or temporary runtime stand-in;
 - escalations encountered and final disposition;
 - downstream assumptions later phases may rely on.
 
@@ -255,15 +278,33 @@ Every task must include `**Depends On:**`. Use task numbers from the same plan, 
 
 Declare only implementation-order dependencies: a task should depend on another task when it requires code, schema, generated files, interfaces, fixtures, or verified behavior produced by that earlier task. Do not add dependencies merely because tasks appear earlier in the document. Tasks marked `Depends On: None` are expected to be parallelizable after plan setup and agent-owned prerequisites are available.
 
-If a dependency crosses plan boundaries, name the external plan and task explicitly instead of using the same-plan shorthand. The Linear sync workflow only creates automatic Linear issue blocking relations for dependencies within the same implementation plan.
+If a dependency crosses plan boundaries, name the external plan and task explicitly instead of using the same-plan shorthand so `$implementation-execution` can build the active frontier from file-backed plan state.
+
+## Dependency And Parallelism Consistency
+
+Before finalizing a plan, verify every task's `Depends On` and `Execution` line against the sub-agent delegation map.
+
+- A task cannot be marked parallel with any task it depends on.
+- A task cannot be marked parallel with any task that depends on it.
+- Parallel lanes must share no required sequential contract unless the plan names the contract handoff point, such as "after shared contract exports are approved" or "after API fixture route exists."
+- If two tasks share files, schema, API contracts, package/config, migrations, generated fixtures, browser harness setup, or long-lived runtime resources, either serialize them or name the precise handoff/checkpoint that makes parallel execution safe.
+- If the safe parallel point is conditional, write it in both the `Execution` line and the `Sub-Agent Delegation Map`; do not rely on task order alone.
 
 Do not mark real service, credential, account, network, database, queue, storage, or real-data verification as optional when the task or design requires that integration. These dependencies are mandatory verification gates. If unavailable, the task should be blocked and recorded as an escalation only when it fits an allowed escalation category.
 
-Mocks are acceptable for early unit tests, fast failure isolation, and hard-to-trigger error paths. But if production code is temporarily wired to a mock, stub, fake service, fixture-only data source, no-op client, in-memory stand-in, or disabled network path, the plan must include a later task that replaces it with the real implementation.
+Mocks, fixtures, fake services, placeholders, generated data, and temporary runtime stand-ins are acceptable during implementation when they speed up safe development or make tests deterministic. The plan must make their disposition explicit so `$implementation-execution` can track them in the mock/fixture ledger.
 
-If production or dev runtime behavior depends on a mock and there is no later conversion task, the implementation plan is invalid and must fail review.
+Valid dispositions:
 
-The conversion task must:
+- `test-only`: used only in tests or deterministic seed data; production/dev runtime path still uses the real implementation.
+- `intentional-phase-boundary`: fixture-backed runtime behavior is explicitly the deliverable of this phase, such as a fixture shell phase.
+- `converted`: temporary fake is replaced by real integration inside this phase and verified through the real runtime boundary.
+- `deferred-with-conversion-task`: fake remains by design and a named later phase/task owns conversion to real integration.
+- `blocked`: real dependency is unavailable under allowed escalation rules and the phase cannot honestly complete unless the phase boundary explicitly allows that blocker.
+
+If production or dev runtime behavior depends on a mock, stub, fake service, fixture-only data source, no-op client, in-memory stand-in, or disabled network path and none of the valid dispositions applies, the implementation plan is invalid and must fail review.
+
+Any conversion task must:
 
 - name the mocked production/dev path being replaced;
 - identify the real service, network call, persistence layer, or code path;
@@ -281,7 +322,7 @@ Never leave:
 - "Similar to previous task"
 - Code steps without code shape, API names, or exact commands
 - Commands without expected results
-- "Mock for now" without a later real-service conversion task
+- "Mock for now" without a valid mock/fixture ledger disposition and, when needed, a later real-service conversion task
 - "Manual test later" or optional non-automated verification language
 - "Optional" real service, credential, account, database, network, queue, storage, or real-data verification for a task that requires that dependency
 - A phase plan without a `Phase Execution Contract`
@@ -313,7 +354,7 @@ Before presenting the plan, check:
 - The `Autonomy And Escalation` table includes only allowed escalation categories, and normal setup remains agent-owned.
 - Every task includes a concrete `Agent-Run Acceptance` section.
 - Every task with tests includes a `Test Mode Disclosure`.
-- Any production/dev mock, fake, stub, no-op, fixture-only path, or disabled network path has a later conversion task to the real implementation.
+- Any production/dev mock, fake, stub, no-op, fixture-only path, or disabled network path has a valid mock/fixture ledger disposition and, when needed, a later conversion task to the real implementation.
 
 Fix gaps inline before delivering the plan.
 

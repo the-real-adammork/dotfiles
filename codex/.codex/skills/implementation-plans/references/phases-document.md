@@ -18,6 +18,26 @@ docs/plans/reviews/
 
 For a custom plan output directory, put review artifacts in `<plan output directory>/reviews/`.
 
+Default HTML approval preview path:
+
+```text
+docs/plans/YYYY-MM-DD-<feature>-implementation-phases.html
+```
+
+Generate the HTML preview from the markdown phases document with `pandoc`, which is Homebrew-installable:
+
+```sh
+pandoc --from=gfm --to=html5 --standalone --metadata title="<Feature> Implementation Phases" -o docs/plans/YYYY-MM-DD-<feature>-implementation-phases.html docs/plans/YYYY-MM-DD-<feature>-implementation-phases.md
+```
+
+If `pandoc` is unavailable, stop before requesting phase approval and tell the human to install it:
+
+```sh
+brew install pandoc
+```
+
+After installation, rerun the phases-document preview step.
+
 ## Template
 
 ```markdown
@@ -65,12 +85,19 @@ Review artifact: `docs/plans/reviews/YYYY-MM-DD-<feature>-phase-breakup-review.m
 
 - <deferred work, allowed escalation, or "None">
 
+## HTML Approval Preview
+
+- HTML file: `docs/plans/YYYY-MM-DD-<feature>-implementation-phases.html`
+- Local review URL: `http://127.0.0.1:<port>/YYYY-MM-DD-<feature>-implementation-phases.html`
+- Generated with: `pandoc --from=gfm --to=html5 --standalone ...`
+- Server command: `python3 -m http.server <port> --bind 127.0.0.1 --directory docs/plans`
+
 ## Generated Implementation Plans
 
 - `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` - <phase goal>
 ```
 
-Before phase boundaries are ready, `Ready Phase Boundaries` and `Generated Implementation Plans` may show planned paths. After plans are generated, update them with final paths.
+Before phase boundaries are ready, `Ready Phase Boundaries` and `Generated Implementation Plans` may show planned paths. After phase boundaries are reviewed and patched, generate the HTML approval preview and populate `HTML Approval Preview` before asking for approval. After plans are generated, update `Generated Implementation Plans` with final paths.
 
 ## Proposal Summary
 
@@ -98,7 +125,10 @@ Present this summary before generating plan documents when the user asks for a p
 ## Lifecycle Updates
 
 - Set status to `Draft` when the phases document is first created.
-- Set status to `Ready` once phase boundaries have passed phase breakup review or the user has explicitly accepted them.
+- Keep status as `Draft` while phase boundaries are being generated, reviewed, and patched.
+- Set status to `Ready` only after phase boundaries have passed phase breakup review and the user has explicitly approved the phases document.
+- Do not create individual phase plan documents while the phases document is still `Draft`.
+- Before requesting phase approval, generate the HTML approval preview and serve it on localhost so the human can review the phase sequence in a browser.
 - Save detailed phase review artifacts under `<plan output directory>/reviews/`.
 - Record only summary findings, dispositions, and review artifact links in `Phase Breakup Review`.
 - Update `Ready Phase Boundaries`, `Coverage Check`, and `Execution Order` when accepted/revised findings change the phase sequence.

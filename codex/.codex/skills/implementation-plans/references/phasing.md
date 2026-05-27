@@ -28,6 +28,9 @@ Keep files as the source of truth. Do not paste full technical designs, phases d
 
 Keep plan generation bounded and idempotent.
 
+- Treat the user's request to run this phase-planning workflow as authorization to dispatch planning agents. Do not ask for a separate delegated-agent approval before dispatching plan writers or reviewers.
+- This authorization does not bypass the phase-document approval checkpoint. Generate and review the phases document first, create and serve an HTML preview, then pause for explicit human approval before writing individual phase plan documents.
+- If planning-agent dispatch is unavailable in the current runtime, generate the phases document and review artifact locally, pause for approval, and only then generate individual phase plans locally.
 - Maintain a small dispatch table in the phases document or parent notes before starting plan writers: phase name, output path, stable `agent_name`, host agent id/nickname, status, and result path.
 - Do not dispatch a plan-writing agent when its output plan already exists and matches the ready phase unless the user explicitly requests regeneration.
 - Do not dispatch a replacement for an active or recently completed phase writer until you have checked the dispatch table, output path, and any handoff path.
@@ -125,24 +128,35 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
    - dependencies, build-on assumptions, and deferred work are explicit.
    Save detailed phase review artifacts under the review output directory. Keep only the summary/disposition table and review links in the phases document.
 7. Patch the phases document for accepted or internally resolved findings. Do not generate plan docs until High/Medium phase issues are resolved, explicitly deferred with rationale, or recorded as allowed escalations.
-8. Create or update the plan-writer dispatch table, then dispatch one plan-writing agent per ready phase that does not already have a valid plan output. Read `references/planning-agent-prompts.md` for the required prompt and return contract.
-9. Update the phases document after each plan is created, then set status to `Plans Generated` once all plan docs exist.
-10. Dispatch one consolidated reviewer agent. Use `references/planning-agent-prompts.md`.
-11. Patch plan docs and/or the phases document for accepted or internally resolved reviewer findings.
-12. Rerun consolidated review when High/Medium findings were patched, phase boundaries changed, or the user asks. Save each rerun as a separate artifact in the review output directory; do not overwrite prior review files.
-13. Final local check and handoff.
+8. Generate an HTML approval preview from the reviewed phases document and serve it on localhost:
+   - Preferred converter: `pandoc`, installed with `brew install pandoc`.
+   - If `pandoc` is unavailable, stop and tell the human to install it, then rerun this preview step.
+   - Write the preview next to the phases document using the same basename and `.html`, for example `docs/plans/YYYY-MM-DD-<feature>-implementation-phases.html`.
+   - Use a local server such as `python3 -m http.server <port> --bind 127.0.0.1 --directory <plan output directory>`.
+   - Prefer port `4173`; if it is busy, choose the next available port.
+   - Record the HTML path and localhost URL in the phases document's `HTML Approval Preview` section.
+9. Present the reviewed phases document, HTML preview link, and pause. Do not dispatch plan-writing agents or create individual phase plan documents until the user explicitly approves the phase sequence and boundaries.
+10. After approval, set the phases document to `Ready`, create or update the plan-writer dispatch table, then dispatch one plan-writing agent per ready phase that does not already have a valid plan output. Read `references/planning-agent-prompts.md` for the required prompt and return contract.
+11. Update the phases document after each plan is created, then set status to `Plans Generated` once all plan docs exist.
+12. Dispatch one consolidated reviewer agent. Use `references/planning-agent-prompts.md`.
+13. Patch plan docs and/or the phases document for accepted or internally resolved reviewer findings.
+14. Rerun consolidated review when High/Medium findings were patched, phase boundaries changed, or the user asks. Save each rerun as a separate artifact in the review output directory; do not overwrite prior review files.
+15. Final local check and handoff.
 
-Do not begin implementation unless the user chooses an execution option. Planning does not require a manual approval checkpoint when the user has already delegated the workflow and the source documents are sufficient.
+Do not begin implementation unless the user chooses an execution option. Do not generate individual phase plan documents before the phases document has explicit user approval, even when the user has delegated the broader planning workflow.
 
 ## Final Checks
 
 Before handoff:
 
 - phases document exists, links back to the technical design, and links forward to every generated plan;
+- phases document has an HTML approval preview generated from the current markdown and served on localhost before requesting approval;
+- individual phase plan documents were generated only after explicit approval of the reviewed phases document;
 - every ready phase has a plan file at the reported path;
 - every phase has a smoke-testable outcome, phase-owner responsibility, sub-agent lane summary, service wiring summary, E2E harness readiness note, phase acceptance automation, and expected acceptance packet;
 - every phase plan includes `Autonomy And Escalation` with only allowed exception categories;
 - every phase plan includes a `Phase Execution Contract` for long-running phase ownership, delegation, integration checkpoints, and handoff;
+- every phase plan includes an `Implementation Execution Handoff` with `$implementation-execution` state and evidence paths;
 - every phase plan includes a `Service Wiring Matrix`;
 - every phase plan brings E2E automation in early enough to verify integrations during phase development;
 - every phase plan includes a `Phase Acceptance Gate` and does not reserve E2E work for a late QA-only task;
@@ -154,6 +168,8 @@ Before handoff:
 - every technical design responsibility maps to one or more phases;
 - horizontal stack splits have been rejected unless explicitly justified;
 - phase and sub-agent lane counts are efficient for Codex: substantial enough to amortize context setup, bounded enough to avoid context loss;
+- task `Execution` parallelism is consistent with task dependencies and any shared sequential contract handoff points are named explicitly;
+- delegated behavior tasks include a TDD test proposal/approval gate before implementation;
 - build-on dependencies, deferred work, verification gaps, and escalations are resolved or explicitly noted;
 - no implementation work was performed.
 
@@ -169,6 +185,10 @@ Created implementation plans:
 
 Phases document:
 - `<path>`
+
+HTML approval preview:
+- `<html path>`
+- `<localhost URL>`
 
 Execution order:
 1. <phase>

@@ -64,6 +64,8 @@ Use the listed source documents and artifact paths as the source of truth. Do no
 
 Dispatch one planning agent per ready phase that lacks a valid output plan. Prefer sequential dispatch so later phase plans can build on earlier phase plans.
 
+After the reviewed phases document has explicit user approval, the parent workflow does not need separate approval to dispatch plan-writing agents for those approved phases. If dispatch tools are unavailable, the parent should write the approved phase plans locally instead.
+
 Each agent owns exactly one phase and one output plan document. Agents must not edit other phases' plan files, modify the technical design, or implement code.
 
 Prompt:
@@ -89,9 +91,12 @@ Constraints:
 - Stay within this phase boundary.
 - Include the UI/API/CLI/jobs/data work needed for this phase's smoke-testable outcome.
 - Include a `Phase Execution Contract` for a long-running phase owner, a small sub-agent delegation map, integration checkpoints, and handoff path.
+- Include an `Implementation Execution Handoff` section that points to `$implementation-execution` state and evidence locations: `run.yaml`, `phase.yaml`, worker result YAML, acceptance packet, and QA artifact paths.
 - Include a compact `Execution` line for every task so the execution workflow can decide phase-owner work vs bounded sub-agent lane without extra analysis.
+- Keep `Execution` parallelism consistent with `Depends On`: a task cannot be parallel with a task it depends on or with a task that depends on it. Parallel lanes that share a required sequential contract must name the handoff point in both the task and delegation map.
 - Optimize for Codex efficiency: avoid tiny delegated tasks, minimize repeated context, and group related implementation work when splitting would add coordination cost without parallelism.
 - Mark tasks as `phase-owner only` when they are integration-heavy, context-heavy, or unsafe to delegate.
+- For delegated behavior work, include a `TDD Approval Gate`: worker writes tests first, runs the focused test to record expected failure, returns test intent/evidence to the phase owner, waits for phase-owner approval that tests satisfy requirements, then implements and makes the approved tests pass.
 - Include `Autonomy And Escalation` and escalate only for credentials/secrets, paid/vendor setup, product/legal/security decisions, destructive production actions, real customer data access, or unavailable devices/services after an agent-owned attempt.
 - Include a `Service Wiring Matrix` that names the phase flows across surface, service, persistence, jobs, and integrations.
 - Include `Service Wiring Rows Covered` for every task that touches surface/service/persistence/jobs/integrations.
@@ -147,11 +152,15 @@ Check for:
 - horizontal backend-first/frontend-later splits that prevent the app from coming to life phase by phase;
 - phases too large or too vague for one long-running phase owner to maintain coherent context;
 - missing or weak `Phase Execution Contract`;
+- missing `Implementation Execution Handoff` for `$implementation-execution` state/evidence paths;
 - missing task-level `Execution` lines;
 - too many tiny delegated tasks that create coordination overhead without parallelism;
 - repeated context pasted into many tasks instead of captured once in phase-level sections;
 - unsafe parallelism or missing shared-resource/collision risks in sub-agent scopes;
+- `Execution` lines that mark a task parallel with a task it depends on or with a task that depends on it;
+- parallel lanes that share a required sequential contract without naming the handoff point;
 - missing integration checkpoints after delegated work;
+- delegated behavior tasks that lack a TDD test proposal/approval gate before implementation;
 - missing or unclear cross-plan dependencies;
 - verification gaps;
 - missing `Autonomy And Escalation` sections or escalation categories outside the allowed exception list;

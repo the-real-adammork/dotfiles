@@ -50,6 +50,8 @@ mock_or_fixture_disclosure: []
 blockers: []
 ```
 
+If the proposed tests use mocks, fixtures, generated data, fake services, or placeholder handlers, `mock_or_fixture_disclosure` must name the fake, its scope, why it is acceptable for the test proposal, and whether it is expected to create a `mock_fixture_ledger` entry after implementation.
+
 ## Implementation Result
 
 After approved tests pass, return worker result YAML as described in `state-files.md`.
@@ -61,7 +63,7 @@ The result must include:
 - pass/fail result;
 - service-wiring rows covered;
 - real dependencies used;
-- mocks or fixtures used and why they are acceptable;
+- mocks or fixtures used, with ledger-ready fields: name, kind, scope, affected paths, service-wiring rows, disposition, acceptable reason, conversion task if any, and evidence path;
 - residual risk;
 - lesson candidate when the worker found a recurring, proven, repo-specific problem;
 - recommended downstream plan edits;
@@ -74,7 +76,7 @@ The result must include:
 - Do not rewrite the phase plan unless assigned.
 - Do not update `run.yaml` or `phase.yaml` unless assigned.
 - Do not hide failing tests.
-- Do not satisfy service wiring with mocks when real wiring is required.
+- Do not satisfy service wiring with mocks when real wiring is required; if a mock/fixture/fake is useful during implementation, disclose it and make sure it can be reconciled by the phase owner's mock/fixture ledger.
 - Do not spawn other agents.
 - Do not generate, write, reveal, hide, stage, or commit secret material without following `$secrets`.
 

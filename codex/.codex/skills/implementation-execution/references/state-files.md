@@ -61,6 +61,14 @@ active_lanes:
     worker: "worker-write-path-1"
     branch: "impl/phase-2/write-path"
     worktree: ".worktrees/impl-phase-2-write-path"
+role_separation:
+  supervisor: "supervisor"
+  phase_owner: "phase-owner-phase-2"
+  phase_owner_dispatch_available: true
+  phase_owner_spawned: true
+  phase_owner_inline_reason: null
+  worker_dispatch_available: true
+  worker_dispatch_fallback_reason: null
 tasks:
   "4":
     status: done
@@ -74,6 +82,21 @@ service_wiring:
   create-record:
     status: covered
     evidence: "docs/qa/artifacts/phase-2/create-record-trace.zip"
+mock_fixture_ledger:
+  - id: "mf-001"
+    name: "seed user fixture"
+    kind: fixture # mock | fixture | fake-service | placeholder | generated-test-data
+    introduced_by: "Task 4"
+    scope: test-only # test-only | runtime | service-wiring | acceptance-evidence
+    affected_paths:
+      - "tests/fixtures/users.ts"
+    service_wiring_rows:
+      - "create-record"
+    disposition: test-only # test-only | intentional-phase-boundary | converted | deferred-with-conversion-task | blocked
+    acceptable_because: "Seed data only; production path still uses real database."
+    conversion_task: null
+    evidence:
+      - "docs/qa/artifacts/phase-2/create-record-trace.zip"
 acceptance:
   status: pending
   packet: "docs/qa/phase-acceptance/phase-2.md"
@@ -131,8 +154,19 @@ service_wiring_rows:
 real_dependencies:
   - "postgres local container"
 mocks_or_fixtures:
-  - name: "seed user fixture"
-    acceptable_because: "seed data only; production path still uses real database"
+  - id: "mf-001"
+    name: "seed user fixture"
+    kind: fixture # mock | fixture | fake-service | placeholder | generated-test-data
+    scope: test-only # test-only | runtime | service-wiring | acceptance-evidence
+    affected_paths:
+      - "tests/fixtures/users.ts"
+    service_wiring_rows:
+      - "create-record"
+    disposition: test-only # test-only | intentional-phase-boundary | converted | deferred-with-conversion-task | blocked | unresolved
+    acceptable_because: "Seed data only; production path still uses real database."
+    conversion_task: null
+    evidence:
+      - "docs/qa/artifacts/phase-2/create-record-trace.zip"
 residual_risks: []
 review_status: approved # not_reviewed | approved | needs_fix | blocked
 lesson_candidate:
@@ -148,6 +182,31 @@ plan_updates_recommended:
     change: "Use /api/v2/records"
 blockers: []
 ```
+
+## Mock/Fixture Ledger
+
+Mocks, fixtures, fake services, placeholder handlers, generated test data, and temporary runtime stand-ins are allowed during implementation when they make the work faster or safer. They must not silently become completion evidence.
+
+The phase owner maintains `mock_fixture_ledger` in `phase.yaml` by merging every worker's `mocks_or_fixtures` entries. Track any fake that touches runtime behavior, service wiring, acceptance evidence, or test data used to prove a phase. Pure unit-test-only fixtures may be tracked compactly when they matter for service-wiring interpretation.
+
+Every ledger entry must have one disposition before phase completion:
+
+- `test-only`: used only in tests or deterministic seed data; production/dev runtime path still uses the real implementation.
+- `intentional-phase-boundary`: fixture-backed runtime behavior is explicitly the phase deliverable, such as an approved fixture shell phase.
+- `converted`: temporary fake was replaced by real integration and verified through the real runtime boundary.
+- `deferred-with-conversion-task`: fake remains by design and a named later phase/task owns conversion to real integration.
+- `blocked`: real dependency is unavailable under allowed escalation rules and the phase cannot honestly complete unless the phase scope allows this blocker.
+
+These statuses fail phase acceptance:
+
+- missing ledger entry for a discovered runtime fake;
+- `unresolved`;
+- runtime fake with no disposition;
+- `mock-only-evidence` for a service-wiring row that requires real integration proof;
+- `deferred-with-conversion-task` without a concrete plan/task path;
+- `blocked` without an allowed escalation and blocking state.
+
+The ledger is state, not evidence storage. Store short summaries and artifact paths only.
 
 ## Do Not Store
 

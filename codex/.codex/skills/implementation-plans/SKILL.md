@@ -52,6 +52,8 @@ Use `references/cross-plan-consistency.md` when:
 
 ## Planning Agent Prompts
 
+When the user asks `$implementation-plans` to decompose a design into phase plans, that request authorizes the workflow to use planning agents for drafting and review. Do not ask for a separate "sub-agent approval" just to dispatch plan-writing or review agents. If agent dispatch tools are unavailable, continue locally and state that limitation.
+
 When dispatching plan-writing agents from the phase workflow, prompt them to use this skill and load the plan-writing reference:
 
 ```text
@@ -68,4 +70,4 @@ Do not dispatch or invoke standalone implementation-plan phasing or consistency 
 
 ## Handoff
 
-After creating or updating plans, report the artifact paths, unresolved escalations, and the next available execution or review options. Do not begin implementation unless the user explicitly chooses an execution option.
+After creating or updating plans, report the artifact paths, unresolved escalations, and the next available execution or review options. In the phasing workflow, pause after the reviewed phases document, generate an HTML preview with `pandoc`, serve it on localhost, share the URL, and wait for explicit user approval before writing individual phase plan documents. If `pandoc` is unavailable, tell the human to run `brew install pandoc` and rerun the preview step. Do not begin implementation unless the user explicitly chooses an execution option.

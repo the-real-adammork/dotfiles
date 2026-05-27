@@ -1,17 +1,20 @@
 # Branch And Worktree Strategy
 
-Use branches and worktrees only where they reduce conflict risk or enable real parallelism. Avoid PR/MR per task by default.
+Use branches and worktrees to keep long-running phase execution resumable and isolated. Avoid PR/MR per task by default.
 
 ## Default Shape
 
-- The phase owner works on the phase branch, such as `impl/<phase-slug>`.
+- Every active phase gets a phase branch and phase worktree by default, such as branch `impl/<phase-slug>` and worktree `.worktrees/impl-<phase-slug>`.
+- The phase owner works from the phase worktree and records the branch/worktree in `phase.yaml`.
 - The phase owner keeps glue, integration, small edits, state updates, consistency updates, and acceptance packet work on the phase branch.
-- Workers use isolated task branches/worktrees only for substantial parallel lanes or risky work.
+- Workers use isolated task branches/worktrees for substantial implementation lanes, including serial lanes. This preserves phase-owner context and keeps worker changes reviewable before merge.
+- Skip a phase worktree only when repo tooling makes worktrees impossible or unsafe; record the fallback reason in `phase.yaml` and the handoff.
 
 ## When To Use Worker Worktrees
 
 Create a worker branch/worktree when a lane:
 
+- changes substantial runtime code, tests, service wiring, or E2E automation;
 - runs in parallel with another lane;
 - touches many files;
 - may take a long time;
@@ -19,7 +22,7 @@ Create a worker branch/worktree when a lane:
 - changes migrations, schemas, generated files, dependency files, or runtime resources;
 - needs independent test/fix/review cycles.
 
-Use the phase worktree directly only for small serial tasks owned by the phase owner.
+Use the phase worktree directly only for tiny phase-owner glue, state updates, acceptance packet edits, plan consistency edits, or emergency fixes where creating a worker worktree would cost more than the change.
 
 ## Worker Branch Naming
 
@@ -32,7 +35,7 @@ impl/<phase-slug>/<lane-slug>
 Prefer deterministic worktree paths:
 
 ```text
-.worktrees/<phase-slug>-<lane-slug>
+.worktrees/impl-<phase-slug>-<lane-slug>
 ```
 
 Record branch, worktree, base commit, and worker id in `phase.yaml` before dispatching the worker.
