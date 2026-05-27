@@ -64,6 +64,14 @@ After installation, rerun the SLICES preview step.
 | --- | --- | --- |
 | `<section>` | `<phase>` | <coverage note> |
 
+## Approved Specialist Implementation Agents
+
+General-purpose implementation workers are always available.
+
+| Agent | Best-Fit Work | Not Allowed To Own | Fallback Rule |
+| --- | --- | --- | --- |
+| <approved specialist, or "None approved"> | <task/lane types> | <boundaries> | Use a general-purpose worker when <condition>. |
+
 ## Phase Breakup Review
 
 | Finding | Severity | Recommendation | Disposition |
@@ -120,6 +128,7 @@ Present this summary before generating plan documents when the user asks for a p
 - Horizontal stack splits avoided:
 - Phase orchestrator ownership:
 - Worker lanes and serialized resources:
+- Approved specialist implementation agents and general-purpose fallbacks:
 - Orchestrator scope excludes substantial implementation:
 - Phase acceptance automation:
 - Acceptance packet expectations:

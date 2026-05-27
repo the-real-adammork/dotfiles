@@ -39,6 +39,8 @@ Supervisor/orchestrator communication uses one compact file: `docs/implementatio
 
 Human involvement is only for allowed escalations: credentials/secrets, paid/vendor setup, unresolved product/legal/security decisions, destructive production actions, real customer data access, or unavailable real dependencies after an agent-owned attempt.
 
+General-purpose implementation workers are always available. If the approved phase plan names specialist implementation agents, treat them as fixed worker-routing metadata approved before planning. The execution workflow must not invent, propose, or block on new specialist agents during runtime; when no approved specialist clearly fits a lane, dispatch a general-purpose worker.
+
 ## Reference Modules
 
 Load only the module needed for the current action:
@@ -60,7 +62,7 @@ Load only the module needed for the current action:
 2. Load `references/supervisor.md` and choose the current phase from `run.yaml`.
 3. Load `references/phase-orchestrator.md` and `references/branch-worktree.md` before starting or resuming the active phase.
 4. Create or refresh the compact execution manifest for the active phase, validate any recorded orchestrator pane before trusting it, then start or resume the phase orchestrator in a new pane in the current tmux window. The orchestrator builds the active frontier from the manifest, task statuses, shared-resource constraints, and active worker lanes.
-5. The orchestrator spawns workers directly for substantial implementation lanes, even when only one lane is currently available. Keep glue, integration, tiny edits, state updates, and acceptance ownership with the orchestrator.
+5. The orchestrator spawns workers directly for substantial implementation lanes, even when only one lane is currently available. Dispatch the planned approved specialist only when the manifest/task names one and the lane matches its approved scope; otherwise use a general-purpose worker. Keep glue, integration, tiny edits, state updates, and acceptance ownership with the orchestrator.
 6. For behavior work, use `references/worker-tdd.md`: test-only goal first, agentic test approval, then implementation.
 7. Use `references/agentic-review.md` for test review, implementation review, and fix loops.
 8. After each worker result, the orchestrator integrates, runs the lane checkpoint, updates `phase.yaml`, reconciles mock/fixture ledger entries, and batches any needed plan consistency notes.

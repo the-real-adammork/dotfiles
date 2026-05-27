@@ -4,6 +4,8 @@ Workers are bounded executors. They do not spawn workers, schedule sibling work,
 
 Workers receive the execution manifest path plus the selected task section from the phase plan. They should not read the whole phase plan unless the assigned task section is missing or ambiguous. If extra plan context is required, read only the specific referenced section and record why in the worker result.
 
+Workers may be dispatched as a general-purpose implementation worker or as an approved specialist implementation agent named in the phase plan. Specialist agent scope affects focus and review lens only; all worker restrictions still apply. If the prompt names no specialist, behave as a general-purpose worker. Do not request or invent a different specialist role.
+
 ## Adaptive TDD Contract
 
 Use full two-stage TDD for high-risk or integration-sensitive behavior:
@@ -38,6 +40,7 @@ Return compact YAML or a compact message containing:
 status: test_proposed
 task: "Task N"
 execution_manifest: "docs/implementation-runs/<run-id>/manifests/<phase>.yaml"
+worker_agent: "general-purpose worker"
 test_files:
   - "test/path"
 commands:
@@ -64,6 +67,7 @@ The result must include:
 - files changed;
 - commands run;
 - pass/fail result;
+- worker agent used: `general-purpose worker` or approved specialist agent name;
 - service-wiring rows covered;
 - real dependencies used;
 - mocks or fixtures used, with ledger-ready fields: name, kind, scope, affected paths, service-wiring rows, disposition, acceptable reason, conversion task if any, and evidence path;
@@ -77,6 +81,7 @@ The result must include:
 ## Restrictions
 
 - Do not broaden scope.
+- Do not invent, request, or switch to an unapproved specialist agent role.
 - Do not read or paste the whole phase plan by default; use the selected task section and manifest.
 - Do not rewrite the phase plan unless assigned.
 - Do not update `run.yaml` or `phase.yaml` unless assigned.

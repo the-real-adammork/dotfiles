@@ -13,6 +13,8 @@ Announce: "I'm using the implementation-plans skill to coordinate the planning w
 
 Before writing or updating plans, inspect the repo enough to know existing patterns, commands, test setup, and relevant files. Use `/usr/bin/git` when git is needed.
 
+General-purpose implementation workers are always available in the downstream execution workflow. If the approved technical design handoff includes an `Approved Specialist Implementation Agents` roster, treat it as optional worker-routing metadata. Do not invent or propose specialist agents during implementation planning; use only the approved roster plus the default general-purpose workers.
+
 ## Bundled References
 
 Load only the reference needed for the current planning mode:

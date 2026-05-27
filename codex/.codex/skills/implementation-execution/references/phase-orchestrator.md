@@ -31,16 +31,19 @@ Use the full phase plan only for targeted task context. Before dispatching a wor
 
 Dispatch workers for substantial bounded implementation lanes, including serial lanes where only one task can safely run right now. Keep small edits, glue code, integration, consistency updates, state updates, and acceptance packet ownership with the orchestrator.
 
+General-purpose implementation workers are always available. Specialist implementation agents are optional fixed routing metadata from the approved phase plan and execution manifest. Do not invent, propose, or wait for new specialist agents during execution. If a task has no approved specialist or the specialist fit is unclear, dispatch a general-purpose worker.
+
 Use this selection order:
 
 1. Exclude tasks already `done`, `blocked`, `deferred`, or assigned to an active lane.
 2. Exclude tasks whose `Depends On` entries are not complete.
 3. Exclude tasks affected by pending consistency updates.
 4. Group remaining tasks by shared files, schemas, migrations, generated files, services, databases, queues, ports, devices, and external dependencies.
-5. Prefer the smallest set of substantial non-overlapping worker lanes that can make progress.
-6. Cap concurrent worker lanes to what the repo can safely isolate; default to one worker lane unless independence is clear.
-7. Dispatch at least one worker for substantial code/test/runtime implementation, even when the active frontier is serial.
-8. Keep integration-heavy decisions, context-heavy orchestration, state updates, and tiny glue edits with the orchestrator.
+5. Apply the planned worker-agent routing from the manifest: approved specialist when named and clearly fitting, otherwise general-purpose worker.
+6. Prefer the smallest set of substantial non-overlapping worker lanes that can make progress.
+7. Cap concurrent worker lanes to what the repo can safely isolate; default to one worker lane unless independence is clear.
+8. Dispatch at least one worker for substantial code/test/runtime implementation, even when the active frontier is serial.
+9. Keep integration-heavy decisions, context-heavy orchestration, state updates, and tiny glue edits with the orchestrator.
 
 ## Worker Count
 
@@ -62,6 +65,8 @@ Every worker goal must include:
 - phase plan path;
 - execution manifest path;
 - task heading or lane scope;
+- worker agent type: `general-purpose worker` or the approved specialist agent name from the manifest;
+- approved specialist roster excerpt when a specialist is used;
 - selected task section from the phase plan, not the whole plan;
 - `run.yaml`, `phase.yaml`, and worker result YAML path;
 - branch/worktree and base commit;
@@ -81,6 +86,7 @@ active_lanes:
     task: "Task N"
     status: "test_proposed"
     worker: "<worker-id>"
+    worker_agent: "<general-purpose worker | approved specialist agent name>"
     branch: "impl/<phase>/<lane>"
     worktree: ".worktrees/impl-<phase>-<lane>"
     result: "docs/implementation-runs/<run-id>/workers/<lane>-<timestamp>.yaml"
@@ -95,6 +101,7 @@ Test-only goal shape:
 
 ```text
 Goal: Write failing tests for <Task/Lane> only. Do not implement production code.
+Worker agent: <general-purpose worker | approved specialist agent name and approved scope>.
 Use execution manifest: <manifest-path>.
 Use selected task context: <task heading/section>.
 Use worker result path: <path>.
@@ -106,6 +113,7 @@ Implementation goal shape:
 
 ```text
 Goal: Implement <Task/Lane> until the approved tests pass. Do not broaden scope.
+Worker agent: <general-purpose worker | approved specialist agent name and approved scope>.
 Use execution manifest: <manifest-path>.
 Use selected task context: <task heading/section>.
 Use worker result path: <path>.

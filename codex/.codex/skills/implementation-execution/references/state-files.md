@@ -105,6 +105,7 @@ active_lanes:
   - lane: "write-path"
     status: agentic_review
     worker: "worker-write-path-1"
+    worker_agent: "general-purpose worker"
     branch: "impl/phase-2/write-path"
     worktree: ".worktrees/impl-phase-2-write-path"
 orchestrator:
@@ -257,6 +258,13 @@ phase: "phase-2"
 plan: "docs/plans/YYYY-MM-DD-feature-phase-2.md"
 generated_from_commit: "abc123"
 generated_by: "supervisor"
+approved_specialist_agents:
+  - agent: "Frontend Workflow Specialist"
+    best_fit_work:
+      - "browser workflow UI lanes"
+    not_allowed_to_own:
+      - "database migrations"
+    fallback_rule: "Use general-purpose worker when the lane is not primarily a browser workflow."
 tasks:
   "4":
     title: "Implement write path"
@@ -272,6 +280,7 @@ tasks:
       - "create-record"
     checkpoint: "pnpm test user-flow"
     tdd_gate: required
+    worker_agent: "general-purpose worker"
     plan_section_anchor: "### Task 4: Implement write path"
 acceptance:
   packet: "docs/qa/phase-acceptance/phase-2.md"
@@ -345,6 +354,7 @@ Workers write or return compact result YAML. The orchestrator merges relevant fi
 
 ```yaml
 worker_id: "worker-write-path-1"
+worker_agent: "general-purpose worker"
 lane: "write-path"
 task: "Task 4"
 status: complete # test_proposed | complete | blocked | needs_fix

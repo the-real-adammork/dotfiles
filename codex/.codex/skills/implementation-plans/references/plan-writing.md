@@ -67,9 +67,16 @@ Every plan starts with:
 - Block only for allowed escalations.
 
 **Worker Delegation Map:**
-| Lane | Task(s) | Delegation Decision | Can Run In Parallel With | Shared Resources / Collision Risk | Integration Checkpoint |
-| --- | --- | --- | --- | --- | --- |
-| <lane name> | <Task N-N> | <orchestrator orchestration/glue, serial worker, or parallel worker> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence orchestrator runs after return> |
+| Lane | Task(s) | Delegation Decision | Worker Agent | Can Run In Parallel With | Shared Resources / Collision Risk | Integration Checkpoint |
+| --- | --- | --- | --- | --- | --- | --- |
+| <lane name> | <Task N-N> | <orchestrator orchestration/glue, serial worker, or parallel worker> | <general-purpose worker or approved specialist agent> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence orchestrator runs after return> |
+
+**Approved Specialist Implementation Agents:**
+General-purpose implementation workers are always available. Use specialist agents only when the approved design handoff names them and the lane clearly matches their scope. If no specialist is a clear fit, use a general-purpose worker.
+
+| Agent | Best-Fit Work | Not Allowed To Own | Fallback Rule |
+| --- | --- | --- | --- |
+| <approved specialist, or "None approved"> | <task/lane types> | <boundaries> | Use a general-purpose worker when <condition>. |
 
 **Long-Running Handoff:**
 - Handoff path: `docs/implementation-runs/<run-id>/handoffs/YYYY-MM-DD-HHMM-<phase>.md`
@@ -92,6 +99,8 @@ This phase is intended to be run by `$implementation-execution` after planning a
 Optimize the plan for the fewest coordination turns that still preserve reviewability and safe parallelism.
 
 - Prefer one phase orchestrator with a small number of substantial worker lanes over many tiny worker tasks.
+- General-purpose implementation workers are always available; specialist implementation agents are optional routing hints from the approved design handoff.
+- Do not invent specialist agents during plan writing. A lane can name only a general-purpose worker or an approved specialist from the handoff roster.
 - Delegate only work that is bounded, independently verifiable, and large enough to justify worker startup/context cost.
 - Keep orchestration, cross-cutting integration decisions, tiny glue, consistency edits, and acceptance packet ownership with the orchestrator.
 - Do not use the orchestrator as the default implementation worker. Substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior belongs in a worker lane even when it must run serially.
@@ -180,6 +189,8 @@ Tasks are potential worker units, not automatic worker units. A task is suitable
 **Depends On:** <Task numbers this task depends on, or "None">
 
 **Execution:** <orchestrator orchestration/glue | worker lane: lane name>; parallel with <task/lane or "none">; checkpoint <command/evidence>
+
+**Worker Agent:** <general-purpose worker | approved specialist agent name>; rationale <why this worker type fits, or "general-purpose fallback">
 
 **Owner-Only Justification:** <required if Execution is orchestrator; otherwise "not applicable">
 
@@ -366,6 +377,7 @@ Before presenting the plan, check:
 - The `Phase Execution Contract` defines the supervisor-launched phase orchestrator, worker delegation map, integration checkpoints, and handoff path.
 - The `Codex Efficiency Rules` are followed: substantial lanes, minimal coordination, no tiny delegation churn.
 - Every task includes a compact `Execution` line, with safe parallelism and integration checkpoint stated.
+- Every worker-owned task includes `Worker Agent`, using either `general-purpose worker` or a specialist named in the approved roster.
 - No task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`.
 - Every substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract change is assigned to a worker lane, even when serial.
 - The plan includes a `Service Wiring Matrix`, and every row is covered by task-level evidence or the phase acceptance gate.
