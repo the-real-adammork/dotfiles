@@ -38,6 +38,12 @@ For each requirement section or paragraph:
 - Do not require task-level implementation detail. A technical design can pass if the architecture, responsibility boundary, data/control flow, or integration decision is sufficient to support the requirement.
 - Mark a gap when the design omits the requirement, contradicts it, delegates it to an unclear owner, or proposes an approach that cannot fully satisfy it.
 
+For designs that touch authentication, authorization, secrets, credentials, deployment, databases, external services, or environment configuration, also verify:
+
+- the design states project posture: `side-project/greenfield`, `internal/demo`, or `production/customer`;
+- the design follows `$secrets` for generated-vs-human credentials, storage, `git-secret`, masking, ignored plaintext, and no plaintext staging;
+- the design does not unnecessarily block on human-provided secrets that `$secrets` allows the agent to generate for the selected posture.
+
 ## Coverage Levels
 
 Use exactly these labels:
@@ -100,6 +106,12 @@ Use severity only for findings:
 - `Medium` - a requirement is only partially supported or ownership/integration is too ambiguous to trust.
 - `Low` - wording, traceability, or minor design clarity issue that should be tightened before task planning.
 
+For secret policy findings:
+
+- `High` - design would commit unsafe plaintext secrets, rely on mock security for real environments, or let agents generate credentials with real account/customer/billing/funds authority.
+- `Medium` - design omits project posture, omits secret storage/handling, or unnecessarily escalates side-project secrets that agents should generate.
+- `Low` - wording around generated secret handling is unclear but the posture and owner are otherwise safe.
+
 ## Self-Review
 
 Before delivering the review:
@@ -108,3 +120,4 @@ Before delivering the review:
 - Confirm every `Covered` row names a concrete design location.
 - Confirm every `Partially Covered`, `Missing`, or `Inconsistent` row has a recommended design edit.
 - Confirm you did not demand task-level detail when a high-level design decision is enough.
+- Confirm secret/environment posture is reviewed when relevant.

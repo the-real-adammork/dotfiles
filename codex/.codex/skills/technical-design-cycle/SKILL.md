@@ -17,6 +17,7 @@ Load these files from this skill as needed:
 
 - `references/drafting.md` before identifying design decision gates, drafting a technical design, or dispatching a design-drafting subagent.
 - `references/review.md` before reviewing a technical design or dispatching a design-review subagent.
+- Use `$secrets` before making design decisions about generated secrets, credentials, env files, deployment keys, database passwords, API tokens, or secret storage.
 
 Inputs:
 
@@ -34,6 +35,7 @@ If the requirements source is missing and cannot be inferred, ask for it before 
 The parent agent must:
 
 - Read the requirements source and inspect the repo enough to understand relevant existing patterns.
+- Load `$secrets` and classify project posture before secret, environment, deployment, or credential decisions.
 - Identify major design decisions that need human input before drafting.
 - Ask those human decision questions one at a time.
 - Save or patch the technical design in the real workspace.
@@ -83,13 +85,14 @@ Keep files as the source of truth. Pass document paths to subagents by default; 
 
 1. Read the requirements source.
 2. Load `references/drafting.md`.
-3. Identify likely architecture/design decision gates using the drafting reference.
-4. For each major decision that cannot be safely inferred:
+3. Classify the project posture using the drafting reference. If the user has said the work is a side project, demo, prototype, or greenfield app without existing users, default to `side-project/greenfield`.
+4. Identify likely architecture/design decision gates using the drafting reference.
+5. For each major decision that cannot be safely inferred:
    - Present 2-3 options.
    - Recommend one.
    - Ask one focused question.
    - Wait for the user's answer.
-5. Keep a short `Human Decisions` list to pass into the drafting subagent.
+6. Keep a short `Human Decisions` list to pass into the drafting subagent.
 
 Skip questions for obvious local conventions or choices that can safely be deferred to `$implementation-plans`.
 
@@ -109,6 +112,9 @@ Requirements source:
 
 Human decisions already made:
 <decision list>
+
+Project posture and secret policy:
+<side-project/greenfield | internal/demo | production/customer, plus which secrets agents may generate vs must escalate>
 
 Repository context:
 <relevant files, commands, constraints, and patterns discovered by parent>

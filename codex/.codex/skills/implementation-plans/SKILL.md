@@ -24,6 +24,8 @@ Load only the reference needed for the current planning mode:
 - `references/task-consistency.md` - update future inactive tasks in one implementation plan after one or more completed tasks changed reality.
 - `references/cross-plan-consistency.md` - update upcoming implementation plans after a completed plan changed APIs, schemas, behavior, ownership boundaries, verification commands, or sequencing assumptions.
 
+Use `$secrets` before planning tasks that generate, store, encrypt, ignore, reveal, hide, commit, or verify secrets, credentials, env files, database passwords, app keys, API tokens, or secret-bearing config.
+
 ## Mode Selection
 
 Use `references/plan-writing.md` when:

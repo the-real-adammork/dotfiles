@@ -66,6 +66,7 @@ The result must include:
 - lesson candidate when the worker found a recurring, proven, repo-specific problem;
 - recommended downstream plan edits;
 - blockers or escalations.
+- secret handling fields from `$secrets` when secret material changed.
 
 ## Restrictions
 
@@ -75,6 +76,7 @@ The result must include:
 - Do not hide failing tests.
 - Do not satisfy service wiring with mocks when real wiring is required.
 - Do not spawn other agents.
+- Do not generate, write, reveal, hide, stage, or commit secret material without following `$secrets`.
 
 ## Lesson Candidates
 

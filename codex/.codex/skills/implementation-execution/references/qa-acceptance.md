@@ -38,6 +38,7 @@ Contents:
 - commands run with result and artifact path;
 - E2E traces, screenshots, videos, logs, API output, DB assertions, or CLI output paths;
 - mocks/fixtures/fakes still present and why they do not invalidate acceptance;
+- secret handling verification for any generated or changed secret material, following `$secrets`;
 - escalations encountered and disposition;
 - lessons created during the phase when they affect later phases;
 - downstream assumptions later phases may rely on.

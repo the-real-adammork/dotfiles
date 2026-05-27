@@ -46,6 +46,7 @@ Load only the module needed for the current action:
 - `references/qa-acceptance.md` - phase acceptance gate, service-wiring verification, no-mock policy, platform E2E expectations, and acceptance packet contents.
 - `references/lessons.md` - lesson candidate rules, phase-owner promotion criteria, `docs/lessons` creation, and `AGENTS.md` pointers.
 - `references/consistency-handoff.md` - batched plan consistency updates, compact actual-vs-planned notes, context handoffs, and final output.
+- Use `$secrets` before generating, writing, revealing, hiding, staging, committing, or reviewing secrets, credentials, env files, database passwords, app keys, API tokens, or secret-bearing config.
 
 ## Workflow
 
@@ -73,6 +74,7 @@ Load only the module needed for the current action:
 - Do not let workers spawn workers.
 - Do not accept mock-only completion for service wiring that requires real integration proof.
 - Do not mark a phase complete until the phase acceptance gate passes and the acceptance packet exists.
+- Do not commit plaintext unsafe secrets; use `$secrets` for classification, generation, `git-secret`, and verification.
 
 ## Handoff
 
