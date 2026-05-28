@@ -35,11 +35,14 @@ Keep plan generation bounded and idempotent.
 - Treat the user's request to run this phase-planning workflow as authorization to dispatch planning agents. Do not ask for a separate delegated-agent approval before dispatching plan writers or reviewers.
 - This authorization does not bypass the phase-document approval checkpoint. Generate and review the phases document first, create and serve an HTML preview, then pause for explicit human approval before writing individual phase plan documents.
 - If planning-agent dispatch is unavailable in the current runtime, generate the phases document and review artifact locally, pause for approval, and only then generate individual phase plans locally.
-- Maintain a small dispatch table in the phases document or parent notes before starting plan writers: phase name, output path, stable `agent_name`, host agent id/nickname, status, and result path.
+- Maintain a small dispatch table in the SLICES document before starting plan writers: phase name, output path, stable `agent_name`, host agent id/nickname, dependency frontier, status, and result path.
 - Do not dispatch a plan-writing agent when its output plan already exists and matches the ready phase unless the user explicitly requests regeneration.
 - Do not dispatch a replacement for an active or recently completed phase writer until you have checked the dispatch table, output path, and any handoff path.
 - Use stable agent names in the format `phase-plan-writer: <feature-slug> / <phase-slug>` and `phase-plan-reviewer: <feature-slug> / consolidated`.
-- Prefer sequential dispatch because later phase plans should build on earlier phase plans. Dispatch phase plan writers in parallel only when phases are explicitly independent and do not need to inherit decisions, APIs, or smoke-test results from earlier phases.
+- In Codex, use `tool_search` to discover available multi-agent dispatch tools before deciding planning-agent dispatch is unavailable.
+- After SLICES approval, build a dependency frontier from each ready phase's `Builds On`, explicit sequencing notes, service-wiring dependencies, and planned output assumptions.
+- Dispatch all currently unblocked phase-plan writers in parallel. A phase is unblocked when every prerequisite phase plan it must inherit from already exists or is not required for its plan details.
+- Serialize only phases that need exact APIs, file paths, smoke-test commands, acceptance packet assumptions, service-wiring decisions, or other concrete outputs from an earlier phase plan. When a prerequisite plan returns, recompute the frontier and dispatch the next unblocked batch.
 
 ## Planning Agent Context Handoff
 
@@ -142,8 +145,8 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
    - Prefer port `4173`; if it is busy, choose the next available port.
    - Record the HTML path and localhost URL in the phases document's `HTML Approval Preview` section.
 9. Present the reviewed phases document, HTML preview link, and pause. Do not dispatch plan-writing agents or create individual phase plan documents until the user explicitly approves the phase sequence and boundaries.
-10. After approval, set the phases document to `Ready`, create or update the plan-writer dispatch table, then dispatch one plan-writing agent per ready phase that does not already have a valid plan output. Read `references/planning-agent-prompts.md` for the required prompt and return contract.
-11. Update the phases document after each plan is created, then set status to `Plans Generated` once all plan docs exist.
+10. After approval, set the phases document to `Ready`, create or update the plan-writer dispatch table, discover available planning-agent dispatch tooling, compute the current unblocked dependency frontier, and dispatch one plan-writing agent per unblocked ready phase that does not already have a valid plan output. Read `references/planning-agent-prompts.md` for the required prompt and return contract.
+11. Update the phases document after each plan is created. Recompute and dispatch the next unblocked dependency frontier until all ready phase plans exist, then set status to `Plans Generated`.
 12. Dispatch one consolidated reviewer agent. Use `references/planning-agent-prompts.md`.
 13. Patch plan docs and/or the phases document for accepted or internally resolved reviewer findings.
 14. Rerun consolidated review when High/Medium findings were patched, phase boundaries changed, or the user asks. Save each rerun as a separate artifact in the review output directory; do not overwrite prior review files.

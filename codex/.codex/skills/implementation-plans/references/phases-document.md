@@ -91,6 +91,12 @@ Review artifact: `docs/plans/reviews/YYYY-MM-DD-<feature>-phase-breakup-review.m
 1. <phase>
 2. <phase>
 
+## Plan Writer Dispatch Table
+
+| Phase | Dependency Frontier | Output Path | Agent Name | Host Agent | Status | Result Path |
+| --- | --- | --- | --- | --- | --- | --- |
+| <phase> | <frontier number or "serial after phase"> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` | `phase-plan-writer: <feature-slug> / <phase-slug>` | <host id/nickname or "pending"> | Pending/In progress/Returned/Skipped | <result path or "pending"> |
+
 ## Deferred Work And Escalations
 
 - <deferred work, allowed escalation, or "None">
@@ -144,6 +150,7 @@ Present this summary before generating plan documents when the user asks for a p
 - Save detailed phase review artifacts under `<plan output directory>/reviews/`.
 - Record only summary findings, dispositions, and review artifact links in `Phase Breakup Review`.
 - Update `Ready Phase Boundaries`, `Coverage Check`, and `Execution Order` when accepted/revised findings change the phase sequence.
+- After approval and before launching plan writers, populate `Plan Writer Dispatch Table` with one row per ready phase, including its dependency frontier and stable `agent_name`.
 - After each implementation plan is created, update `Generated Implementation Plans`.
 - Set status to `Plans Generated` once all plan docs exist.
 - Save consolidated plan reviews and reruns under `<plan output directory>/reviews/`.

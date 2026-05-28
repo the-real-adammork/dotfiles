@@ -56,7 +56,7 @@ Use `references/cross-plan-consistency.md` when:
 
 ## Planning Agent Prompts
 
-When the user asks `$implementation-plans` to decompose a design into phase plans, that request authorizes the workflow to use planning agents for drafting and review. Do not ask for separate planning-agent approval just to dispatch plan-writing or review agents. If agent dispatch tools are unavailable, continue locally and state that limitation.
+When the user asks `$implementation-plans` to decompose a design into phase plans, that request authorizes the workflow to use planning agents for drafting and review. Do not ask for separate planning-agent approval just to dispatch plan-writing or review agents. In Codex, discover available multi-agent dispatch tools with `tool_search` before deciding dispatch is unavailable. If agent dispatch tools are unavailable, continue locally and state that limitation.
 
 When dispatching plan-writing agents from the phase workflow, prompt them to use this skill and load the plan-writing reference:
 

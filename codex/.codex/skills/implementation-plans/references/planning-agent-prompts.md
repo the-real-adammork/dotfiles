@@ -62,9 +62,9 @@ Use the listed source documents and artifact paths as the source of truth. Do no
 
 ## Plan-Writing Agent
 
-Dispatch one planning agent per ready phase that lacks a valid output plan. Prefer sequential dispatch so later phase plans can build on earlier phase plans.
+Dispatch one planning agent per ready phase in the current unblocked dependency frontier that lacks a valid output plan. Prefer parallel dispatch within that frontier. Serialize only phases that need exact APIs, file paths, smoke-test commands, acceptance packet assumptions, service-wiring decisions, or other concrete outputs from an earlier phase plan.
 
-After the reviewed phases document has explicit user approval, the parent workflow does not need separate approval to dispatch plan-writing agents for those approved phases. If dispatch tools are unavailable, the parent should write the approved phase plans locally instead.
+After the reviewed phases document has explicit user approval, the parent workflow does not need separate approval to dispatch plan-writing agents for those approved phases. In Codex, use `tool_search` to discover available multi-agent dispatch tools before deciding dispatch tools are unavailable. If dispatch tools are unavailable, the parent should write the approved phase plans locally instead.
 
 Each agent owns exactly one phase and one output plan document. Agents must not edit other phases' plan files, modify the technical design, or implement code.
 
@@ -123,7 +123,7 @@ Constraints:
 - If context pressure reaches roughly 70%, save a handoff document under `docs/handoffs/` using the Context Handoff Protocol and return only the handoff path plus current artifact paths.
 ```
 
-Dispatch later phase plans after prerequisite phase plan drafts return when later phases need their exact APIs, files, smoke tests, acceptance packet assumptions, or service wiring decisions.
+Dispatch later phase plans after prerequisite phase plan drafts return when later phases need their exact APIs, files, smoke tests, acceptance packet assumptions, or service wiring decisions. When a prerequisite returns, recompute the unblocked dependency frontier and dispatch every now-unblocked phase-plan writer in parallel.
 
 ## Consolidated Reviewer Agent
 
