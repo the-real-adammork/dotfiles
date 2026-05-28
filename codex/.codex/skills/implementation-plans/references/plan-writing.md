@@ -69,14 +69,15 @@ Every plan starts with:
 **Worker Delegation Map:**
 | Lane | Task(s) | Delegation Decision | Worker Agent | Can Run In Parallel With | Shared Resources / Collision Risk | Integration Checkpoint |
 | --- | --- | --- | --- | --- | --- | --- |
-| <lane name> | <Task N-N> | <orchestrator orchestration/glue, serial worker, or parallel worker> | <general-purpose worker or approved specialist agent> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence orchestrator runs after return> |
+| <lane name> | <Task N-N> | <orchestrator orchestration/glue, serial worker, or parallel worker> | <general-purpose worker or "not applicable"> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence orchestrator runs after return> |
 
-**Approved Specialist Implementation Agents:**
-General-purpose implementation workers are always available. Use specialist agents only when the approved design handoff names them and the lane clearly matches their scope. If no specialist is a clear fit, use a general-purpose worker.
+**Worker Role Policy:**
+General-purpose implementation workers are the only implementation worker type. Review and fix-worker roles are reserved for the downstream execution workflow's review/remediation loops, not for repo-specific task routing. Do not define, preserve, invent, request, or route work through custom repo-specific implementation agents.
 
-| Agent | Best-Fit Work | Not Allowed To Own | Fallback Rule |
-| --- | --- | --- | --- |
-| <approved specialist, or "None approved"> | <task/lane types> | <boundaries> | Use a general-purpose worker when <condition>. |
+| Role | Used For | Not Used For |
+| --- | --- | --- |
+| general-purpose worker | bounded substantial implementation lanes | tiny glue, orchestration, state, acceptance packet ownership, review-only tasks |
+| reviewer / fix worker | execution-time review and remediation loops | initial repo-specific implementation routing |
 
 **Long-Running Handoff:**
 - Handoff path: `docs/implementation-runs/<run-id>/handoffs/YYYY-MM-DD-HHMM-<phase>.md`
@@ -99,8 +100,8 @@ This phase is intended to be run by `$implementation-execution` after planning a
 Optimize the plan for the fewest coordination turns that still preserve reviewability and safe parallelism.
 
 - Prefer one phase orchestrator with a small number of substantial worker lanes over many tiny worker tasks.
-- General-purpose implementation workers are always available; specialist implementation agents are optional routing hints from the approved design handoff.
-- Do not invent specialist agents during plan writing. A lane can name only a general-purpose worker or an approved specialist from the handoff roster.
+- Use `general-purpose worker` for every delegated implementation lane.
+- Do not define, preserve, invent, request, or route work through custom repo-specific implementation agents during plan writing.
 - Delegate only work that is bounded, independently verifiable, and large enough to justify worker startup/context cost.
 - Keep orchestration, cross-cutting integration decisions, tiny glue, consistency edits, and acceptance packet ownership with the orchestrator.
 - Do not use the orchestrator as the default implementation worker. Substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior belongs in a worker lane even when it must run serially.
@@ -190,7 +191,7 @@ Tasks are potential worker units, not automatic worker units. A task is suitable
 
 **Execution:** <orchestrator orchestration/glue | worker lane: lane name>; parallel with <task/lane or "none">; checkpoint <command/evidence>
 
-**Worker Agent:** <general-purpose worker | approved specialist agent name>; rationale <why this worker type fits, or "general-purpose fallback">
+**Worker Agent:** <general-purpose worker if Execution is a worker lane; otherwise "not applicable">; rationale <why this lane is substantial enough to delegate, or why no worker is used>
 
 **Owner-Only Justification:** <required if Execution is orchestrator; otherwise "not applicable">
 
@@ -362,6 +363,7 @@ Never leave:
 - A phase plan without a `Phase Execution Contract`
 - A task without a compact `Execution` line
 - Ambiguous ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`
+- Custom repo-specific implementation agent routing or legacy custom worker rosters
 - An orchestrator-owned task without an `Owner-Only Justification`
 - An orchestrator-owned task that includes substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior
 - A phase plan without `Autonomy And Escalation`, `Service Wiring Matrix`, E2E harness readiness coverage, and a `Phase Acceptance Gate`
@@ -377,7 +379,7 @@ Before presenting the plan, check:
 - The `Phase Execution Contract` defines the supervisor-launched phase orchestrator, worker delegation map, integration checkpoints, and handoff path.
 - The `Codex Efficiency Rules` are followed: substantial lanes, minimal coordination, no tiny delegation churn.
 - Every task includes a compact `Execution` line, with safe parallelism and integration checkpoint stated.
-- Every worker-owned task includes `Worker Agent`, using either `general-purpose worker` or a specialist named in the approved roster.
+- Every worker-owned task includes `Worker Agent: general-purpose worker`.
 - No task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`.
 - Every substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract change is assigned to a worker lane, even when serial.
 - The plan includes a `Service Wiring Matrix`, and every row is covered by task-level evidence or the phase acceptance gate.

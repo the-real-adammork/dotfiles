@@ -128,4 +128,6 @@ phase_completion:
   commit: "<40-character accepted phase commit>"
 ```
 
-The supervisor verifies the transition gate, fast-forwards the phase branch into the run base branch, records the resulting base commit, and only then updates `run.yaml` to the next phase or `status: complete` when no phases remain.
+After writing the phase-completion request, the orchestrator must stop at accepted phase state. It may leave the pane idle or request graceful exit, but it must not write a phase-transition handoff, report final run status, fast-forward the base branch, launch local verification, or start the next phase.
+
+The supervisor transition handler verifies the transition gate, fast-forwards the phase branch into the run base branch, records the resulting base commit, runs post-merge local verification setup, reports the localhost URL and smoke-test instructions, and then updates `run.yaml` to the next phase or `status: complete` when no phases remain.

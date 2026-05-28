@@ -39,7 +39,7 @@ Supervisor/orchestrator communication uses one compact file: `docs/implementatio
 
 Human involvement is only for allowed escalations: credentials/secrets, paid/vendor setup, unresolved product/legal/security decisions, destructive production actions, real customer data access, or unavailable real dependencies after an agent-owned attempt.
 
-General-purpose implementation workers are always available. If the approved phase plan names specialist implementation agents, treat them as fixed worker-routing metadata approved before planning. The execution workflow must not invent, propose, or block on new specialist agents during runtime; when no approved specialist clearly fits a lane, dispatch a general-purpose worker.
+General-purpose implementation workers are the only implementation worker type. Reviewer and fix-worker roles remain available for review and remediation loops. Ignore any legacy custom-agent routing in old plans or manifests, and do not invent, propose, request, wait for, or dispatch custom repo-specific implementation agents during runtime.
 
 ## Reference Modules
 
@@ -62,12 +62,12 @@ Load only the module needed for the current action:
 2. Load `references/supervisor.md` and choose the current phase from `run.yaml`.
 3. Load `references/phase-orchestrator.md` and `references/branch-worktree.md` before starting or resuming the active phase.
 4. Create or refresh the compact execution manifest for the active phase, validate any recorded orchestrator pane before trusting it, then start or resume the phase orchestrator in a new pane in the current tmux window. The orchestrator builds the active frontier from the manifest, task statuses, shared-resource constraints, and active worker lanes.
-5. The orchestrator spawns workers directly for substantial implementation lanes, even when only one lane is currently available. Dispatch the planned approved specialist only when the manifest/task names one and the lane matches its approved scope; otherwise use a general-purpose worker. Keep glue, integration, tiny edits, state updates, and acceptance ownership with the orchestrator.
+5. The orchestrator spawns general-purpose workers directly for substantial implementation lanes, even when only one lane is currently available. Keep glue, integration, tiny edits, state updates, and acceptance ownership with the orchestrator. Use reviewer and fix-worker roles only for review/remediation loops.
 6. For behavior work, use `references/worker-tdd.md`: test-only goal first, agentic test approval, then implementation.
 7. Use `references/agentic-review.md` for test review, implementation review, and fix loops.
 8. After each worker result, the orchestrator integrates, runs the lane checkpoint, updates `phase.yaml`, reconciles mock/fixture ledger entries, and batches any needed plan consistency notes.
 9. Use `references/qa-acceptance.md` before marking a phase complete.
-10. The orchestrator writes a phase-completion request to the supervisor inbox when acceptance passes. The detached watchdog wakes a short supervisor transition handler. The supervisor verifies acceptance, fast-forwards the phase branch/worktree back into the run base branch, then advances `run.yaml`. If the base branch has diverged or cannot be fast-forwarded, stop with a supervisor escalation/handoff instead of silently chaining branches. If execution scope is `run` and another phase remains, the supervisor must transition the run and start the next phase orchestrator/watchdog from the updated base branch. Do not stop after a successful phase unless the user explicitly requested `single-phase`, an allowed escalation blocks progress, context handoff is required, or the user stops the workflow.
+10. The orchestrator writes a phase-completion request to the supervisor inbox when acceptance passes. The detached watchdog wakes a short supervisor transition handler. The supervisor verifies acceptance, fast-forwards the phase branch/worktree back into the run base branch, then advances `run.yaml`. If the base branch has diverged or cannot be fast-forwarded, stop with a supervisor escalation/handoff instead of silently chaining branches. After the base branch/worktree is advanced, the supervisor must do agent-owned local verification setup: install or refresh dependencies, apply local setup steps, start required local services, run the project locally, record the localhost URL/port and process identity, and print concise human smoke-test instructions. Missing secrets, paid/vendor access, unavailable external services, or other allowed escalations may be flagged; ordinary local setup friction remains agent-owned. If execution scope is `run` and another phase remains, the supervisor must then start the next phase orchestrator/watchdog automatically from the updated base branch while the local verification run stays available for the human to inspect. Do not stop after a successful phase unless the user explicitly requested `single-phase`, an allowed escalation blocks progress, context handoff is required, or the user stops the workflow.
 11. Use `references/lessons.md` when worker/reviewer results reveal a recurring proven problem future agents should avoid.
 12. Use `references/consistency-handoff.md` for downstream plan updates, handoffs, final reporting, or blocked states.
 
@@ -96,6 +96,8 @@ Load only the module needed for the current action:
 - Do not write abbreviated, malformed, manually typed, or unvalidated commit hashes into workflow state; resolve full 40-character hashes with `/usr/bin/git rev-parse ...^{commit}` and validate them before transition handling.
 - Do not advance to the next phase before the supervisor fast-forwards the accepted phase branch/worktree back into the run base branch and records the resulting base commit.
 - Do not silently chain the next phase from the previous phase branch when the run base branch has not advanced.
+- Do not discard, stash, overwrite, or ignore dirty/ad-hoc changes in the run base worktree during phase merge-back. Classify dirty paths, detect overlap with the accepted phase diff, preserve or reasonably reconcile changes when possible, record autonomous medium/high merge decisions, and stop only for critical conflicts that require human direction.
+- Do not skip post-merge local verification setup after a phase transition. Start the project locally when feasible, report the reachable `localhost:<port>` URL and smoke-test instructions, and only treat missing secrets, paid/vendor setup, unavailable real dependencies, or similarly allowed escalations as blockers.
 - Do not stop after a phase completes while `run.yaml` points at another phase, unless execution scope is explicitly `single-phase`, an allowed escalation blocks progress, context handoff is required, or the user stops the workflow.
 - Do not commit plaintext unsafe secrets; use `$secrets` for classification, generation, `git-secret`, and verification.
 
@@ -124,6 +126,7 @@ Watchdog:
 Evidence:
 - Acceptance packet: `<path or none yet>`
 - QA artifacts: `<directory>`
+- Local verification: `<localhost URL or blocked reason>`; smoke tests: `<artifact/path or brief checklist>`
 
 Blocked or escalated:
 - <item or "None">

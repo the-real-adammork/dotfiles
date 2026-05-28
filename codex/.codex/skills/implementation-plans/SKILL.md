@@ -13,7 +13,7 @@ Announce: "I'm using the implementation-plans skill to coordinate the planning w
 
 Before writing or updating plans, inspect the repo enough to know existing patterns, commands, test setup, and relevant files. Use `/usr/bin/git` when git is needed.
 
-General-purpose implementation workers are always available in the downstream execution workflow. If the approved technical design handoff includes an `Approved Specialist Implementation Agents` roster, treat it as optional worker-routing metadata. Do not invent or propose specialist agents during implementation planning; use only the approved roster plus the default general-purpose workers.
+General-purpose implementation workers are the only implementation worker type in the downstream execution workflow. Keep reviewer and fix-worker roles for review and remediation loops, but do not define, preserve, invent, request, or route work through custom repo-specific implementation agents. If a legacy technical design handoff includes a custom implementation-agent roster, ignore it as non-binding historical metadata.
 
 When the user asks to plan from the current approved technical design but does not provide a path, look for `docs/architecture/TECHNICAL_DESIGN.md` first.
 
@@ -74,4 +74,4 @@ Do not dispatch or invoke standalone implementation-plan phasing or consistency 
 
 ## Handoff
 
-After creating or updating plans, report the artifact paths, unresolved escalations, and the next available execution or review options. In the phasing workflow, write the reviewed slices index to `docs/plans/SLICES.md`, generate `docs/plans/SLICES.html` with `pandoc`, serve it on localhost, share the URL, and wait for explicit user approval before writing individual phase plan documents. If `pandoc` is unavailable, tell the human to run `brew install pandoc` and rerun the preview step. Do not begin implementation unless the user explicitly chooses an execution option.
+After creating or updating plans, report the artifact paths, unresolved escalations, and the next available execution or review options. In the phasing workflow, write the reviewed slices index to `docs/plans/SLICES.md`, author a standalone `docs/plans/SLICES.html` approval page from that markdown content, serve it on localhost, share the URL, and wait for explicit user approval before writing individual phase plan documents. Do not use a deterministic markdown-to-HTML converter for the preview. Do not begin implementation unless the user explicitly chooses an execution option.

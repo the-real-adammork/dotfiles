@@ -17,7 +17,6 @@ Load these files from this skill as needed:
 
 - `references/drafting.md` before identifying design decision gates, drafting a technical design, or dispatching a design-drafting subagent.
 - `references/review.md` before reviewing a technical design or dispatching a design-review subagent.
-- Use `$poe` after reading a PRD, product brief, requirements document, or feature spec and before locking design decision gates.
 - Use `$secrets` before making design decisions about generated secrets, credentials, env files, deployment keys, database passwords, API tokens, or secret storage.
 
 Inputs:
@@ -36,8 +35,8 @@ If the requirements source is missing and cannot be inferred, ask for it before 
 The parent agent must:
 
 - Read the requirements source and inspect the repo enough to understand relevant existing patterns.
-- Run `$poe` for substantial PRDs or requirements artifacts and convert material critique into PRD clarifications or design decision gates.
 - Load `$secrets` and classify project posture before secret, environment, deployment, or credential decisions.
+- Run a short human framing brainstorm before technical decision gates.
 - Identify major design decisions that need human input before drafting.
 - Ask those human decision questions one at a time.
 - Save or patch the technical design in the real workspace.
@@ -84,26 +83,30 @@ Keep files as the source of truth. Pass document paths to subagents by default; 
 - Parent reads targeted file sections only when patching, resolving a finding, or answering a user question.
 - If a subagent estimates it is at or above roughly 70% context usage, it must save a handoff under `docs/handoffs/` and return only the handoff path plus current artifact paths. Parent must dispatch a replacement from that handoff, not from chat history, using `replacement-design-drafter: <feature-slug> / resume` or `replacement-design-reviewer: <feature-slug> / resume` as appropriate.
 
-## Phase 1: Requirements, PRD Panel, And Decision Gates
+## Phase 0: Human Framing Brainstorm
+
+Before identifying final decision gates or spawning subagents, run a short parent-owned brainstorm with the human. This is not a POE critique and does not create a panel.
+
+1. Summarize the apparent product goal, target user, success signal, likely non-goals, and highest-risk assumptions in 3-5 bullets.
+2. Ask the human to confirm, correct, or add any missing goals, constraints, taste/preferences, non-goals, or risks.
+3. If the requirements are broad or ambiguous, ask up to 3 focused brainstorm questions before moving on. Prefer questions that change architecture or product behavior over questions that only refine wording.
+4. Record the result as `Human Framing Notes`.
+
+Do not spawn the design drafter until this brainstorm is complete or the user explicitly skips it.
+
+## Phase 1: Requirements And Decision Gates
 
 1. Read the requirements source.
 2. Inspect enough of the repo and linked docs to understand relevant constraints, patterns, and product context.
-3. If the source is an existing PRD, product brief, requirements document, or feature spec, use `$poe` to generate a PRD-specific panel of experts and critique the artifact before identifying final design gates. Skip `$poe` only when the artifact does not exist, the request is a single factual question, or the domain is clearly wrong for product/requirements critique.
-4. Record a short `POE Findings` list:
-   - convergent concerns;
-   - divergent concerns;
-   - recommended next action;
-   - any concrete PRD clarifications or requirement edits needed before design.
-5. If `$poe` recommends clarifying or amending the PRD before design, ask the human those questions before drafting. Treat material unresolved items as blockers or `Open Questions`.
-6. Load `references/drafting.md`.
-7. Classify the project posture using the drafting reference. If the user has said the work is a side project, demo, prototype, or greenfield app without existing users, default to `side-project/greenfield`.
-8. Identify likely architecture/design decision gates using the drafting reference and the `POE Findings`.
-9. For each major decision that cannot be safely inferred:
+3. Load `references/drafting.md`.
+4. Classify the project posture using the drafting reference. If the user has said the work is a side project, demo, prototype, or greenfield app without existing users, default to `side-project/greenfield`.
+5. Identify likely architecture/design decision gates using the requirements source, repo context, drafting reference, and `Human Framing Notes`. Focus on decisions that materially affect architecture, data shape, security/privacy posture, operational complexity, future extensibility, integration boundaries, validation strategy, or requirement completeness.
+6. For each major decision that cannot be safely inferred:
    - Present 2-3 options.
    - Recommend one.
    - Ask one focused question.
    - Wait for the user's answer.
-10. Keep a short `Human Decisions` list and `POE Findings` list to pass into the drafting subagent.
+7. Keep a short `Human Decisions` list to pass into the drafting subagent.
 
 Skip questions for obvious local conventions or choices that can safely be deferred to `$implementation-plans`.
 
@@ -124,8 +127,8 @@ Requirements source:
 Human decisions already made:
 <decision list>
 
-Panel of experts critique:
-<POE Findings list, or "Not run: <reason>">
+Human framing notes:
+<goals, constraints, non-goals, preferences, and risks from Phase 0>
 
 Project posture and secret policy:
 <side-project/greenfield | internal/demo | production/customer, plus which secrets agents may generate vs must escalate>
@@ -261,7 +264,6 @@ Do not automatically start `$implementation-plans` unless the user chooses that 
 Before declaring the cycle complete:
 
 - Confirm the design file exists at the stated path.
-- Confirm `$poe` was run for substantial PRDs/requirements artifacts, or record why it was skipped.
 - Confirm every review finding has a recorded disposition.
 - Confirm accepted/revised findings were applied to the design.
 - Confirm unresolved issues are listed under `Open Questions`.

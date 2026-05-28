@@ -11,7 +11,7 @@ Run consistency when:
 - a worker result changes a future task assumption;
 - a task completes and unblocks dependent work;
 - a phase is about to be accepted;
-- the orchestrator is about to hand off;
+- the orchestrator is about to request supervisor action because it is blocked, must restart, or cannot safely continue;
 - the supervisor is about to move to the next phase.
 
 Update only future inactive task instructions. Do not rewrite completed task history except for compact actual-vs-planned notes when useful.
@@ -30,6 +30,8 @@ Do not add notes for routine successful implementation that does not affect futu
 
 ## Handoff
 
+The supervisor transition handler owns phase-transition handoffs and final user-facing run status. The phase orchestrator must not write a handoff merely because phase acceptance passed; it should write `request.type: phase_completion` to the supervisor inbox and let the watchdog wake the supervisor.
+
 Write a markdown handoff only when:
 
 - context pressure is high;
@@ -37,7 +39,7 @@ Write a markdown handoff only when:
 - the user stops the workflow;
 - a different agent must resume.
 
-Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, fast-forward the accepted phase branch into the run base branch, update `run.yaml`, record the completed phase evidence and resulting base commit, close or replace the completed orchestrator pane, and continue with the next phase orchestrator from the updated base branch.
+Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, the supervisor transition handler fast-forwards the accepted phase branch into the run base branch, updates `run.yaml`, records the completed phase evidence and resulting base commit, runs post-merge local verification setup, closes or replaces the completed orchestrator pane, and continues with the next phase orchestrator from the updated base branch.
 
 Default path:
 
@@ -75,7 +77,8 @@ Run state:
 - `<run.yaml>`
 
 Completed phases:
-- `<phase>` - <acceptance packet>
+- `<phase>` - <acceptance packet> - local verification: `<localhost URL or blocked reason>`
+- Merge reconciliation: `<none | preserved local changes | decisions artifact | critical blocker>`
 
 Current phase:
 - `<phase>` - <status> - `<phase.yaml>`
@@ -90,6 +93,10 @@ Watchdog:
 
 Next action:
 - <continuing to next phase | stopped because single-phase scope | blocked | complete>
+
+Human smoke test:
+- URL: `<localhost URL or unavailable>`
+- Checks: `<brief checklist or artifact path>`
 
 Blocked or escalated:
 - <item or "None">

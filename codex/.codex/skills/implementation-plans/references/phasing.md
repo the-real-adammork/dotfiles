@@ -12,7 +12,7 @@ Inputs:
 - optional review output directory, default `<plan output directory>/reviews/`;
 - optional SLICES document path, default `docs/plans/SLICES.md`.
 
-If the technical design handoff includes an `Approved Specialist Implementation Agents` roster, carry it into `docs/plans/SLICES.md` and every generated phase plan. General-purpose implementation workers are always available and are the fallback for any lane that does not clearly match an approved specialist. Do not invent or propose specialist agents during planning.
+General-purpose implementation workers are the only implementation worker type. Keep reviewer and fix-worker roles for downstream review/remediation loops, but do not define, preserve, invent, request, or route work through custom repo-specific implementation agents during planning. If the technical design handoff includes a custom implementation-agent roster, ignore it as non-binding historical metadata.
 
 `docs/plans/SLICES.md` is the canonical phase/slices index for every repo. Do not create feature-dated `*-implementation-phases.md` files unless the user explicitly overrides the path. This stable path lets `$implementation-execution` discover the approved phase order without the human passing a slices document path.
 
@@ -83,7 +83,7 @@ Every phase must state:
 - what smoke test proves it;
 - what the phase orchestrator is responsible for, limited to orchestration, integration decisions, state, acceptance, and tiny glue;
 - what substantial worker lanes are safe or unsafe to run in parallel, including serial lanes for work that cannot parallelize;
-- which approved specialist implementation agent, if any, is the best fit for each worker lane;
+- which substantial worker lanes use general-purpose workers and which review/fix loops the execution workflow should expect;
 - what service wiring rows must be proven across surface, service, persistence, jobs, and integrations;
 - what E2E harness is needed early in the phase;
 - what platform E2E automation will prove the smoke test through the phase acceptance gate;
@@ -96,7 +96,7 @@ Optimize phase plans for Codex execution efficiency:
 
 - Use fewer, substantial phases rather than many thin phases that force repeated setup, sync, and review overhead.
 - Keep each phase coherent enough for one phase orchestrator to hold the working context.
-- Identify a small number of worker lanes only where parallelism or bounded specialization is valuable.
+- Identify a small number of worker lanes only where parallelism, serial isolation, or bounded scope is valuable.
 - Do not turn every task into a delegated worker by default, but keep orchestrator-owned work limited to orchestration, tiny glue, integration decisions, state, acceptance, and plan consistency. Substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior must become a worker lane even when it is serial.
 - Prefer sequential phase execution unless phases are truly independent, because later phases should reuse verified behavior and acceptance packets from earlier phases.
 - Make the phases document a routing map, not a second implementation plan.
@@ -129,7 +129,7 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
    - each phase has a coherent smoke-testable outcome;
    - each phase can be owned by one long-running phase agent without losing coherence;
    - each phase names a small number of likely worker lanes and shared-resource risks;
-   - each worker lane uses either a general-purpose worker or an approved specialist implementation agent from the design handoff roster;
+   - each worker lane uses a general-purpose worker;
    - each phase avoids delegation churn from overly tiny tasks;
    - each phase names the service wiring that must be proven;
    - each phase names early E2E harness needs and phase acceptance automation;
@@ -137,9 +137,10 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
    - dependencies, build-on assumptions, and deferred work are explicit.
    Save detailed phase review artifacts under the review output directory. Keep only the summary/disposition table and review links in the phases document.
 7. Patch the phases document for accepted or internally resolved findings. Do not generate plan docs until High/Medium phase issues are resolved, explicitly deferred with rationale, or recorded as allowed escalations.
-8. Generate an HTML approval preview from the reviewed phases document and serve it on localhost:
-   - Preferred converter: `pandoc`, installed with `brew install pandoc`.
-   - If `pandoc` is unavailable, stop and tell the human to install it, then rerun this preview step.
+8. Author an HTML approval preview from the reviewed phases document and serve it on localhost:
+   - Do not use a deterministic markdown-to-HTML converter such as `pandoc`.
+   - Read the current `docs/plans/SLICES.md` and create a standalone, hand-authored `docs/plans/SLICES.html` page that preserves every section, table row, link, path, and approval-relevant detail.
+   - Use embedded CSS with a readable document layout, constrained content width, clear typography, high-contrast text, muted metadata, and horizontally scrollable wide tables.
    - Write the preview next to the SLICES document using the same basename and `.html`, normally `docs/plans/SLICES.html`.
    - Use a local server such as `python3 -m http.server <port> --bind 127.0.0.1 --directory <plan output directory>`.
    - Prefer port `4173`; if it is busy, choose the next available port.
@@ -163,7 +164,6 @@ Before handoff:
 - individual phase plan documents were generated only after explicit approval of the reviewed phases document;
 - every ready phase has a plan file at the reported path;
 - every phase has a smoke-testable outcome, orchestrator responsibility, worker lane summary, service wiring summary, E2E harness readiness note, phase acceptance automation, and expected acceptance packet;
-- SLICES and every phase plan either carry the approved specialist implementation-agent roster from the design handoff or explicitly say no specialists were approved;
 - every phase plan includes `Autonomy And Escalation` with only allowed exception categories;
 - every phase plan includes a `Phase Execution Contract` for supervisor-launched phase orchestration, worker delegation, integration checkpoints, and handoff;
 - every phase plan includes an `Implementation Execution Handoff` with `$implementation-execution` state, manifest, event, and evidence paths;
@@ -179,7 +179,7 @@ Before handoff:
 - horizontal stack splits have been rejected unless explicitly justified;
 - phase and worker lane counts are efficient for Codex: substantial enough to amortize context setup, bounded enough to avoid context loss;
 - task `Execution` parallelism is consistent with task dependencies and any shared sequential contract handoff points are named explicitly;
-- task `Execution` uses approved specialist agents only when named in the approved roster; otherwise it uses a general-purpose worker;
+- every worker-owned task uses `general-purpose worker` and no custom repo-specific implementation agent routing;
 - no task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`;
 - substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior is assigned to worker lanes even when serial;
 - delegated behavior tasks include a TDD test proposal/approval gate before implementation;

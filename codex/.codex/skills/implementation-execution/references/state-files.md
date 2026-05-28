@@ -53,6 +53,40 @@ completed_phases:
     base_commit_after_merge: "def456def456def456def456def456def456def456def4"
     accepted_phase_commit: "abc123abc123abc123abc123abc123abc123abc123abc1"
     acceptance_packet: "docs/qa/phase-acceptance/phase-1.md"
+    base_worktree_local_changes:
+      status: reconciled # none | preserved | reconciled | blocked_critical | unknown
+      dirty_path_count: 2
+      overlapping_path_count: 1
+      conflict_path_count: 1
+      status_before_artifact: "docs/qa/artifacts/phase-1/base-worktree-status-before.z"
+      status_after_artifact: "docs/qa/artifacts/phase-1/base-worktree-status-after.z"
+      safety_branch: "supervisor/YYYY-MM-DD-feature/phase-1-base-before-reconcile-YYYYMMDDTHHMMSSZ"
+      reconciliation_decisions: "docs/qa/artifacts/phase-1/merge-reconciliation-decisions.md"
+      classification_summary:
+        supervisor_owned: 1
+        local_verification: 1
+        human_ad_hoc: 0
+        suspected_secret_or_runtime_data: 0
+      autonomous_decisions:
+        low_risk_count: 2
+        medium_high_count: 1
+      escalated_conflicts: []
+      blocker: null
+    local_verification:
+      status: running # running | blocked | stopped | failed | not_applicable
+      setup_commands:
+        - command: "pnpm install"
+          result: pass
+          artifact: "docs/qa/artifacts/phase-1/local-verification-setup.txt"
+      run_command: "pnpm dev --host 127.0.0.1 --port 3000"
+      url: "http://localhost:3000"
+      pid: 12345
+      tmux_pane: "%34"
+      smoke_tests:
+        - "Open http://localhost:3000 and verify the completed phase workflow loads."
+        - "Exercise the primary happy path changed by phase-1."
+      artifact: "docs/qa/artifacts/phase-1/local-verification-run.txt"
+      blocker: null
 branches:
   base: "main"
   current: "impl/phase-2"
@@ -199,15 +233,17 @@ The detached supervisor watchdog writes a trigger file when the supervisor needs
 phase: "phase-2"
 triggered_at: "YYYY-MM-DDTHH:MM:SSZ"
 reason: phase_completion # phase_completion | escalation | restart_needed | heartbeat_expired | pane_dead | orchestrator_failed
-inbox: "docs/implementation-runs/YYYY-MM-DD-feature/supervisor-inbox/phase-2.yaml"
-run_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/run.yaml"
-phase_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
+inbox: "/absolute/path/to/docs/implementation-runs/YYYY-MM-DD-feature/supervisor-inbox/phase-2.yaml"
+run_yaml: "/absolute/path/to/docs/implementation-runs/YYYY-MM-DD-feature/run.yaml"
+phase_yaml: "/absolute/path/to/docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
+base_worktree: "/absolute/path/to/repo"
+phase_worktree: "/absolute/path/to/repo/.worktrees/impl-phase-2"
 tmux_pane: "%12"
-event_log: "docs/implementation-runs/YYYY-MM-DD-feature/events/supervisor.jsonl"
+event_log: "/absolute/path/to/docs/implementation-runs/YYYY-MM-DD-feature/events/supervisor.jsonl"
 handled: false
 ```
 
-The resumed supervisor transition handler must mark the trigger handled, append a compact event, and then either complete the phase transition, restart the orchestrator, or record the escalation/blocker.
+The resumed supervisor transition handler must mark the trigger handled, append a compact event, and then either complete the phase transition, restart the orchestrator, or record the escalation/blocker. For `phase_completion`, it must operate from `base_worktree` for merge-back, post-merge verification, local verification launch, run-state updates, and next-phase orchestrator startup; use `phase_worktree` only to inspect the accepted phase state, inbox, and artifacts.
 
 ## Commit Hash Fields
 
@@ -258,13 +294,6 @@ phase: "phase-2"
 plan: "docs/plans/YYYY-MM-DD-feature-phase-2.md"
 generated_from_commit: "abc123"
 generated_by: "supervisor"
-approved_specialist_agents:
-  - agent: "Frontend Workflow Specialist"
-    best_fit_work:
-      - "browser workflow UI lanes"
-    not_allowed_to_own:
-      - "database migrations"
-    fallback_rule: "Use general-purpose worker when the lane is not primarily a browser workflow."
 tasks:
   "4":
     title: "Implement write path"
@@ -321,6 +350,8 @@ Useful events:
 - command started and ended, with duration, result, and artifact path;
 - inbox request written or handled;
 - phase acceptance started, passed, failed, or merged to base;
+- post-merge local verification setup started, launched, blocked, stopped, or failed;
+- base worktree dirty status captured, preserved, reconciled, or blocked for critical conflict;
 - escalation opened or cleared.
 
 Do not put full prompts, full stdout, full diffs, full review text, screenshots, traces, videos, or copied plan sections in JSONL events. Store artifact paths and short summaries only.
@@ -343,7 +374,9 @@ State updates must happen immediately after these transitions:
 - worker result integrated;
 - task status changed;
 - branch/worktree merged;
+- base worktree dirty status classified, preserved, reconciled, or blocked;
 - acceptance command run;
+- post-merge local verification setup or run status changed;
 - escalation opened or cleared.
 
 Do not let multiple agents edit the same YAML state file concurrently. When parallel workers run, each worker writes a separate result YAML; the orchestrator serially merges those results into `phase.yaml`.

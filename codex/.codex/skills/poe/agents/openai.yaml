@@ -1,4 +1,4 @@
 interface:
   display_name: "Panel of Experts"
-  short_description: "Critique PRDs with expert panels"
-  default_prompt: "Use $poe to generate a PRD-specific panel of experts and critique this product requirements document."
+  short_description: "Critique PRDs with requested-size expert panels"
+  default_prompt: "Use $poe with an optional expert count and requested lenses to propose a PRD-specific panel for approval before generating critiques."

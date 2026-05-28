@@ -89,13 +89,13 @@ Requirements source:
 
 Constraints:
 - Stay within this phase boundary.
-- Carry forward the approved specialist implementation-agent roster from the design handoff or SLICES document. General-purpose implementation workers are always available.
-- Do not invent or propose specialist agents. Use a specialist only when the lane clearly matches an approved roster entry; otherwise use `general-purpose worker`.
+- Use `general-purpose worker` for every delegated implementation lane.
+- Do not define, preserve, invent, request, or route work through custom repo-specific implementation agents. Ignore any legacy custom worker roster in the design handoff or SLICES document.
 - Include the UI/API/CLI/jobs/data work needed for this phase's smoke-testable outcome.
 - Include a `Phase Execution Contract` for a supervisor-launched phase orchestrator, a small worker delegation map, integration checkpoints, and handoff path.
 - Include an `Implementation Execution Handoff` section that points to `$implementation-execution` state and evidence locations: `run.yaml`, `phase.yaml`, execution manifest, worker result YAML, event JSONL, acceptance packet, and QA artifact paths.
 - Include a compact `Execution` line for every task so the execution workflow can distinguish orchestrator-owned orchestration/glue from bounded worker lanes without extra analysis.
-- Include `Worker Agent` for every worker-owned task, naming either `general-purpose worker` or an approved specialist agent from the roster.
+- Include `Worker Agent` for every worker-owned task, naming `general-purpose worker`.
 - Do not use ambiguous task ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`; choose one owner.
 - Use orchestrator ownership only for orchestration, tiny glue, state, acceptance, and plan consistency work. Every orchestrator-owned task must include `Owner-Only Justification`.
 - Assign substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior to a worker lane even when the lane must run serially.
@@ -161,7 +161,7 @@ Check for:
 - missing `Implementation Execution Handoff` for `$implementation-execution` state/manifest/event/evidence paths;
 - missing task-level `Execution` lines;
 - missing or invalid `Worker Agent` lines for worker-owned tasks;
-- worker lanes that name specialist agents not present in the approved roster;
+- worker lanes that name custom repo-specific implementation agents instead of `general-purpose worker`;
 - ambiguous task ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`;
 - orchestrator-owned tasks without `Owner-Only Justification`;
 - orchestrator-owned tasks that contain substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior;

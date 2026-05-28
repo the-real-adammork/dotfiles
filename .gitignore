@@ -15,6 +15,7 @@ claude/.claude/history.jsonl
 claude/.claude/.last-cleanup
 claude/.claude/.last-update-result.json
 claude/.claude/mcp-needs-auth-cache.json
+claude/.claude/paste-cache/
 claude/.claude/plugins/
 claude/.claude/projects/
 claude/.claude/session-env/
