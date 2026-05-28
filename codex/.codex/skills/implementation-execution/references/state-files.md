@@ -24,6 +24,7 @@ docs/implementation-runs/<run-id>/
     orchestrator-<phase-slug>.jsonl
     worker-<lane>-<timestamp>.jsonl
   handoffs/
+    <phase-slug>-transition.md
     <timestamp>.md
 
 docs/qa/
@@ -53,6 +54,13 @@ completed_phases:
     base_commit_after_merge: "def456def456def456def456def456def456def456def4"
     accepted_phase_commit: "abc123abc123abc123abc123abc123abc123abc123abc1"
     acceptance_packet: "docs/qa/phase-acceptance/phase-1.md"
+    transition_handoff: "docs/implementation-runs/YYYY-MM-DD-feature/handoffs/phase-1-transition.md"
+    orchestrator_teardown:
+      status: stopped # stopped | failed | skipped
+      command: "tmux kill-pane -t %12"
+      tmux_pane: "%12"
+      stopped_at: "YYYY-MM-DDTHH:MM:SSZ"
+      fallback_reason: null
     base_worktree_local_changes:
       status: reconciled # none | preserved | reconciled | blocked_critical | unknown
       dirty_path_count: 2
@@ -86,10 +94,25 @@ completed_phases:
         - "Open http://localhost:3000 and verify the completed phase workflow loads."
         - "Exercise the primary happy path changed by phase-1."
       artifact: "docs/qa/artifacts/phase-1/local-verification-run.txt"
+      transition_handoff: "docs/implementation-runs/YYYY-MM-DD-feature/handoffs/phase-1-transition.md"
+      smoke_report: "docs/qa/artifacts/phase-1/local-verification-smoke-report.md"
       blocker: null
 branches:
   base: "main"
   current: "impl/phase-2"
+supervisor:
+  tmux_pane: "%10"
+  tmux_window: "project:1"
+  cwd: "/absolute/path/to/repo"
+  codex_session:
+    id: "019e..."
+    path: "/Users/example/.codex/sessions/YYYY/MM/DD/session.jsonl"
+    role: "supervisor"
+    discovered_at: "YYYY-MM-DDTHH:MM:SSZ"
+  validation:
+    checked_at: "YYYY-MM-DDTHH:MM:SSZ"
+    status: valid # valid | invalid | unknown
+    reason: null
 orchestrator:
   phase: "phase-2"
   status: running # starting | running | blocked | acceptance_ready | complete | failed | exiting | invalid
@@ -113,7 +136,11 @@ supervisor_watchdog:
   script: "docs/implementation-runs/YYYY-MM-DD-feature/watchdogs/phase-2.sh"
   trigger: "docs/implementation-runs/YYYY-MM-DD-feature/watchdogs/phase-2-trigger.yaml"
   interval_seconds: 120
-  wake_method: tmux-pane # tmux-pane | codex-cli | disabled
+  wake_method: tmux-send-keys # tmux-send-keys | tmux-pane-fallback | codex-cli-fallback | disabled
+  wake_target:
+    supervisor_pane: "%10"
+    supervisor_window: "project:1"
+  fallback_reason: null
   last_checked_at: "YYYY-MM-DDTHH:MM:SSZ"
 paths:
   run_dir: "docs/implementation-runs/YYYY-MM-DD-feature"
@@ -220,6 +247,7 @@ request:
 phase_completion:
   phase_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
   acceptance_packet: null
+  transition_handoff: null
   commit: null # full 40-character commit hash when populated
 ```
 
@@ -239,11 +267,15 @@ phase_yaml: "/absolute/path/to/docs/implementation-runs/YYYY-MM-DD-feature/phase
 base_worktree: "/absolute/path/to/repo"
 phase_worktree: "/absolute/path/to/repo/.worktrees/impl-phase-2"
 tmux_pane: "%12"
+supervisor_pane: "%10"
+supervisor_window: "project:1"
 event_log: "/absolute/path/to/docs/implementation-runs/YYYY-MM-DD-feature/events/supervisor.jsonl"
+wake_method: "tmux-send-keys" # tmux-send-keys | tmux-pane-fallback | codex-cli-fallback | blocked
+fallback_reason: null
 handled: false
 ```
 
-The resumed supervisor transition handler must mark the trigger handled, append a compact event, and then either complete the phase transition, restart the orchestrator, or record the escalation/blocker. For `phase_completion`, it must operate from `base_worktree` for merge-back, post-merge verification, local verification launch, run-state updates, and next-phase orchestrator startup; use `phase_worktree` only to inspect the accepted phase state, inbox, and artifacts.
+The resumed supervisor transition handler must mark the trigger handled, append a compact event, and then either complete the phase transition, restart the orchestrator, or record the escalation/blocker. For `phase_completion`, it must operate from `base_worktree` for merge-back, post-merge verification, run-state updates, completed-orchestrator teardown, local verification launch, and next-phase orchestrator startup; use `phase_worktree` only to inspect the accepted phase state, inbox, and artifacts.
 
 ## Commit Hash Fields
 
@@ -262,6 +294,7 @@ For a phase completion request, the orchestrator must write the accepted phase c
 phase_completion:
   phase_yaml: "docs/implementation-runs/YYYY-MM-DD-feature/phases/phase-2.yaml"
   acceptance_packet: "docs/qa/phase-acceptance/phase-2.md"
+  transition_handoff: "docs/implementation-runs/YYYY-MM-DD-feature/handoffs/phase-2-transition.md"
   commit: "abc123abc123abc123abc123abc123abc123abc123abc1"
 ```
 
@@ -349,8 +382,11 @@ Useful events:
 - worker dispatched, test proposed, tests approved, implementation complete, reviewed, fixed, or integrated;
 - command started and ended, with duration, result, and artifact path;
 - inbox request written or handled;
+- phase-transition handoff/report written or consumed;
 - phase acceptance started, passed, failed, or merged to base;
+- completed phase orchestrator pane/session stopped;
 - post-merge local verification setup started, launched, blocked, stopped, or failed;
+- local verification smoke-test report written and printed;
 - base worktree dirty status captured, preserved, reconciled, or blocked for critical conflict;
 - escalation opened or cleared.
 
@@ -360,7 +396,7 @@ Do not put full prompts, full stdout, full diffs, full review text, screenshots,
 
 Only the supervisor edits `run.yaml`. Only the orchestrator edits `phase.yaml` during normal phase execution. The supervisor owns initial manifest creation before launch. The orchestrator may patch or regenerate the manifest only as part of a batched consistency update for future inactive tasks.
 
-The supervisor may initialize `supervisor-inbox/<phase-slug>.yaml` before spawning the orchestrator and may write the tmux pane id immediately after spawn. After that, the orchestrator writes compact lifecycle requests there. The watchdog polls that inbox and wakes a short supervisor transition handler for phase transitions, escalations, restarts, and completion. The supervisor transition handler reads the inbox and updates `run.yaml`.
+The supervisor may initialize `supervisor-inbox/<phase-slug>.yaml` before spawning the orchestrator and may write the tmux pane id immediately after spawn. After that, the orchestrator writes compact lifecycle requests there. The watchdog polls that inbox and wakes the recorded original supervisor pane with `tmux send-keys` for phase transitions, escalations, restarts, and completion. A fresh Codex transition-handler pane/process is a fallback only when the recorded supervisor pane cannot be validated, and the fallback must be recorded in the trigger, `run.yaml`, and supervisor events. The supervisor transition handler reads the inbox and updates `run.yaml`.
 
 Workers write worker result YAML, compact worker event JSONL, and code/test changes only. They must not edit canonical state files unless explicitly assigned a narrow state-repair task.
 

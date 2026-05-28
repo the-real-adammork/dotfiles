@@ -6,7 +6,7 @@ Because the orchestrator is a top-level Codex process, it can spawn and communic
 
 The orchestrator is launched with `--dangerously-bypass-approvals-and-sandbox` so it can own worker approvals and phase execution without blocking on Codex edit prompts. Do not ask the supervisor to approve worker edits. Human-only blockers must be written to the supervisor inbox as workflow escalations.
 
-The orchestrator does not perform supervisor transition work. On normal phase completion, it must not write a phase-transition handoff, merge back to the run base branch, launch local verification, start the next phase, or produce final-style user reporting. It stops at accepted phase state: `phase.yaml` complete, acceptance packet current, artifacts recorded, and `request.type: phase_completion` written to the supervisor inbox. The supervisor transition handler owns every handoff/status needed after that point.
+The orchestrator does not perform supervisor transition work. On normal phase completion, it must write a compact phase-transition handoff/report for the supervisor, but it must not merge back to the run base branch, launch local verification, start the next phase, or produce final-style user reporting. It stops at accepted phase state: `phase.yaml` complete, acceptance packet current, artifacts recorded, a phase-transition handoff/report written, and `request.type: phase_completion` written to the supervisor inbox. The supervisor transition handler owns the actual transition work after that point.
 
 ## Startup Handshake
 
@@ -136,10 +136,32 @@ Set:
 - `startup.acknowledged: true`, expected manifest path, pane id, and best-effort Codex session id/path at startup.
 - `request.type: escalation` only for allowed escalations the supervisor must surface or preserve.
 - `request.type: restart_needed` when the orchestrator cannot continue safely.
-- `request.type: phase_completion` only after phase acceptance passed, the acceptance packet exists, and `phase_completion.commit` is a quoted full 40-character commit hash resolved with `/usr/bin/git rev-parse HEAD^{commit}`.
+- `request.type: phase_completion` only after phase acceptance passed, the acceptance packet exists, the phase-transition handoff/report exists, and `phase_completion.commit` is a quoted full 40-character commit hash resolved with `/usr/bin/git rev-parse HEAD^{commit}`.
 - `request.type: graceful_exit` when the supervisor should close the pane after state is safely written.
 
-After writing `request.type: phase_completion`, the orchestrator should leave the pane idle or request graceful exit. It must not call `references/consistency-handoff.md` to create a normal phase-transition handoff. If context is exhausted before the completion request is safely written, write a blocked/restart-needed inbox request instead of creating a transition handoff.
+After writing `request.type: phase_completion`, the orchestrator should leave the pane idle or request graceful exit. If context is exhausted before the completion request and phase-transition handoff/report are safely written, write a blocked/restart-needed inbox request instead of asking the supervisor to infer missing setup or smoke-test details.
+
+## Phase-Transition Handoff Report
+
+After phase acceptance passes and before writing `request.type: phase_completion`, write a compact handoff/report under:
+
+```text
+docs/implementation-runs/<run-id>/handoffs/<phase-slug>-transition.md
+```
+
+This is not final user reporting and does not transfer ownership of implementation work. It is the supervisor's transition input for merge-back, local verification, smoke-test reporting, and next-phase startup.
+
+Required contents:
+
+- phase slug, run id, phase plan path, `phase.yaml`, acceptance packet path, accepted commit, and artifact directory;
+- concise summary of new expected behavior delivered by the phase;
+- setup instructions for running the completed phase locally from the run base worktree after merge-back, including dependency install, env/example setup, local services, migrations/seeds, dev server command, expected ports, and safe alternate-port guidance when known;
+- human smoke-test checklist focused on new behavior and acceptance boundaries, with expected outcomes and any login/demo/test data needed;
+- known local setup caveats, such as safe placeholder env values, required external services, intentionally unavailable devices, port conflicts seen during acceptance, or commands that must not be run against production data;
+- verification commands and artifacts that prove the phase passed acceptance;
+- residual risks and downstream assumptions that matter to later phases.
+
+The setup instructions must be concrete enough that the supervisor can execute them without re-reading the full phase plan. If the phase cannot be launched locally because of an allowed escalation, state the blocker explicitly and include the closest useful smoke-test alternative.
 
 ## Integration Checkpoint
 

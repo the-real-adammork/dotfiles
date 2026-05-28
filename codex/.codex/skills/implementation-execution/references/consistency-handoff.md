@@ -30,18 +30,35 @@ Do not add notes for routine successful implementation that does not affect futu
 
 ## Handoff
 
-The supervisor transition handler owns phase-transition handoffs and final user-facing run status. The phase orchestrator must not write a handoff merely because phase acceptance passed; it should write `request.type: phase_completion` to the supervisor inbox and let the watchdog wake the supervisor.
+The phase orchestrator owns the phase-transition handoff/report after phase acceptance passes. The supervisor transition handler owns final user-facing run status and uses the orchestrator's handoff/report as input for local verification setup, smoke-test reporting, and next-phase startup.
 
-Write a markdown handoff only when:
+The phase-transition handoff/report is required for normal phase completion. Write it before `request.type: phase_completion` under:
+
+```text
+docs/implementation-runs/<run-id>/handoffs/<phase-slug>-transition.md
+```
+
+It must include:
+
+- phase slug, run id, accepted commit, acceptance packet, phase state, and artifact directory;
+- what new behavior should now work;
+- exact local setup/run instructions from the merged base worktree;
+- expected localhost URL/ports or how the supervisor should choose safe alternates;
+- smoke-test checklist with expected outcomes for newly delivered behavior;
+- required demo/test data, accounts, fixtures, or safe placeholder env values;
+- local caveats, blockers, and allowed escalation details;
+- verification artifacts and residual risks.
+
+Write additional markdown handoffs only when:
 
 - context pressure is high;
 - the run is blocked;
 - the user stops the workflow;
 - a different agent must resume.
 
-Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, the supervisor transition handler fast-forwards the accepted phase branch into the run base branch, updates `run.yaml`, records the completed phase evidence and resulting base commit, runs post-merge local verification setup, closes or replaces the completed orchestrator pane, and continues with the next phase orchestrator from the updated base branch.
+Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, the orchestrator writes the phase-transition handoff/report above, then the supervisor transition handler merges or reconciles the accepted phase branch into the run base branch, updates `run.yaml`, records the completed phase evidence, resulting base commit, and any merge decisions, stops the completed orchestrator pane/session, runs post-merge local verification setup from the handoff/report, prints the smoke-test report, and continues with the next phase orchestrator from the updated base branch.
 
-Default path:
+Default path for additional context/blocker/resume handoffs:
 
 ```text
 docs/implementation-runs/<run-id>/handoffs/YYYY-MM-DD-HHMM-<phase>.md
@@ -96,7 +113,8 @@ Next action:
 
 Human smoke test:
 - URL: `<localhost URL or unavailable>`
-- Checks: `<brief checklist or artifact path>`
+- Transition handoff: `<path or unavailable>`
+- Smoke report: `<brief checklist or artifact path>`
 
 Blocked or escalated:
 - <item or "None">
