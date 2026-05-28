@@ -54,9 +54,9 @@ Preview requirements:
 
 ## Phase Proposal
 
-| Phase | Goal | Builds On | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Planned Output |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Auth/Test Data | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Planned Output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase or none> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <seeded admin/demo user, credential path, fixture/seed command, or "not auth-gated"> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 
@@ -123,9 +123,9 @@ Present this summary before generating plan documents when the user asks for a p
 ```markdown
 ## Proposed Implementation Plan Phases
 
-| Phase | Goal | Builds On | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Plan Path |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Auth/Test Data | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Plan Path |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase or none> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <seeded admin/demo user, credential path, fixture/seed command, or "not auth-gated"> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 

@@ -55,6 +55,8 @@ Every plan starts with:
 
 **Phase Acceptance:** <platform automation, service-wiring coverage, and packet path that prove the smoke-testable outcome>
 
+**Test Data And Auth:** <seeded local admin/demo users, credential handling, and deterministic data needed for smoke/E2E tests>
+
 ## Phase Execution Contract
 
 **Execution Model:** The supervisor launches one top-level phase orchestrator for this phase. Worker agents implement bounded substantial tasks; the orchestrator remains responsible for sequencing, integration, verification, the acceptance packet, and downstream assumptions.
@@ -149,6 +151,20 @@ Allowed escalation categories are narrow:
 - physical device, simulator entitlement, browser profile, or external service availability that the agent cannot provision after a documented attempt.
 
 If a task needs a real service, real database, real network/API call, real-data path, or service integration to prove completion, the plan must say how the agent provisions it through repo tooling, containers, emulators, dev/staging resources, migrations, or seed scripts. If it falls into an allowed escalation category, record the blocker in `Autonomy And Escalation` and make the dependent task block with clear fallback evidence.
+
+## Seeded Users And Test Data
+
+Every plan with login-gated app behavior, auth-gated APIs, admin-only workflows, or Playwright smoke tests that require an authenticated session must include deterministic local seed data.
+
+Required planning details:
+
+- a seeded local admin or demo user exists before the first auth-gated smoke/E2E test runs;
+- the plan names the seed command, migration, fixture, or setup script that creates the user;
+- the plan states where the supervisor and Playwright tests get credentials: harmless local/demo credentials may be written directly only when classified safe by `$secrets`; otherwise the plan must specify an ignored plaintext file path and account/variable names without printing unsafe secret values;
+- Playwright tests must log in through the real UI or an established authenticated test helper that exercises the same auth/session boundary the app uses in development;
+- missing seeded admin/demo access is a plan gap, not an allowed escalation, unless the product explicitly has no auth-gated local smoke path.
+
+For web apps, seed-user setup belongs before or alongside E2E harness setup. Do not defer it to final acceptance, because Playwright smoke tests need deterministic access while wiring lands.
 
 ## Service Wiring Matrix
 
@@ -263,6 +279,7 @@ Every implementation plan must define a phase acceptance gate. This is a complet
 The acceptance gate must:
 
 - prove the complete phase behavior through the real user/runtime surface, not only isolated internals;
+- for auth-gated web behavior, use seeded local admin/demo access so Playwright can exercise the authenticated smoke path deterministically;
 - cover every applicable row in the `Service Wiring Matrix`;
 - verify wiring between UI/CLI/app surface, API/service layer, persistence, background jobs, and external/local integrations that are in scope for the phase;
 - use the appropriate platform automation for the project;
@@ -376,6 +393,7 @@ Before presenting the plan, check:
 - Every requirement maps to at least one task.
 - The plan represents one substantial vertical phase, not a horizontal stack layer.
 - The plan has a concrete smoke-testable outcome available after completion.
+- The plan includes `Test Data And Auth` with seeded local admin/demo users for any auth-gated smoke path or Playwright test.
 - The `Phase Execution Contract` defines the supervisor-launched phase orchestrator, worker delegation map, integration checkpoints, and handoff path.
 - The `Codex Efficiency Rules` are followed: substantial lanes, minimal coordination, no tiny delegation churn.
 - Every task includes a compact `Execution` line, with safe parallelism and integration checkpoint stated.
@@ -384,6 +402,7 @@ Before presenting the plan, check:
 - Every substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract change is assigned to a worker lane, even when serial.
 - The plan includes a `Service Wiring Matrix`, and every row is covered by task-level evidence or the phase acceptance gate.
 - E2E automation appears early enough to verify integrations during phase development.
+- Playwright/browser E2E has deterministic credentials or an ignored credential-file path, and the relevant seed/setup task precedes authenticated tests.
 - Tasks that introduce service wiring include `Service Wiring Rows Covered`.
 - The `Phase Acceptance Gate` uses the appropriate platform harness and verifies wiring across the phase's app surface, APIs/services, persistence, jobs, and integrations.
 - The `Phase Acceptance Gate` requires a current phase acceptance packet with evidence and downstream assumptions.
@@ -397,6 +416,7 @@ Before presenting the plan, check:
 - Every task includes a concrete `Agent-Run Acceptance` section.
 - Every task with tests includes a `Test Mode Disclosure`.
 - Any production/dev mock, fake, stub, no-op, fixture-only path, or disabled network path has a valid mock/fixture ledger disposition and, when needed, a later conversion task to the real implementation.
+- No auth-gated smoke test relies on an unseeded user, manual account creation, or unknown credentials.
 
 Fix gaps inline before delivering the plan.
 

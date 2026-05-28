@@ -106,10 +106,12 @@ Constraints:
 - Include `Autonomy And Escalation` and escalate only for credentials/secrets, paid/vendor setup, product/legal/security decisions, destructive production actions, real customer data access, or unavailable devices/services after an agent-owned attempt.
 - Include a `Service Wiring Matrix` that names the phase flows across surface, service, persistence, jobs, and integrations.
 - Include `Service Wiring Rows Covered` for every task that touches surface/service/persistence/jobs/integrations.
+- Include `Test Data And Auth` for any auth-gated behavior, including seeded local admin/demo users, seed command or fixture path, credential handling, and Playwright login data. Use `$secrets` handling: safe local/demo credentials may be listed directly; unsafe plaintext credentials must be stored in an ignored file and the plan should list only the path and account/variable names.
 - Bring E2E automation in early enough to verify integrations during phase development; create a minimal harness early if none exists.
 - Include a `Phase Acceptance Gate` with commands, required service-wiring coverage, acceptance packet path, and completion rule.
 - Do not create a late QA-only E2E task as the enforcement point; E2E coverage should be added or extended as wiring lands.
 - For web phases, use Playwright to verify browser behavior and API/service wiring unless the repo has an explicit different browser E2E standard.
+- For auth-gated web phases, Playwright smoke tests must have deterministic seeded users before they run. Missing seeded admin/demo access is a plan defect; add a setup/seed task rather than leaving account creation manual.
 - For app phases, use simulator/emulator automation appropriate to the platform.
 - Use `Agent-Run Acceptance` fields for every task; do not add optional non-automated checks or manual smoke-test gates.
 - Mention dependencies on earlier phases, but do not plan their tasks.
@@ -179,10 +181,12 @@ Check for:
 - missing or weak `Service Wiring Matrix` coverage;
 - tasks that touch service wiring but lack `Service Wiring Rows Covered`;
 - missing or late E2E harness setup when integrations need E2E verification during phase development;
+- missing seeded local admin/demo users or credential-access instructions for auth-gated Playwright/browser smoke tests;
 - late QA-only E2E tasks that defer integration proof until the end of the phase;
 - missing or weak `Phase Acceptance Gate`;
 - phase acceptance gates that do not cover every applicable service-wiring row;
 - web phase plans that do not use Playwright or an explicitly established browser E2E equivalent;
+- web phase plans whose Playwright smoke tests depend on manual account creation, unknown credentials, or unseeded users;
 - app phase plans that do not use simulator/emulator automation or an explicitly established app E2E equivalent;
 - plan tasks that escaped their phase boundary.
 

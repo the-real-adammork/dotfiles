@@ -4,7 +4,7 @@ Use this when the supervisor starts, resumes, validates, restarts, or replaces a
 
 ## Tmux Orchestrator Pane
 
-Start each phase orchestrator in a new pane in the current tmux window so the human can see both supervisor and orchestrator.
+Start each phase orchestrator in a new pane in the current tmux window and same tmux session as the original supervisor so the human can see both supervisor and orchestrator. Do not use `tmux new-session` for the orchestrator.
 
 Recommended pattern:
 

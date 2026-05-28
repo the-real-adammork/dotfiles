@@ -46,6 +46,7 @@ It must include:
 - expected localhost URL/ports or how the supervisor should choose safe alternates;
 - smoke-test checklist with expected outcomes for newly delivered behavior;
 - required demo/test data, accounts, fixtures, or safe placeholder env values;
+- seeded local admin access details for login-gated smoke tests. Include harmless local/demo credentials directly only when classified safe by `$secrets`; otherwise list the exact ignored plaintext file path and account/variable names where the credentials are stored, without printing secret values. If no seeded admin user exists, the phase-transition handoff/report is incomplete and the orchestrator must not request `phase_completion`;
 - local caveats, blockers, and allowed escalation details;
 - verification artifacts and residual risks.
 
@@ -71,7 +72,7 @@ Required contents:
 - execution manifest path;
 - orchestrator pane id or inline fallback reason;
 - supervisor inbox path;
-- watchdog script, PID, trigger path, and wake method;
+- watchdog script, PID, same-session window/pane, trigger path, wake method, and wake blocker if any;
 - branch/worktree;
 - active lanes and worker result paths;
 - completed tasks and commits;

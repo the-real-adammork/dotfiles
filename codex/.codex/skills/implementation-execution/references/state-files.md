@@ -89,6 +89,8 @@ completed_phases:
       run_command: "pnpm dev --host 127.0.0.1 --port 3000"
       url: "http://localhost:3000"
       pid: 12345
+      tmux_session: "project"
+      tmux_window: "project:workflow"
       tmux_pane: "%34"
       smoke_tests:
         - "Open http://localhost:3000 and verify the completed phase workflow loads."
@@ -101,8 +103,10 @@ branches:
   base: "main"
   current: "impl/phase-2"
 supervisor:
+  tmux_session: "project"
   tmux_pane: "%10"
   tmux_window: "project:1"
+  workflow_window: "project:workflow"
   cwd: "/absolute/path/to/repo"
   codex_session:
     id: "019e..."
@@ -136,11 +140,15 @@ supervisor_watchdog:
   script: "docs/implementation-runs/YYYY-MM-DD-feature/watchdogs/phase-2.sh"
   trigger: "docs/implementation-runs/YYYY-MM-DD-feature/watchdogs/phase-2-trigger.yaml"
   interval_seconds: 120
-  wake_method: tmux-send-keys # tmux-send-keys | tmux-pane-fallback | codex-cli-fallback | disabled
+  tmux_session: "project"
+  tmux_window: "project:workflow"
+  tmux_pane: "%35"
+  wake_method: tmux-send-keys # tmux-send-keys | blocked | disabled
   wake_target:
     supervisor_pane: "%10"
     supervisor_window: "project:1"
-  fallback_reason: null
+    supervisor_session: "project"
+  wake_blocker: null
   last_checked_at: "YYYY-MM-DDTHH:MM:SSZ"
 paths:
   run_dir: "docs/implementation-runs/YYYY-MM-DD-feature"
@@ -225,7 +233,7 @@ updated_at: "YYYY-MM-DDTHH:MM:SSZ"
 
 ## Supervisor Inbox YAML
 
-The detached watchdog polls one compact inbox file for the active phase. The supervisor reads it only during launch validation or transition handling. This file is lifecycle state only, not worker or task detail.
+The same-session watchdog polls one compact inbox file for the active phase. The supervisor reads it only during launch validation or transition handling. This file is lifecycle state only, not worker or task detail.
 
 ```yaml
 phase: "phase-2"
@@ -255,7 +263,7 @@ Do not store worker dispatch details, active lane details, review text, full com
 
 ## Watchdog Trigger YAML
 
-The detached supervisor watchdog writes a trigger file when the supervisor needs to resume as a transition handler. The trigger is compact lifecycle state, not an implementation report.
+The same-session supervisor watchdog writes a trigger file when the supervisor needs to resume as a transition handler. The trigger is compact lifecycle state, not an implementation report.
 
 ```yaml
 phase: "phase-2"
@@ -269,9 +277,10 @@ phase_worktree: "/absolute/path/to/repo/.worktrees/impl-phase-2"
 tmux_pane: "%12"
 supervisor_pane: "%10"
 supervisor_window: "project:1"
+supervisor_session: "project"
 event_log: "/absolute/path/to/docs/implementation-runs/YYYY-MM-DD-feature/events/supervisor.jsonl"
-wake_method: "tmux-send-keys" # tmux-send-keys | tmux-pane-fallback | codex-cli-fallback | blocked
-fallback_reason: null
+wake_method: "tmux-send-keys" # tmux-send-keys | blocked
+wake_blocker: null
 handled: false
 ```
 
@@ -396,7 +405,7 @@ Do not put full prompts, full stdout, full diffs, full review text, screenshots,
 
 Only the supervisor edits `run.yaml`. Only the orchestrator edits `phase.yaml` during normal phase execution. The supervisor owns initial manifest creation before launch. The orchestrator may patch or regenerate the manifest only as part of a batched consistency update for future inactive tasks.
 
-The supervisor may initialize `supervisor-inbox/<phase-slug>.yaml` before spawning the orchestrator and may write the tmux pane id immediately after spawn. After that, the orchestrator writes compact lifecycle requests there. The watchdog polls that inbox and wakes the recorded original supervisor pane with `tmux send-keys` for phase transitions, escalations, restarts, and completion. A fresh Codex transition-handler pane/process is a fallback only when the recorded supervisor pane cannot be validated, and the fallback must be recorded in the trigger, `run.yaml`, and supervisor events. The supervisor transition handler reads the inbox and updates `run.yaml`.
+The supervisor may initialize `supervisor-inbox/<phase-slug>.yaml` before spawning the orchestrator and may write the tmux pane id immediately after spawn. After that, the orchestrator writes compact lifecycle requests there. The watchdog polls that inbox and wakes the recorded original supervisor pane with `tmux send-keys` for phase transitions, escalations, restarts, and completion. If the recorded supervisor pane cannot be validated, the watchdog writes a blocked trigger, records `wake_blocker: supervisor_pane_invalid`, appends a compact event, and stops. It must not create a fresh Codex transition-handler pane/process. The supervisor transition handler reads the inbox and updates `run.yaml`.
 
 Workers write worker result YAML, compact worker event JSONL, and code/test changes only. They must not edit canonical state files unless explicitly assigned a narrow state-repair task.
 

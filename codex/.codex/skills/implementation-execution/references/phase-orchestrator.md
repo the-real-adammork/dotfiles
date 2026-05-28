@@ -156,12 +156,13 @@ Required contents:
 - phase slug, run id, phase plan path, `phase.yaml`, acceptance packet path, accepted commit, and artifact directory;
 - concise summary of new expected behavior delivered by the phase;
 - setup instructions for running the completed phase locally from the run base worktree after merge-back, including dependency install, env/example setup, local services, migrations/seeds, dev server command, expected ports, and safe alternate-port guidance when known;
+- seeded local admin access details for any login-gated app or smoke path. If credentials are harmless local/demo values classified safe by `$secrets`, include the username/email and password directly. If credentials are unsafe plaintext or stored in an ignored file, list the exact ignored file path and account/variable names where the human can find them, without printing secret values. If no seeded admin user exists, treat it as a phase-completion gap and do not request `phase_completion`;
 - human smoke-test checklist focused on new behavior and acceptance boundaries, with expected outcomes and any login/demo/test data needed;
 - known local setup caveats, such as safe placeholder env values, required external services, intentionally unavailable devices, port conflicts seen during acceptance, or commands that must not be run against production data;
 - verification commands and artifacts that prove the phase passed acceptance;
 - residual risks and downstream assumptions that matter to later phases.
 
-The setup instructions must be concrete enough that the supervisor can execute them without re-reading the full phase plan. If the phase cannot be launched locally because of an allowed escalation, state the blocker explicitly and include the closest useful smoke-test alternative.
+The setup instructions must be concrete enough that the supervisor can execute them without re-reading the full phase plan. For login-gated apps, concrete setup includes a seeded local admin account and a clear path to credentials. If the phase cannot be launched locally because of an allowed escalation, state the blocker explicitly and include the closest useful smoke-test alternative. Missing seeded local admin access is not an allowed escalation by itself; fix the seed/setup path before requesting phase completion.
 
 ## Integration Checkpoint
 

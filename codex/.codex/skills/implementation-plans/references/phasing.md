@@ -81,6 +81,7 @@ Every phase must state:
 - what app behavior works at the end;
 - what earlier phase behavior it builds on;
 - what smoke test proves it;
+- what seeded local admin/demo users, credentials path, and deterministic test data are needed for auth-gated smoke tests;
 - what the phase orchestrator is responsible for, limited to orchestration, integration decisions, state, acceptance, and tiny glue;
 - what substantial worker lanes are safe or unsafe to run in parallel, including serial lanes for work that cannot parallelize;
 - which substantial worker lanes use general-purpose workers and which review/fix loops the execution workflow should expect;
@@ -102,6 +103,8 @@ Optimize phase plans for Codex execution efficiency:
 - Make the phases document a routing map, not a second implementation plan.
 
 Every generated phase plan must include a phase acceptance gate with E2E or equivalent end-to-end automation and a required acceptance packet. This is a completion gate, not a task-position requirement. For web work, use Playwright unless the repo already standardizes on another browser automation framework. For mobile or app work, use simulator/emulator automation appropriate to the platform. For service, CLI, desktop, or worker-only phases, use the closest true end-to-end harness that exercises the phase through its real runtime boundary.
+
+For auth-gated web work, Playwright readiness requires deterministic seeded local users. The phase must include or depend on a seed/setup path that creates a local admin or demo user before authenticated browser tests run. Missing seeded local admin/demo access is a phase-planning defect, not an execution-time escalation, unless the phase has no login-gated smoke path.
 
 ## Autonomy Model
 
@@ -163,7 +166,7 @@ Before handoff:
 - SLICES document has an HTML approval preview generated from the current markdown and served on localhost before requesting approval;
 - individual phase plan documents were generated only after explicit approval of the reviewed phases document;
 - every ready phase has a plan file at the reported path;
-- every phase has a smoke-testable outcome, orchestrator responsibility, worker lane summary, service wiring summary, E2E harness readiness note, phase acceptance automation, and expected acceptance packet;
+- every phase has a smoke-testable outcome, auth/test-data readiness note, orchestrator responsibility, worker lane summary, service wiring summary, E2E harness readiness note, phase acceptance automation, and expected acceptance packet;
 - every phase plan includes `Autonomy And Escalation` with only allowed exception categories;
 - every phase plan includes a `Phase Execution Contract` for supervisor-launched phase orchestration, worker delegation, integration checkpoints, and handoff;
 - every phase plan includes an `Implementation Execution Handoff` with `$implementation-execution` state, manifest, event, and evidence paths;
