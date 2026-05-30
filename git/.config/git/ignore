@@ -21,3 +21,6 @@ __pycache__/
 
 # Claude
 **/.claude/settings.local.json
+
+# Local linked worktrees
+.worktrees/

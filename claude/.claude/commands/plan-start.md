@@ -6,8 +6,8 @@ Guide for starting implementation of an approved plan.
 
 | Workflow | Pros | Cons |
 |----------|------|------|
-| **Worktree** (recommended) | Keeps main clean, parallel work possible | More directories to manage |
-| **Traditional branch** | Simpler, single directory | Must stash/commit to switch branches |
+| **Worktree** (default) | Keeps main clean, parallel work possible | More directories to manage |
+| **Traditional branch** (explicit opt-in only) | Simpler, single directory | Dirties the main worktree and blocks parallel work |
 
 ---
 
@@ -15,26 +15,29 @@ Guide for starting implementation of an approved plan.
 
 ### Directory Structure
 ```
-Projects/
-├── spare-parts/                     # main worktree (always exists)
-├── spare-parts-plan-nav-redesign/   # plan worktree (temporary)
-└── spare-parts-plan-dark-mode/      # another plan worktree (temporary)
+spare-parts/
+├── .worktrees/
+│   ├── plan-nav-redesign/           # plan worktree (temporary)
+│   └── plan-dark-mode/              # another plan worktree (temporary)
+└── ...                              # main worktree, kept on main
 ```
 
 ### Steps
 
 1. **Create branch and worktree together:**
    ```bash
-   # From main worktree (spare-parts/)
-   /usr/bin/git worktree add -b <type>/plan-<short-description> ../spare-parts-plan-<short-name>
+   # From the main worktree root
+   mkdir -p .worktrees
+   /usr/bin/git worktree add -b <type>/plan-<short-description> .worktrees/plan-<short-name>
 
    # Example:
-   /usr/bin/git worktree add -b feat/plan-nav-redesign ../spare-parts-plan-nav-redesign
+   mkdir -p .worktrees
+   /usr/bin/git worktree add -b feat/plan-nav-redesign .worktrees/plan-nav-redesign
    ```
 
 2. **Change to worktree directory:**
    ```bash
-   cd ../spare-parts-plan-<short-name>
+   cd .worktrees/plan-<short-name>
    ```
 
 3. **Update plan status** (see Common Steps below)
@@ -51,17 +54,19 @@ Projects/
 
 ```bash
 # Correct - from plan worktree
-cd ../spare-parts-plan-nav-redesign
+cd .worktrees/plan-nav-redesign
 python3 -m http.server 8080   # Serves brand guide with plan changes
 
 # Wrong - from main worktree
-cd ../spare-parts
+cd ../..
 python3 -m http.server 8080   # Serves WITHOUT plan changes!
 ```
 
 ---
 
-## Option B: Traditional Branch Workflow
+## Option B: Traditional Branch Workflow (Explicit Opt-In Only)
+
+Use this only when the user explicitly asks to work in the main worktree.
 
 ### Steps
 
