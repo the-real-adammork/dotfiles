@@ -27,6 +27,14 @@ Dependencies and configs must stay in sync. If a config references a binary, tha
 
 Use `/usr/bin/git` instead of `git` to avoid SCM Breeze wrapper conflicts.
 
+## Worktree Policy
+
+The repository root is the main worktree and should stay on `main`.
+
+All non-main branches, implementation plans, feature work, fixes, and task execution must happen in linked worktrees under `.worktrees/<branch-or-plan-name>/`.
+
+Agents must not start implementation work in the main worktree unless the user explicitly asks to work in main.
+
 ## Lessons
 
 - Linear implementation workflows: prefer the two-layer supervisor-owned task loop; keep native sub-agent dispatch at the supervisor level and use task/review/fix/merge workers for bounded work. See [docs/lessons/2026-05-21-supervisor-mediated-subagents.md](docs/lessons/2026-05-21-supervisor-mediated-subagents.md).

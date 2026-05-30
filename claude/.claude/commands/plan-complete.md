@@ -93,7 +93,7 @@ EOF
 **Worktree workflow:**
 ```bash
 # Remove the worktree
-/usr/bin/git worktree remove ../spare-parts-plan-<short-name>
+/usr/bin/git worktree remove .worktrees/plan-<short-name>
 
 # Verify
 /usr/bin/git worktree list

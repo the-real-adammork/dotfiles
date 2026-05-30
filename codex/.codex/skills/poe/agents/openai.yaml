@@ -1,0 +1,4 @@
+interface:
+  display_name: "Panel of Experts"
+  short_description: "Critique PRDs with requested-size expert panels"
+  default_prompt: "Use $poe with an optional expert count and requested lenses to propose a PRD-specific panel for approval before generating critiques."

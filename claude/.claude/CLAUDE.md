@@ -5,3 +5,22 @@ When working inside a git worktree, never create symlinks that point to paths in
 - Copy files, re-install dependencies, or regenerate artifacts instead.
 - If isolation is inconvenient (slow install, large dataset), surface the tradeoff to the user and ask — don't route around it with a symlink.
 - Symlinks to genuinely shared, read-only locations outside any repo (e.g. `~/.cache`, system tool dirs, global model/data stores) are fine.
+
+## Local Port Isolation
+
+Treat local ports as project- and worktree-local resources. Do not assume default ports are free across projects, branches, or git worktrees.
+
+Before starting any local server or service, check for port conflicts. If the default port is unavailable, use an unused high port via env vars, CLI flags, or existing project config, and tell the user the final URL.
+
+Never kill unrelated processes or share a running service from another repo/worktree unless the user explicitly approves it.
+
+## Durable Local/Test Accounts
+
+For apps that require login, prefer seeded durable local/test accounts so smoke tests and E2E tests can authenticate repeatably.
+
+- Store local/test account credentials in `account.env`.
+- Add a narrow `.gitignore` rule for `account.env`.
+- Encrypt `account.env` with `git-secret` when available, producing `account.env.secret`.
+- Commit encrypted credentials and git-secret metadata only; never commit plaintext `account.env`.
+- Do not print passwords, tokens, or secret values in logs, docs, comments, or final responses.
+- Verify seeded accounts can authenticate locally before claiming login, smoke, or E2E flows pass.

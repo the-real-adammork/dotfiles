@@ -11,13 +11,21 @@ Orchestrate a complete design loop from requirements to reviewed technical desig
 
 Announce: "I'm using the technical-design-cycle skill to coordinate the design draft, review, and issue walkthrough."
 
+## Bundled References
+
+Load these files from this skill as needed:
+
+- `references/drafting.md` before identifying design decision gates, drafting a technical design, or dispatching a design-drafting subagent.
+- `references/review.md` before reviewing a technical design or dispatching a design-review subagent.
+- Use `$secrets` before making design decisions about generated secrets, credentials, env files, deployment keys, database passwords, API tokens, or secret storage.
+
 Inputs:
 
 - Requirements document path, issue, PRD, spec, or approved brief.
 - Optional target design path. Default:
 
 ```text
-docs/designs/YYYY-MM-DD-<short-feature-name>.md
+docs/architecture/TECHNICAL_DESIGN.md
 ```
 
 If the requirements source is missing and cannot be inferred, ask for it before proceeding.
@@ -27,12 +35,15 @@ If the requirements source is missing and cannot be inferred, ask for it before 
 The parent agent must:
 
 - Read the requirements source and inspect the repo enough to understand relevant existing patterns.
+- Load `$secrets` and classify project posture before secret, environment, deployment, or credential decisions.
+- Run a short human framing brainstorm before technical decision gates.
 - Identify major design decisions that need human input before drafting.
 - Ask those human decision questions one at a time.
 - Save or patch the technical design in the real workspace.
 - Dispatch subagents only for bounded draft/review work.
 - Review subagent output before presenting it to the user.
 - Walk the user through every review finding and record the disposition.
+- After design acceptance, ask whether to define a small approved specialist implementation-agent roster before implementation planning.
 
 Subagents must not own the overall workflow, continue into implementation planning, commit changes, or decide human-facing design tradeoffs without parent review.
 
@@ -72,16 +83,30 @@ Keep files as the source of truth. Pass document paths to subagents by default; 
 - Parent reads targeted file sections only when patching, resolving a finding, or answering a user question.
 - If a subagent estimates it is at or above roughly 70% context usage, it must save a handoff under `docs/handoffs/` and return only the handoff path plus current artifact paths. Parent must dispatch a replacement from that handoff, not from chat history, using `replacement-design-drafter: <feature-slug> / resume` or `replacement-design-reviewer: <feature-slug> / resume` as appropriate.
 
+## Phase 0: Human Framing Brainstorm
+
+Before identifying final decision gates or spawning subagents, run a short parent-owned brainstorm with the human. This is not a POE critique and does not create a panel.
+
+1. Summarize the apparent product goal, target user, success signal, likely non-goals, and highest-risk assumptions in 3-5 bullets.
+2. Ask the human to confirm, correct, or add any missing goals, constraints, taste/preferences, non-goals, or risks.
+3. If the requirements are broad or ambiguous, ask up to 3 focused brainstorm questions before moving on. Prefer questions that change architecture or product behavior over questions that only refine wording.
+4. Record the result as `Human Framing Notes`.
+
+Do not spawn the design drafter until this brainstorm is complete or the user explicitly skips it.
+
 ## Phase 1: Requirements And Decision Gates
 
 1. Read the requirements source.
-2. Identify likely architecture/design decision gates using `$technical-design` rules.
-3. For each major decision that cannot be safely inferred:
+2. Inspect enough of the repo and linked docs to understand relevant constraints, patterns, and product context.
+3. Load `references/drafting.md`.
+4. Classify the project posture using the drafting reference. If the user has said the work is a side project, demo, prototype, or greenfield app without existing users, default to `side-project/greenfield`.
+5. Identify likely architecture/design decision gates using the requirements source, repo context, drafting reference, and `Human Framing Notes`. Focus on decisions that materially affect architecture, data shape, security/privacy posture, operational complexity, future extensibility, integration boundaries, validation strategy, or requirement completeness.
+6. For each major decision that cannot be safely inferred:
    - Present 2-3 options.
    - Recommend one.
    - Ask one focused question.
    - Wait for the user's answer.
-4. Keep a short `Human Decisions` list to pass into the drafting subagent.
+7. Keep a short `Human Decisions` list to pass into the drafting subagent.
 
 Skip questions for obvious local conventions or choices that can safely be deferred to `$implementation-plans`.
 
@@ -94,13 +119,19 @@ Use a prompt with this structure:
 ```text
 agent_name: design-drafter: <feature-slug> / <requirements id>
 
-Use $technical-design to draft a technical design.
+Use $technical-design-cycle and load `references/drafting.md` to draft a technical design.
 
 Requirements source:
 <path>
 
 Human decisions already made:
 <decision list>
+
+Human framing notes:
+<goals, constraints, non-goals, preferences, and risks from Phase 0>
+
+Project posture and secret policy:
+<side-project/greenfield | internal/demo | production/customer, plus which secrets agents may generate vs must escalate>
 
 Repository context:
 <relevant files, commands, constraints, and patterns discovered by parent>
@@ -115,7 +146,7 @@ If context pressure reaches roughly 70%, save a handoff under `docs/handoffs/` a
 
 The parent agent reviews the draft and fixes obvious formatting or instruction violations.
 
-If the draft contains `Open Questions` that affect architecture, product behavior, data shape, migration risk, security/privacy posture, operational complexity, future extensibility, or requirement completeness, stop before review. Ask the human to resolve those questions, patch or rerun the design draft, and only then continue to `$technical-design-review`.
+If the draft contains `Open Questions` that affect architecture, product behavior, data shape, migration risk, security/privacy posture, operational complexity, future extensibility, or requirement completeness, stop before review. Ask the human to resolve those questions, patch or rerun the design draft, and only then continue to review using `references/review.md`.
 
 ## Phase 3: Review Subagent
 
@@ -126,7 +157,7 @@ Use a prompt with this structure:
 ```text
 agent_name: design-reviewer: <feature-slug> / <requirements id>
 
-Use $technical-design-review to review the technical design against the requirements.
+Use $technical-design-cycle and load `references/review.md` to review the technical design against the requirements.
 
 Requirements document:
 <path>
@@ -168,7 +199,7 @@ Patch the design only for accepted or revised findings.
 
 ## Phase 5: Optional Review Loop
 
-After patching accepted/revised findings, ask whether to rerun `$technical-design-review`.
+After patching accepted/revised findings, ask whether to rerun the review using `references/review.md`.
 
 Rerun when:
 
@@ -178,7 +209,43 @@ Rerun when:
 
 If rerun produces new findings, repeat Phase 4.
 
-## Phase 6: Handoff
+## Phase 6: Specialist Implementation-Agent Gate
+
+After the technical design is accepted and before offering `$implementation-plans`, ask whether the user wants to define specialist implementation agents for the upcoming work.
+
+General-purpose implementation workers are always available and require no approval. Specialist implementation agents are optional routing hints for worker dispatch, not required capacity.
+
+If suggesting specialists:
+
+- suggest at most 3;
+- make them reusable across multiple tasks or phases, not one-off task personas;
+- define each as an implementation worker role, not a skill;
+- include name/title, best-fit work, scope boundaries, and when to fall back to a general-purpose worker;
+- ask the user to approve, reject, or revise each suggestion.
+
+Record the approved roster in the design handoff as:
+
+```markdown
+## Approved Specialist Implementation Agents
+
+General-purpose implementation workers are always available.
+
+| Agent | Best-Fit Work | Not Allowed To Own | Fallback Rule |
+| --- | --- | --- | --- |
+| <name/title> | <task/lane types> | <boundaries> | Use a general-purpose worker when <condition>. |
+```
+
+If no specialists are approved, record:
+
+```markdown
+## Approved Specialist Implementation Agents
+
+General-purpose implementation workers are always available. No specialist implementation agents approved for this design.
+```
+
+Do not create local skill documents for these agents. Do not allow later planning or execution steps to invent additional specialists for the same run.
+
+## Phase 7: Handoff
 
 When the design is accepted, offer:
 
@@ -200,4 +267,5 @@ Before declaring the cycle complete:
 - Confirm every review finding has a recorded disposition.
 - Confirm accepted/revised findings were applied to the design.
 - Confirm unresolved issues are listed under `Open Questions`.
+- Confirm the approved specialist implementation-agent roster is recorded, even if it says no specialists were approved.
 - Confirm no implementation task checklist was created unless the user explicitly chose implementation planning.
