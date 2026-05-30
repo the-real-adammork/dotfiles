@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expert Researcher"
+  short_description: "Create repo-specific expert researcher profiles"
+  default_prompt: "Use $expert-researcher to propose repo-specific expert researchers for approval before writing them."

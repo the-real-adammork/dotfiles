@@ -30,9 +30,9 @@ Do not add notes for routine successful implementation that does not affect futu
 
 ## Handoff
 
-The phase orchestrator owns the phase-transition handoff/report after phase acceptance passes. The supervisor transition handler owns final user-facing run status and uses the orchestrator's handoff/report as input for local verification setup, smoke-test reporting, and next-phase startup.
+The delegated acceptance worker/agent owns the phase-transition handoff/report after phase acceptance passes. The orchestrator validates that result and routes phase completion. The native phase-merge sub-agent uses that handoff/report for merge-back. After the supervisor has stopped the completed orchestrator and started the next phase from the merged base branch, the native phase-transition sub-agent uses that same handoff/report for local verification setup. The original supervisor owns final user-facing smoke-report printing when the transition sub-agent reports ready.
 
-The phase-transition handoff/report is required for normal phase completion. Write it before `request.type: phase_completion` under:
+The phase-transition handoff/report is required for normal phase completion. The acceptance worker writes it before the orchestrator sends `request.type: phase_completion` under:
 
 ```text
 docs/implementation-runs/<run-id>/handoffs/<phase-slug>-transition.md
@@ -50,6 +50,8 @@ It must include:
 - local caveats, blockers, and allowed escalation details;
 - verification artifacts and residual risks.
 
+The handoff/report is the correct place for smoke-test and reviewer instructions. Do not copy these instructions into the app itself. Product UI, API responses, seed user-facing content, generated demo content, and runtime assets must contain only product-facing copy that is part of the requirements; workflow-only setup, smoke, acceptance, or reviewer guidance stays in handoffs, QA artifacts, acceptance packets, transition YAML, or developer docs.
+
 Write additional markdown handoffs only when:
 
 - context pressure is high;
@@ -57,7 +59,7 @@ Write additional markdown handoffs only when:
 - the user stops the workflow;
 - a different agent must resume.
 
-Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, the orchestrator writes the phase-transition handoff/report above, then the supervisor transition handler merges or reconciles the accepted phase branch into the run base branch, updates `run.yaml`, records the completed phase evidence, resulting base commit, and any merge decisions, stops the completed orchestrator pane/session, runs post-merge local verification setup from the handoff/report, prints the smoke-test report, and continues with the next phase orchestrator from the updated base branch.
+Do not write a final-style handoff merely because one phase completed when execution scope is `run` and another phase remains. In that case, the orchestrator writes the phase-transition handoff/report above, then the supervisor routes `phase_completion` to a native phase-merge sub-agent. The merge sub-agent merges or reconciles the accepted phase branch into the run base branch, updates merge-owned `transitions/<phase>.yaml` fields, records completed phase evidence, resulting base commit, and merge decisions, then returns a compact result to the supervisor. The supervisor stops the completed orchestrator pane/session, marks the trigger handled, updates only minimal `run.yaml` pointers/status, starts the next phase orchestrator from the updated base branch, and then spawns the post-advance phase-transition sub-agent for local verification and smoke reporting. When the smoke report is ready, the supervisor prints it while leaving the next phase running.
 
 Default path for additional context/blocker/resume handoffs:
 
@@ -68,9 +70,9 @@ docs/implementation-runs/<run-id>/handoffs/YYYY-MM-DD-HHMM-<phase>.md
 Required contents:
 
 - run id and current phase;
-- `run.yaml` and `phase.yaml` paths;
+- `run.yaml`, `phase.yaml`, and `transitions/<phase>.yaml` paths;
 - execution manifest path;
-- orchestrator pane id or inline fallback reason;
+- orchestrator pane id or blocked launch reason;
 - supervisor inbox path;
 - watchdog script, PID, same-session window/pane, trigger path, wake method, and wake blocker if any;
 - branch/worktree;
@@ -102,7 +104,7 @@ Current phase:
 - `<phase>` - <status> - `<phase.yaml>`
 
 Orchestrator:
-- pane: `<tmux pane id or inline fallback>`
+- pane: `<tmux pane id or unavailable>`
 - inbox: `<supervisor inbox path>`
 
 Watchdog:

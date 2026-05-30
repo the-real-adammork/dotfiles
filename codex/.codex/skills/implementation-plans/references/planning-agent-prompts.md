@@ -62,7 +62,7 @@ Use the listed source documents and artifact paths as the source of truth. Do no
 
 ## Plan-Writing Agent
 
-Dispatch one planning agent per ready phase in the current unblocked dependency frontier that lacks a valid output plan. Prefer parallel dispatch within that frontier. Serialize only phases that need exact APIs, file paths, smoke-test commands, acceptance packet assumptions, service-wiring decisions, or other concrete outputs from an earlier phase plan.
+Dispatch one planning agent per ready phase in the current unblocked dependency frontier that lacks a valid output plan. Prefer parallel dispatch within that frontier. The first frontier is normally the foundation phase. Later frontiers may contain multiple phases that build on the same merged foundation or prior wave. Serialize only phases that need exact APIs, file paths, smoke-test commands, acceptance packet assumptions, service-wiring decisions, or other concrete outputs from an earlier phase plan.
 
 After the reviewed phases document has explicit user approval, the parent workflow does not need separate approval to dispatch plan-writing agents for those approved phases. In Codex, use `tool_search` to discover available multi-agent dispatch tools before deciding dispatch tools are unavailable. If dispatch tools are unavailable, the parent should write the approved phase plans locally instead.
 
@@ -82,39 +82,40 @@ Implementation SLICES document:
 <path>
 
 Phase:
-<phase name, goal, builds on, orchestrator scope, worker lanes, app surface included, smoke test, service wiring, E2E readiness, phase acceptance automation, acceptance packet, output path>
+<phase name, goal, builds on, dependency frontier, orchestrator scope, worker lanes, app surface included, smoke test, service wiring, E2E readiness, phase acceptance automation, acceptance packet, output path>
 
 Requirements source:
 <path or "not provided">
 
 Constraints:
 - Stay within this phase boundary.
-- Use `general-purpose worker` for every delegated implementation lane.
-- Do not define, preserve, invent, request, or route work through custom repo-specific implementation agents. Ignore any legacy custom worker roster in the design handoff or SLICES document.
+- Preserve the dependency frontier from the SLICES document. If this is the foundation phase, include the shared scaffolding/contracts/setup/E2E work later phases need. If this is a parallel-wave phase, avoid changing shared contracts unless the SLICES boundary explicitly assigns that contract change to this phase.
+- Use a repo-approved specialist worker only when current repo instructions, installed local skills, or the approved technical design explicitly define that specialist for the lane; otherwise use `general-purpose worker`.
+- Do not define, preserve, invent, request, or route work through unapproved repo-specific implementation agents. Treat any legacy custom worker roster in the design handoff or SLICES document as non-binding until confirmed by current repo instructions or installed local skills.
 - Include the UI/API/CLI/jobs/data work needed for this phase's smoke-testable outcome.
 - Include a `Phase Execution Contract` for a supervisor-launched phase orchestrator, a small worker delegation map, integration checkpoints, and handoff path.
 - Include an `Implementation Execution Handoff` section that points to `$implementation-execution` state and evidence locations: `run.yaml`, `phase.yaml`, execution manifest, worker result YAML, event JSONL, acceptance packet, and QA artifact paths.
-- Include a compact `Execution` line for every task so the execution workflow can distinguish orchestrator-owned orchestration/glue from bounded worker lanes without extra analysis.
-- Include `Worker Agent` for every worker-owned task, naming `general-purpose worker`.
-- Do not use ambiguous task ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`; choose one owner.
-- Use orchestrator ownership only for orchestration, tiny glue, state, acceptance, and plan consistency work. Every orchestrator-owned task must include `Owner-Only Justification`.
-- Assign substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior to a worker lane even when the lane must run serially.
+- Include a compact `Execution` line for every task; every task must be a bounded worker lane.
+- Include `Worker Agent: <repo-approved specialist or general-purpose worker>` for every task, with rationale when a specialist is used.
+- Do not use ambiguous task ownership such as `orchestrator`, `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`.
+- Do not create orchestrator-owned tasks or `Owner-Only Justification` fields. Pure lifecycle work belongs in the Phase Execution Contract, not the task list.
+- Assign runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, shared-contract behavior, docs/config, setup, acceptance-prep, remediation, and final acceptance to worker lanes even when the lane must run serially.
 - Keep `Execution` parallelism consistent with `Depends On`: a task cannot be parallel with a task it depends on or with a task that depends on it. Parallel lanes that share a required sequential contract must name the handoff point in both the task and delegation map.
 - Optimize for Codex efficiency: avoid tiny delegated tasks, minimize repeated context, and group related implementation work when splitting would add coordination cost without parallelism.
-- When substantial work is integration-heavy, context-heavy, or unsafe to parallelize, mark it as a serial worker lane rather than orchestrator-owned work.
+- When work is integration-heavy, context-heavy, or unsafe to parallelize, mark it as a serial worker lane rather than orchestrator-owned work.
 - For delegated behavior work, include a `TDD Approval Gate`: worker writes tests first, runs the focused test to record expected failure, returns test intent/evidence to the orchestrator, waits for orchestrator approval that tests satisfy requirements, then implements and makes the approved tests pass.
 - Include `Autonomy And Escalation` and escalate only for credentials/secrets, paid/vendor setup, product/legal/security decisions, destructive production actions, real customer data access, or unavailable devices/services after an agent-owned attempt.
 - Include a `Service Wiring Matrix` that names the phase flows across surface, service, persistence, jobs, and integrations.
 - Include `Service Wiring Rows Covered` for every task that touches surface/service/persistence/jobs/integrations.
 - Include `Test Data And Auth` for any auth-gated behavior, including seeded local admin/demo users, seed command or fixture path, credential handling, and Playwright login data. Use `$secrets` handling: safe local/demo credentials may be listed directly; unsafe plaintext credentials must be stored in an ignored file and the plan should list only the path and account/variable names.
 - Bring E2E automation in early enough to verify integrations during phase development; create a minimal harness early if none exists.
-- Include a `Phase Acceptance Gate` with commands, required service-wiring coverage, acceptance packet path, and completion rule.
+- Include a delegated `Phase Acceptance Gate` with commands, required service-wiring coverage, acceptance packet path, transition handoff path, and completion rule. State that a general-purpose acceptance worker/agent runs the gate and writes the packet/handoff.
 - Do not create a late QA-only E2E task as the enforcement point; E2E coverage should be added or extended as wiring lands.
 - For web phases, use Playwright to verify browser behavior and API/service wiring unless the repo has an explicit different browser E2E standard.
 - For auth-gated web phases, Playwright smoke tests must have deterministic seeded users before they run. Missing seeded admin/demo access is a plan defect; add a setup/seed task rather than leaving account creation manual.
 - For app phases, use simulator/emulator automation appropriate to the platform.
 - Use `Agent-Run Acceptance` fields for every task; do not add optional non-automated checks or manual smoke-test gates.
-- Mention dependencies on earlier phases, but do not plan their tasks.
+- Mention dependencies on earlier phases or frontiers, but do not plan their tasks.
 - Do not turn the phase into a horizontal backend-only or frontend-only layer unless the ready phase explicitly says the whole product increment is that layer.
 - Use exact file paths and verification commands.
 - Save the plan to the specified output path.
@@ -125,7 +126,7 @@ Constraints:
 - If context pressure reaches roughly 70%, save a handoff document under `docs/handoffs/` using the Context Handoff Protocol and return only the handoff path plus current artifact paths.
 ```
 
-Dispatch later phase plans after prerequisite phase plan drafts return when later phases need their exact APIs, files, smoke tests, acceptance packet assumptions, or service wiring decisions. When a prerequisite returns, recompute the unblocked dependency frontier and dispatch every now-unblocked phase-plan writer in parallel.
+Dispatch later phase plans after prerequisite phase plan drafts return when later phases need their exact APIs, files, smoke tests, acceptance packet assumptions, or service wiring decisions. When a prerequisite returns, recompute the unblocked dependency frontier and dispatch every now-unblocked phase-plan writer in parallel. For foundation-first plans, do not dispatch parallel-wave writers until the foundation phase plan exists unless their contracts are already fully specified in the approved SLICES document.
 
 ## Consolidated Reviewer Agent
 
@@ -153,20 +154,28 @@ Requirements source:
 Review output directory:
 <plan output directory>/reviews/
 
+Standing committee member:
+- Ari Chen - Phase Architecture Engineer. Apply this lens to foundation-first sequencing, dependency frontiers, safe parallel workstreams, and merge-back waves. Push back on over-serial plans, weak Phase 1 foundations, unsafe parallelism, and phase boundaries that block later agents.
+
 Check for:
 - gaps between the technical design and the plan set;
 - gaps between ready phases and their generated plans;
 - phase boundary mismatches or duplicate work across plans;
 - horizontal backend-first/frontend-later splits that prevent the app from coming to life phase by phase;
+- missing or weak foundation phase when the design has multiple substantial work areas;
+- Phase 1 that is pure scaffolding without a minimal smoke-testable runtime proof;
+- missed safe parallel phase waves after a shared foundation;
+- phases placed in the same dependency frontier despite shared write conflicts, unstable contracts, or required sequencing;
+- missing explicit Ari Chen / Phase Architecture Engineer recommendation in the SLICES phase breakup review;
 - phases too large or too vague for one phase orchestrator to maintain coherent context;
 - missing or weak `Phase Execution Contract`;
 - missing `Implementation Execution Handoff` for `$implementation-execution` state/manifest/event/evidence paths;
 - missing task-level `Execution` lines;
 - missing or invalid `Worker Agent` lines for worker-owned tasks;
-- worker lanes that name custom repo-specific implementation agents instead of `general-purpose worker`;
-- ambiguous task ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`;
-- orchestrator-owned tasks without `Owner-Only Justification`;
-- orchestrator-owned tasks that contain substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior;
+- worker lanes that name unapproved custom repo-specific implementation agents instead of repo-approved specialists or `general-purpose worker`;
+- ambiguous task ownership such as `orchestrator`, `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`;
+- any orchestrator-owned tasks or `Owner-Only Justification` fields;
+- final acceptance assigned to the orchestrator instead of a delegated acceptance worker/agent;
 - too many tiny delegated tasks that create coordination overhead without parallelism;
 - repeated context pasted into many tasks instead of captured once in phase-level sections;
 - unsafe parallelism or missing shared-resource/collision risks in worker scopes;
@@ -190,7 +199,7 @@ Check for:
 - app phase plans that do not use simulator/emulator automation or an explicitly established app E2E equivalent;
 - plan tasks that escaped their phase boundary.
 
-Return Findings, Coverage Matrix, Phase Boundary Review, and Recommended Plan Edits. Do not modify files. Do not implement code.
+Return Findings, Coverage Matrix, Phase Boundary Review, Phase Architecture Engineer Review, and Recommended Plan Edits. Do not modify files. Do not implement code.
 
 Write the detailed review to `<plan output directory>/reviews/YYYY-MM-DD-<feature>-implementation-plan-review.md` and return only the review path, top findings, severity counts, and blocking status. For review reruns, create a new file such as `<plan output directory>/reviews/YYYY-MM-DD-<feature>-implementation-plan-review-rerun-2.md`; do not overwrite prior review artifacts.
 

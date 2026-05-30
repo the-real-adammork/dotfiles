@@ -1,6 +1,6 @@
 # Implementation Phase Planning Reference
 
-Turn an approved technical design into a sequence of smoke-testable implementation phase plans. Each generated implementation plan is one long-running phase task owned by a phase agent. Phases build on each other so the app comes to life over time, instead of building isolated horizontal stack layers.
+Turn an approved technical design into a sequence of smoke-testable implementation phase plans. Each generated implementation plan is one long-running phase task owned by a phase agent. Phases build on each other so the app comes to life over time, instead of building isolated horizontal stack layers. Prefer a foundation-first phase that creates shared scaffolding and stable contracts, then split later work into parallelizable phase waves whenever the design and repo can support safe concurrent execution.
 
 ## Start
 
@@ -12,7 +12,7 @@ Inputs:
 - optional review output directory, default `<plan output directory>/reviews/`;
 - optional SLICES document path, default `docs/plans/SLICES.md`.
 
-General-purpose implementation workers are the only implementation worker type. Keep reviewer and fix-worker roles for downstream review/remediation loops, but do not define, preserve, invent, request, or route work through custom repo-specific implementation agents during planning. If the technical design handoff includes a custom implementation-agent roster, ignore it as non-binding historical metadata.
+Implementation plans may use repo-approved specialist worker agents when current repo instructions, installed local skills, or the approved technical design explicitly define them for specific lanes. Use `general-purpose worker` as the default/fallback worker type when no approved specialist is named. Keep reviewer and fix-worker roles for downstream review/remediation loops, but do not define, preserve, invent, request, or route work through unapproved repo-specific implementation agents during planning. If the technical design handoff includes a custom implementation-agent roster, treat it as non-binding until confirmed by current repo instructions or installed local skills.
 
 `docs/plans/SLICES.md` is the canonical phase/slices index for every repo. Do not create feature-dated `*-implementation-phases.md` files unless the user explicitly overrides the path. This stable path lets `$implementation-execution` discover the approved phase order without the human passing a slices document path.
 
@@ -68,6 +68,46 @@ Prefer fewer coherent phase plans over many thin plans. Do not split just becaus
 
 Do not split phases as horizontal stack layers like data model, backend/API, UI, jobs, and cleanup. Instead, combine the needed parts of those layers into each phase so a real workflow or capability exists at the end of the phase.
 
+## Foundation-First Parallelization
+
+During phasing, intentionally design Phase 1 as the shared foundation whenever the project has more than one substantial product area, integration, or workflow.
+
+Phase 1 should establish enough common scaffolding for later phases to branch safely:
+
+- repo setup, app shell, routing/navigation skeleton, auth/test-account seed path, design-system hooks, env/config shape, and smoke/E2E harness when relevant;
+- shared schemas, migrations, domain contracts, API/client boundaries, job/event contracts, fixtures, and typed interfaces needed by multiple later phases;
+- minimal vertical proof that the foundation works through the real runtime boundary, such as a simple read/write path, CLI run, or authenticated page flow;
+- durable setup commands and acceptance artifacts later phase agents can reuse.
+
+Phase 1 must not become a purely horizontal backend-only or infrastructure-only layer unless the product genuinely has no user/runtime surface yet. It should be a thin, smoke-testable foundation slice that proves the shared layers connect.
+
+After Phase 1, look for parallel waves:
+
+- phases with the same `Builds On` value and no shared write conflicts should be grouped into the same dependency frontier;
+- split independent product areas, integrations, pages, workflows, reports, import/export paths, or runtime adapters into shorter parallel phases when each can be smoke tested independently;
+- serialize phases that need exact APIs, schemas, migrations, generated types, acceptance packet outputs, or service-wiring decisions from another phase;
+- when parallel phases touch a shared contract, move the stable contract into Phase 1 or create a short contract-setting phase before the parallel wave;
+- after a parallel wave merges back to main, allow the next wave of phases to build on that merged frontier.
+
+The SLICES document should make these waves explicit through `Builds On`, `Execution Order`, and the plan-writer dependency frontier. If parallelism is unsafe, state why in the phase breakup review instead of silently serializing everything.
+
+## Phase Planning Committee
+
+Always include this standing committee member during phase proposal and phase breakup review:
+
+| Committee Member | Lens | Pushes Back On | Required Output |
+| --- | --- | --- | --- |
+| Ari Chen - Phase Architecture Engineer | Foundation-first sequencing, dependency frontiers, safe parallel workstreams, and merge-back waves | Over-serial phase plans, weak Phase 1 foundations, unsafe parallelism, and phase boundaries that block later agents | A Phase Breakup Review finding or explicit pass on foundation strength and parallel-wave safety |
+
+Ari's review must answer:
+
+- Does Phase 1 establish the shared contracts, setup, test data, E2E harness, schemas, app shell, and runtime proof later phases need?
+- Which phases can run in the same dependency frontier after Phase 1 or a later wave merges?
+- Which phases must serialize because of shared schemas, contracts, generated files, migrations, runtime resources, or acceptance assumptions?
+- Would splitting one large phase into shorter parallel phases increase speed without adding dangerous merge conflicts?
+
+Record Ari's recommendation in the SLICES document even when the answer is "phase sequence approved as serial."
+
 Good phase boundaries include:
 
 - the smallest end-to-end read path that proves the model, API/service, and UI/CLI can talk to each other;
@@ -82,14 +122,15 @@ Every phase must state:
 - what earlier phase behavior it builds on;
 - what smoke test proves it;
 - what seeded local admin/demo users, credentials path, and deterministic test data are needed for auth-gated smoke tests;
-- what the phase orchestrator is responsible for, limited to orchestration, integration decisions, state, acceptance, and tiny glue;
-- what substantial worker lanes are safe or unsafe to run in parallel, including serial lanes for work that cannot parallelize;
-- which substantial worker lanes use general-purpose workers and which review/fix loops the execution workflow should expect;
+- what the phase orchestrator is responsible for, limited to orchestration, integration decisions, lifecycle state, and result validation;
+- what worker lanes are safe or unsafe to run in parallel, including serial lanes for work that cannot parallelize;
+- which worker lanes use repo-approved specialists or general-purpose workers, and which review/fix loops the execution workflow should expect;
 - what service wiring rows must be proven across surface, service, persistence, jobs, and integrations;
 - what E2E harness is needed early in the phase;
 - what platform E2E automation will prove the smoke test through the phase acceptance gate;
 - what acceptance packet must exist before phase completion;
 - what later phases can safely assume.
+- which dependency frontier or parallel wave it belongs to, and whether it can run concurrently with sibling phases after its prerequisites merge.
 
 ## Codex Efficiency Model
 
@@ -98,11 +139,12 @@ Optimize phase plans for Codex execution efficiency:
 - Use fewer, substantial phases rather than many thin phases that force repeated setup, sync, and review overhead.
 - Keep each phase coherent enough for one phase orchestrator to hold the working context.
 - Identify a small number of worker lanes only where parallelism, serial isolation, or bounded scope is valuable.
-- Do not turn every task into a delegated worker by default, but keep orchestrator-owned work limited to orchestration, tiny glue, integration decisions, state, acceptance, and plan consistency. Substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior must become a worker lane even when it is serial.
+- Every task is a delegated worker lane. Keep only lifecycle routing, integration decisions, state, and result validation with the orchestrator. Runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, shared-contract behavior, docs/config, setup, acceptance-prep, remediation, and final acceptance must become worker lanes even when serial.
 - Prefer sequential phase execution unless phases are truly independent, because later phases should reuse verified behavior and acceptance packets from earlier phases.
+- Prefer a foundation phase followed by parallel dependency frontiers when phases are truly independent. Do not force sequential execution after Phase 1 when sibling phases can safely branch from the same verified foundation and merge back independently.
 - Make the phases document a routing map, not a second implementation plan.
 
-Every generated phase plan must include a phase acceptance gate with E2E or equivalent end-to-end automation and a required acceptance packet. This is a completion gate, not a task-position requirement. For web work, use Playwright unless the repo already standardizes on another browser automation framework. For mobile or app work, use simulator/emulator automation appropriate to the platform. For service, CLI, desktop, or worker-only phases, use the closest true end-to-end harness that exercises the phase through its real runtime boundary.
+Every generated phase plan must include a delegated phase acceptance gate with E2E or equivalent end-to-end automation and a required acceptance packet. This is a completion gate run by a general-purpose acceptance worker/agent, not an orchestrator-owned task. For web work, use Playwright unless the repo already standardizes on another browser automation framework. For mobile or app work, use simulator/emulator automation appropriate to the platform. For service, CLI, desktop, or worker-only phases, use the closest true end-to-end harness that exercises the phase through its real runtime boundary.
 
 For auth-gated web work, Playwright readiness requires deterministic seeded local users. The phase must include or depend on a seed/setup path that creates a local admin or demo user before authenticated browser tests run. Missing seeded local admin/demo access is a phase-planning defect, not an execution-time escalation, unless the phase has no login-gated smoke path.
 
@@ -124,7 +166,7 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
 
 1. Read the technical design and any referenced requirements.
 2. Inspect enough repo context to understand ownership boundaries, test commands, E2E harnesses, and existing patterns.
-3. Identify sequential phases by smoke-testable app state and build-on relationship.
+3. Identify a foundation-first Phase 1 and then dependency frontiers: phases that can run in parallel after the foundation, phases that must wait for a prior wave, and phases that must remain serial because of shared contracts or resources.
 4. Create or update the SLICES document at `docs/plans/SLICES.md`. Read `references/phases-document.md` for the required format and lifecycle.
 5. Present the phase proposal summary when the user asks for a planning checkpoint; otherwise record planning assumptions in the phases document and proceed when the design is sufficient.
 6. Run a phase breakup review against the technical design:
@@ -132,12 +174,15 @@ Record escalations in the phase plan's `Autonomy And Escalation` table. Do not a
    - each phase has a coherent smoke-testable outcome;
    - each phase can be owned by one long-running phase agent without losing coherence;
    - each phase names a small number of likely worker lanes and shared-resource risks;
-   - each worker lane uses a general-purpose worker;
+   - each worker lane uses a repo-approved specialist or general-purpose worker, with specialists justified by current repo instructions, installed local skills, or the approved technical design;
    - each phase avoids delegation churn from overly tiny tasks;
    - each phase names the service wiring that must be proven;
    - each phase names early E2E harness needs and phase acceptance automation;
    - each phase names the acceptance packet expected before phase completion;
-   - dependencies, build-on assumptions, and deferred work are explicit.
+   - dependencies, build-on assumptions, and deferred work are explicit;
+   - Phase 1 provides the right shared foundation for later phases without becoming a horizontal stack-only phase;
+   - safe post-foundation parallel waves are identified, and unsafe parallelism has a concrete reason;
+   - Ari Chen's Phase Architecture Engineer committee review is recorded with either an explicit pass or actionable findings.
    Save detailed phase review artifacts under the review output directory. Keep only the summary/disposition table and review links in the phases document.
 7. Patch the phases document for accepted or internally resolved findings. Do not generate plan docs until High/Medium phase issues are resolved, explicitly deferred with rationale, or recorded as allowed escalations.
 8. Author an HTML approval preview from the reviewed phases document and serve it on localhost:
@@ -176,14 +221,17 @@ Before handoff:
 - review artifacts are stored under the review output directory, not mixed with implementation plan files;
 - coverage check maps technical design sections to phases;
 - phase breakup review ran before plan generation;
+- Phase Architecture Engineer committee review is recorded in the SLICES document;
 - consolidated plan review ran after all plan docs returned;
 - accepted/revised findings were applied;
 - every technical design responsibility maps to one or more phases;
 - horizontal stack splits have been rejected unless explicitly justified;
+- Phase 1 establishes shared scaffolding/contracts/setup/E2E foundation for later phases when the design has multiple substantial work areas;
+- safe parallel phase waves after the foundation are identified through dependency frontiers, or serialization is justified by concrete shared-resource/contract risks;
 - phase and worker lane counts are efficient for Codex: substantial enough to amortize context setup, bounded enough to avoid context loss;
 - task `Execution` parallelism is consistent with task dependencies and any shared sequential contract handoff points are named explicitly;
-- every worker-owned task uses `general-purpose worker` and no custom repo-specific implementation agent routing;
-- no task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`;
+- every worker-owned task uses a repo-approved specialist or general-purpose worker, with no unapproved custom repo-specific implementation agent routing;
+- no task uses ambiguous ownership such as `orchestrator`, `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`, and no task is orchestrator-owned;
 - substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior is assigned to worker lanes even when serial;
 - delegated behavior tasks include a TDD test proposal/approval gate before implementation;
 - build-on dependencies, deferred work, verification gaps, and escalations are resolved or explicitly noted;
@@ -207,8 +255,9 @@ HTML approval preview:
 - `<localhost URL>`
 
 Execution order:
-1. <phase>
-2. <phase>
+1. <foundation phase>
+2. Parallel frontier: <phase>, <phase>
+3. Next frontier: <phase>
 
 Open coordination notes:
 - <note or "None">

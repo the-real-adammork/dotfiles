@@ -59,26 +59,27 @@ Every plan starts with:
 
 ## Phase Execution Contract
 
-**Execution Model:** The supervisor launches one top-level phase orchestrator for this phase. Worker agents implement bounded substantial tasks; the orchestrator remains responsible for sequencing, integration, verification, the acceptance packet, and downstream assumptions.
+**Execution Model:** The supervisor launches one top-level phase orchestrator for this phase. Worker agents implement every task, including serial, setup, docs/config, acceptance-prep, and remediation work. A delegated acceptance worker/agent runs the phase acceptance gate and writes the acceptance packet plus transition handoff. The orchestrator remains responsible for sequencing, dispatch, integration decisions, lifecycle state, and result validation only.
 
 **Phase Orchestrator Responsibilities:**
 - Maintain the phase branch/worktree and current understanding of completed work.
-- Dispatch only worker tasks with clear file/resource boundaries and explicit dependencies.
+- Dispatch every task to a worker with clear file/resource boundaries and explicit dependencies.
 - Integrate worker results promptly, run the relevant verification, and update downstream task instructions when implementation reality changes.
-- Keep the phase acceptance packet current enough that a context handoff can resume from files, not chat history.
+- Validate the delegated acceptance worker's packet/result before phase completion.
 - Block only for allowed escalations.
 
 **Worker Delegation Map:**
 | Lane | Task(s) | Delegation Decision | Worker Agent | Can Run In Parallel With | Shared Resources / Collision Risk | Integration Checkpoint |
 | --- | --- | --- | --- | --- | --- | --- |
-| <lane name> | <Task N-N> | <orchestrator orchestration/glue, serial worker, or parallel worker> | <general-purpose worker or "not applicable"> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence orchestrator runs after return> |
+| <lane name> | <Task N-N> | <serial worker, parallel worker, or acceptance worker> | <repo-approved specialist or general-purpose worker> | <lanes/tasks or "None"> | <files/db/services/runtime resources> | <command/evidence returned for orchestrator validation> |
 
 **Worker Role Policy:**
-General-purpose implementation workers are the only implementation worker type. Review and fix-worker roles are reserved for the downstream execution workflow's review/remediation loops, not for repo-specific task routing. Do not define, preserve, invent, request, or route work through custom repo-specific implementation agents.
+Use repo-approved specialist worker agents when current repo instructions, installed local skills, or the approved technical design explicitly define them for a lane. Use `general-purpose worker` as the default/fallback worker type. Review and fix-worker roles are reserved for the downstream execution workflow's review/remediation loops, not for initial task routing. Do not define, preserve, invent, request, or route work through unapproved repo-specific implementation agents.
 
 | Role | Used For | Not Used For |
 | --- | --- | --- |
-| general-purpose worker | bounded substantial implementation lanes | tiny glue, orchestration, state, acceptance packet ownership, review-only tasks |
+| repo-approved specialist worker | lanes explicitly covered by current repo instructions, installed local skills, or approved technical design | orchestrator lifecycle work or unrelated lanes |
+| general-purpose worker | all implementation-plan tasks without an approved specialist, including serial work, setup, docs/config, remediation, acceptance-prep, and acceptance verification | phase lifecycle routing or supervisor transition work |
 | reviewer / fix worker | execution-time review and remediation loops | initial repo-specific implementation routing |
 
 **Long-Running Handoff:**
@@ -102,11 +103,10 @@ This phase is intended to be run by `$implementation-execution` after planning a
 Optimize the plan for the fewest coordination turns that still preserve reviewability and safe parallelism.
 
 - Prefer one phase orchestrator with a small number of substantial worker lanes over many tiny worker tasks.
-- Use `general-purpose worker` for every delegated implementation lane.
-- Do not define, preserve, invent, request, or route work through custom repo-specific implementation agents during plan writing.
-- Delegate only work that is bounded, independently verifiable, and large enough to justify worker startup/context cost.
-- Keep orchestration, cross-cutting integration decisions, tiny glue, consistency edits, and acceptance packet ownership with the orchestrator.
-- Do not use the orchestrator as the default implementation worker. Substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior belongs in a worker lane even when it must run serially.
+- Use a repo-approved specialist worker only when current repo instructions, installed local skills, or the approved technical design explicitly define that specialist for the lane; otherwise use `general-purpose worker`.
+- Do not define, preserve, invent, request, or route work through unapproved repo-specific implementation agents during plan writing.
+- Delegate every implementation-plan task. Keep only lifecycle routing, worker dispatch, integration decisions, and state/result validation with the orchestrator.
+- Do not use the orchestrator as an implementation worker for any task. Runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, shared-contract behavior, docs/config, setup, acceptance-prep, remediation, and final acceptance all belong in worker lanes even when they must run serially.
 - Group closely related files and behaviors into one task when splitting would create extra handoffs without meaningful parallelism.
 - Split tasks when they touch independent surfaces, can run in parallel without shared resources, or need separate review because of risk.
 - Avoid repeating the same context in every task. Put phase-wide rules in the file map, service wiring matrix, execution contract, and acceptance gate; task sections should reference those names.
@@ -115,21 +115,22 @@ Optimize the plan for the fewest coordination turns that still preserve reviewab
 
 ## Orchestrator Work Limits
 
-The orchestrator is an integrator and scheduler, not the default implementer.
+The orchestrator is an integrator and scheduler, not an implementer and not an acceptance executor.
 
-Orchestrator-owned tasks are allowed only for:
+The orchestrator may do lifecycle work only:
 
 - sequencing and active-frontier decisions;
 - shared contract approval before workers start;
-- tiny glue or mechanical edits where a worker lane would be larger than the change;
-- run/phase state, handoff, acceptance packet, and plan consistency updates;
-- post-worker integration fixes that are small, local, and do not add new behavior.
+- run/phase state updates;
+- worker dispatch, review routing, and result validation;
+- phase-completion routing after a delegated acceptance worker returns an accepted result;
+- plan consistency notes that do not edit product/test/runtime files.
 
-Substantial implementation must be a worker lane even when it is serial, context-heavy, or unsafe to parallelize. This includes runtime code, service/API behavior, persistence, migrations, schemas, parser logic, frontend behavior, E2E/integration tests, and shared contracts consumed by downstream tasks.
+All implementation-plan tasks must be worker lanes even when they are tiny, serial, context-heavy, acceptance-oriented, or unsafe to parallelize. This includes runtime code, service/API behavior, persistence, migrations, schemas, parser logic, frontend behavior, E2E/integration tests, shared contracts, docs/config, setup, fixture/seed work, acceptance-prep, and remediation.
 
-Do not write ambiguous ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`. Choose one owner. If substantial work cannot run in parallel, write `worker lane: <lane>; parallel with none`.
+Do not write ambiguous ownership such as `orchestrator or worker`, `orchestrator or one worker`, `orchestrator unless delegated`, or `orchestrator`. If work cannot run in parallel, write `worker lane: <lane>; parallel with none`.
 
-Every task marked `orchestrator` must include an `Owner-Only Justification` field explaining why the task is orchestration, glue, state, acceptance, or plan consistency rather than substantial implementation.
+Do not include `Owner-Only Justification`; there are no orchestrator-owned tasks. If something is pure lifecycle bookkeeping, describe it in the Phase Execution Contract or acceptance gate, not as a task.
 
 ## Autonomy And Escalation
 
@@ -198,18 +199,18 @@ Choose QA automation by platform:
 
 Each task should be small enough to review independently and should end with verification. Tasks inside a phase may touch different layers of the stack, but together they must complete the phase's smoke-testable outcome. Prefer TDD for behavior changes.
 
-Tasks are potential worker units, not automatic worker units. A task is suitable for delegation only when its dependencies, files, runtime resources, acceptance evidence, and integration checkpoint are explicit enough that a bounded worker can complete it without inferring phase-level intent. Use `orchestrator` only for orchestration, tiny glue, state, acceptance, and plan consistency work. Substantial implementation that is not safe to parallelize is still a serial worker lane.
+Tasks are worker units. A task is valid only when its dependencies, files, runtime resources, acceptance evidence, and integration checkpoint are explicit enough that a bounded worker can complete it without inferring phase-level intent. Pure orchestrator lifecycle work belongs in phase-level workflow text, not in the task list. Work that is not safe to parallelize is still a serial worker lane.
 
 ````markdown
 ### Task N: <specific outcome>
 
 **Depends On:** <Task numbers this task depends on, or "None">
 
-**Execution:** <orchestrator orchestration/glue | worker lane: lane name>; parallel with <task/lane or "none">; checkpoint <command/evidence>
+**Execution:** worker lane: <lane name>; parallel with <task/lane or "none">; checkpoint <command/evidence>
 
-**Worker Agent:** <general-purpose worker if Execution is a worker lane; otherwise "not applicable">; rationale <why this lane is substantial enough to delegate, or why no worker is used>
+**Worker Agent:** <repo-approved specialist or general-purpose worker>; rationale <why this worker type fits the lane and what evidence it returns>
 
-**Owner-Only Justification:** <required if Execution is orchestrator; otherwise "not applicable">
+**Orchestrator Scope:** dispatch, integrate, and validate returned evidence only; no task implementation or acceptance execution
 
 **Files:**
 - Create: `exact/path`
@@ -231,7 +232,7 @@ Tasks are potential worker units, not automatic worker units. A task is suitable
 - Required real dependencies: <service/db/network/API/real-data path and how agent provisions it, or exact escalation blocker>
 - Blocking if unavailable: <yes/no and why>
 
-**TDD Approval Gate:** <required for delegated behavior work | not applicable with reason>
+**TDD Approval Gate:** <required for behavior work | not applicable with reason>
 - Worker writes or updates tests first.
 - Worker runs focused tests and records the expected failure.
 - Worker returns test intent, covered requirements, command, expected failure, and affected files to the orchestrator.
@@ -270,11 +271,11 @@ Expected: `<specific pass condition>`
 Suggested message: `<type>[optional scope]: <description>`
 ````
 
-For orchestrator-owned work, documentation, config, or mechanical changes where TDD approval does not apply, mark `TDD Approval Gate` as not applicable with a concrete reason and replace the failing-test step with the smallest meaningful validation step, such as syntax validation, config parse, render check, or dry run.
+For documentation, config, setup, acceptance, or mechanical worker lanes where TDD approval does not apply, mark `TDD Approval Gate` as not applicable with a concrete reason and replace the failing-test step with the smallest meaningful validation step, such as syntax validation, config parse, render check, acceptance command, or dry run.
 
 ## Phase E2E And Acceptance Gate
 
-Every implementation plan must define a phase acceptance gate. This is a completion gate for the phase, not a task-position requirement. The plan should place E2E and integration work in the tasks where wiring is introduced, then use the acceptance gate to rerun the complete evidence set and confirm the phase is shippable to the next phase.
+Every implementation plan must define a delegated phase acceptance gate. This is a completion gate for the phase, not an orchestrator-owned task. The plan should place E2E and integration work in the tasks where wiring is introduced, then use a general-purpose acceptance worker/agent to rerun the complete evidence set, write the acceptance packet, draft the transition handoff, and confirm the phase is shippable to the next phase.
 
 The acceptance gate must:
 
@@ -283,13 +284,15 @@ The acceptance gate must:
 - cover every applicable row in the `Service Wiring Matrix`;
 - verify wiring between UI/CLI/app surface, API/service layer, persistence, background jobs, and external/local integrations that are in scope for the phase;
 - use the appropriate platform automation for the project;
-- require a phase acceptance packet with commands, results, evidence, and residual risks;
+- require a phase acceptance packet with commands, results, evidence, and residual risks written by the delegated acceptance worker/agent;
 - block phase completion if the automation environment cannot run and the phase cannot be honestly smoke tested.
 
 Each plan must include this section after the task list or before handoff:
 
 ````markdown
 ## Phase Acceptance Gate
+
+**Acceptance Owner:** delegated general-purpose acceptance worker/agent; the orchestrator only dispatches the worker, validates the returned result, updates lifecycle state, and routes phase completion.
 
 **Acceptance Commands:**
 - Run: `<exact command>`
@@ -301,12 +304,12 @@ Each plan must include this section after the task list or before handoff:
 
 **Acceptance Packet:** `docs/qa/phase-acceptance/YYYY-MM-DD-<feature>-phase-<n>.md`
 
-**Completion Rule:** The phase cannot be marked complete until the commands pass, every applicable service-wiring row has evidence, and the acceptance packet exists with current commit evidence.
+**Completion Rule:** The phase cannot be marked complete until the delegated acceptance worker/agent returns an accepted result, the commands pass, every applicable service-wiring row has evidence, the transition handoff/report exists, and the acceptance packet exists with current commit evidence.
 ````
 
 ## Phase Acceptance Packet
 
-The phase acceptance packet is the handoff artifact a long-running agent team leaves for later phases and occasional operator audits. It may be created or updated by any task, but it must be current before the phase is marked complete.
+The phase acceptance packet is the handoff artifact a long-running agent team leaves for later phases and occasional operator audits. It is written by the delegated acceptance worker/agent and must be current before the phase is marked complete.
 
 Packet contents:
 
@@ -379,10 +382,10 @@ Never leave:
 - "Optional" real service, credential, account, database, network, queue, storage, or real-data verification for a task that requires that dependency
 - A phase plan without a `Phase Execution Contract`
 - A task without a compact `Execution` line
-- Ambiguous ownership such as `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`
-- Custom repo-specific implementation agent routing or legacy custom worker rosters
-- An orchestrator-owned task without an `Owner-Only Justification`
-- An orchestrator-owned task that includes substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract behavior
+- Ambiguous ownership such as `orchestrator`, `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`
+- Unapproved custom repo-specific implementation agent routing or legacy custom worker rosters not confirmed by current repo instructions/skills
+- Any orchestrator-owned task
+- An `Owner-Only Justification` field
 - A phase plan without `Autonomy And Escalation`, `Service Wiring Matrix`, E2E harness readiness coverage, and a `Phase Acceptance Gate`
 - A task that touches service wiring but does not name the service-wiring rows it covers
 
@@ -397,15 +400,15 @@ Before presenting the plan, check:
 - The `Phase Execution Contract` defines the supervisor-launched phase orchestrator, worker delegation map, integration checkpoints, and handoff path.
 - The `Codex Efficiency Rules` are followed: substantial lanes, minimal coordination, no tiny delegation churn.
 - Every task includes a compact `Execution` line, with safe parallelism and integration checkpoint stated.
-- Every worker-owned task includes `Worker Agent: general-purpose worker`.
-- No task uses ambiguous ownership such as `orchestrator or worker`, and every orchestrator-owned task has an `Owner-Only Justification`.
-- Every substantial runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, or shared-contract change is assigned to a worker lane, even when serial.
+- Every task includes `Worker Agent: <repo-approved specialist or general-purpose worker>`, and any specialist is justified by current repo instructions, installed local skills, or the approved technical design.
+- No task uses ambiguous ownership such as `orchestrator`, `orchestrator or worker`, `orchestrator or one worker`, or `orchestrator unless delegated`.
+- Every runtime, service/API, persistence, schema/migration, parser, frontend, E2E/integration-test, shared-contract, docs/config, setup, acceptance-prep, remediation, or final acceptance change is assigned to a worker lane, even when serial.
 - The plan includes a `Service Wiring Matrix`, and every row is covered by task-level evidence or the phase acceptance gate.
 - E2E automation appears early enough to verify integrations during phase development.
 - Playwright/browser E2E has deterministic credentials or an ignored credential-file path, and the relevant seed/setup task precedes authenticated tests.
 - Tasks that introduce service wiring include `Service Wiring Rows Covered`.
 - The `Phase Acceptance Gate` uses the appropriate platform harness and verifies wiring across the phase's app surface, APIs/services, persistence, jobs, and integrations.
-- The `Phase Acceptance Gate` requires a current phase acceptance packet with evidence and downstream assumptions.
+- The `Phase Acceptance Gate` is delegated to a general-purpose acceptance worker/agent and requires a current phase acceptance packet with evidence and downstream assumptions.
 - Later planned phases can build on this plan's verified behavior.
 - Every task includes `**Depends On:**`, with `None` for tasks that can start in parallel.
 - Every created or modified file appears in the file map.

@@ -54,9 +54,9 @@ Preview requirements:
 
 ## Phase Proposal
 
-| Phase | Goal | Builds On | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Auth/Test Data | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Planned Output |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <seeded admin/demo user, credential path, fixture/seed command, or "not auth-gated"> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | Dependency Frontier | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Auth/Test Data | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Planned Output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase, frontier, or none> | <foundation, parallel wave N, serial after phase, or terminal wave> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <seeded admin/demo user, credential path, fixture/seed command, or "not auth-gated"> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 
@@ -66,12 +66,19 @@ Preview requirements:
 
 ## Worker Role Policy
 
-General-purpose implementation workers are the only implementation worker type. Reviewer and fix-worker roles are reserved for execution-time review/remediation loops. Do not define, preserve, invent, request, or route work through custom repo-specific implementation agents.
+Use repo-approved specialist worker agents when current repo instructions, installed local skills, or the approved technical design explicitly define them for a lane. Use `general-purpose worker` as the default/fallback worker type. Reviewer and fix-worker roles are reserved for execution-time review/remediation loops. Do not define, preserve, invent, request, or route work through unapproved repo-specific implementation agents.
 
 | Role | Used For | Not Used For |
 | --- | --- | --- |
-| general-purpose worker | bounded substantial implementation lanes | tiny glue, orchestration, state, acceptance packet ownership, review-only tasks |
+| repo-approved specialist worker | lanes explicitly covered by current repo instructions, installed local skills, or approved technical design | orchestrator lifecycle work or unrelated lanes |
+| general-purpose worker | all implementation-plan tasks without an approved specialist, including serial work, setup, docs/config, remediation, acceptance-prep, and acceptance verification | phase lifecycle routing or supervisor transition work |
 | reviewer / fix worker | execution-time review and remediation loops | initial repo-specific implementation routing |
+
+## Planning Committee
+
+| Committee Member | Lens | Pushes Back On | Required Output |
+| --- | --- | --- | --- |
+| Ari Chen - Phase Architecture Engineer | Foundation-first sequencing, dependency frontiers, safe parallel workstreams, and merge-back waves | Over-serial phase plans, weak Phase 1 foundations, unsafe parallelism, and phase boundaries that block later agents | Explicit pass or finding in `Phase Breakup Review` |
 
 ## Phase Breakup Review
 
@@ -83,14 +90,15 @@ Review artifact: `docs/plans/reviews/YYYY-MM-DD-<feature>-phase-breakup-review.m
 
 ## Ready Phase Boundaries
 
-| Phase | Final Smoke-Testable Outcome | Orchestrator Scope | Worker Lanes | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Builds On | Later Phases Can Assume | Out Of Scope | Plan Document |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| <name> | <working behavior> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <matrix summary> | <harness/setup expectation> | <platform harness and command intent> | <packet path> | <dependency> | <verified capability> | <excluded work> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Final Smoke-Testable Outcome | Dependency Frontier | Orchestrator Scope | Worker Lanes | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Builds On | Later Phases Can Assume | Out Of Scope | Plan Document |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <working behavior> | <foundation, parallel wave N, serial after phase, or terminal wave> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <matrix summary> | <harness/setup expectation> | <platform harness and command intent> | <packet path> | <dependency> | <verified capability> | <excluded work> | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Execution Order
 
-1. <phase>
-2. <phase>
+1. <foundation phase>
+2. Parallel frontier: <phase>, <phase>
+3. Next frontier: <phase>
 
 ## Plan Writer Dispatch Table
 
@@ -123,9 +131,9 @@ Present this summary before generating plan documents when the user asks for a p
 ```markdown
 ## Proposed Implementation Plan Phases
 
-| Phase | Goal | Builds On | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Auth/Test Data | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Plan Path |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| <name> | <testable increment> | <phase or none> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <seeded admin/demo user, credential path, fixture/seed command, or "not auth-gated"> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
+| Phase | Goal | Builds On | Dependency Frontier | Orchestrator Scope | Worker Lanes | App Surface Included | Smoke Test | Auth/Test Data | Service Wiring | E2E Readiness | Phase Acceptance Automation | Acceptance Packet | Plan Path |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <name> | <testable increment> | <phase, frontier, or none> | <foundation, parallel wave N, serial after phase, or terminal wave> | <orchestration/integration/state/acceptance only> | <parallel/serialized substantial lanes> | <UI/API/CLI/jobs/data touched together> | <primary smoke test> | <seeded admin/demo user, credential path, fixture/seed command, or "not auth-gated"> | <surface/service/persistence/jobs/integrations to prove> | <existing harness or early setup needed> | <Playwright/simulator/CLI/service harness> | `docs/qa/phase-acceptance/...md` | `docs/plans/YYYY-MM-DD-<feature>-phase-<n>.md` |
 
 ## Coverage Check
 
@@ -133,7 +141,10 @@ Present this summary before generating plan documents when the user asks for a p
 - Sections intentionally deferred:
 - Risks in this phasing:
 - Horizontal stack splits avoided:
-- Phase orchestrator ownership:
+- Foundation-first scaffolding/contracts:
+- Parallel phase waves:
+- Phase Architecture Engineer recommendation:
+- Phase orchestrator lifecycle scope:
 - Worker lanes and serialized resources:
 - General-purpose worker lanes and review/fix loops:
 - Orchestrator scope excludes substantial implementation:

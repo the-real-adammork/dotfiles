@@ -1,6 +1,6 @@
 # Agentic Review
 
-Review happens without routine human involvement. Use reviewer and fix-worker agents as bounded workers under the orchestrator.
+Review happens without routine human involvement. Use reviewer and fix-worker agents as bounded workers under the orchestrator. When review finds setup, dependency, runtime, environment, or workflow-state blockers, return a classified blocker so the orchestrator can dispatch a blocker-resolver before escalating to the human.
 
 ## Test Proposal Review
 
@@ -27,8 +27,13 @@ Review implementation against:
 - mock/fixture ledger rules;
 - security, migration, and compatibility risks.
 - recurring review failures that should become lesson candidates.
+- runtime content boundary: smoke-test instructions, reviewer instructions, local setup steps, acceptance checklists, implementation prompts, agent handoff text, and internal QA notes must not appear in product UI, API responses, seed user-facing content, generated demo content, or runtime assets unless explicitly required as end-user product help.
 
 High/Medium findings block completion. Dispatch a fix worker with a narrow goal, then rerun review.
+
+Treat workflow-only text in runtime app surfaces as a high-severity finding. The required fix is to remove it from product code/content and place it in the phase-transition handoff/report, QA artifact, acceptance packet, or developer docs.
+
+Do not mark missing local tools, stale dependencies, local services, generated files, or non-secret env wiring as human blockers. Classify them as blocker-resolver candidates with the failing command and artifact path.
 
 ## Mock And Fixture Review
 
@@ -70,11 +75,21 @@ mock_fixture_findings:
   - id: "mf-001"
     status: approved # approved | needs_fix | blocked
     issue: "short issue or null"
+runtime_content_boundary:
+  status: approved # approved | needs_fix | blocked
+  artifact: "docs/qa/artifacts/<phase>/runtime-workflow-copy-audit.txt"
+  issue: "workflow-only instructions in runtime UI, or null"
 lesson_candidate:
   problem: "recurring proven problem, or null"
   proven_fix: "durable fix, or null"
   evidence:
     - "docs/qa/artifacts/<phase>/review.txt"
+blockers:
+  - id: "blocker-review-runtime"
+    classification: "runtime_dependency"
+    summary: "local Kubernetes runtime missing"
+    artifact: "docs/qa/artifacts/<phase>/review-runtime-probe.txt"
+    suggested_owner: "blocker-resolver"
 ```
 
 Store large logs as artifacts and reference paths.

@@ -13,9 +13,9 @@ orchestrator_prompt='Use the implementation-execution skill as the phase orchest
 tmux split-window -h -P -F '#{pane_id}' -c "$PWD" -- codex --dangerously-bypass-approvals-and-sandbox "$orchestrator_prompt"
 ```
 
-The bypass flag is for the spawned orchestrator process only. It prevents Codex edit/command approval popups from blocking long-running autonomous phase execution, including worker edit prompts owned by the orchestrator. The orchestrator must still follow the workflow escalation policy and write allowed human-only blockers to the supervisor inbox instead of asking ad hoc approval questions.
+The bypass flag is for the spawned orchestrator process only. It prevents Codex edit/command approval popups from blocking long-running autonomous phase execution, including worker edit prompts owned by the orchestrator. The orchestrator must still follow the workflow escalation policy, dispatch blocker-resolvers for agent-owned setup/dependency/runtime blockers, and write only true human blockers to the supervisor inbox instead of asking ad hoc approval questions.
 
-Capture the printed pane id and store it in `run.yaml` and the initial inbox. If horizontal split is not usable, use a vertical split. If `$TMUX` is not set or `tmux` fails, record `orchestrator.spawn_method: inline_fallback` and the reason in `run.yaml` and the inbox.
+Capture the printed pane id and store it in `run.yaml` and the initial inbox. If horizontal split is not usable, use a vertical split. If `$TMUX` is not set or `tmux` fails, record `active_orchestrator.status: blocked` with the launch blocker in `run.yaml` and the inbox, then stop for repair. Do not run the orchestrator inline as a fallback.
 
 ## Orchestrator Pane Validation
 

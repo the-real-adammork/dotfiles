@@ -1,6 +1,6 @@
 # Phase Merge Back
 
-Use this when the supervisor handles a `phase_completion` transition. The orchestrator merges workers into the phase branch. The supervisor merges or reconciles the completed phase branch back into the run base branch during phase transition.
+Use this when the native phase-merge sub-agent handles `phase_completion` merge-back. The orchestrator merges workers into the phase branch. The phase-merge sub-agent merges or reconciles the completed phase branch back into the run base branch during fast transition preparation.
 
 ## Preconditions
 
@@ -43,12 +43,11 @@ After merging:
 
 - run the lightweight post-merge verification needed to catch integration drift, at minimum the phase acceptance gate or the repo's standard smoke commands;
 - verify the base branch now points at the accepted phase commit, or at a descendant that contains it when the phase branch includes final acceptance/state commits;
-- record the merge commit in `run.yaml` under the completed phase entry before launching any local verification process;
-- set `branches.current` to the updated base branch before local verification setup or next-phase startup;
-- perform post-merge local verification setup from the transition handoff/report in the updated base branch/worktree, record its result, and print the smoke-test report before launching the next phase orchestrator;
-- start the next phase orchestrator from the updated base branch, not from the previous phase worktree, after the local verification run has either launched or recorded an allowed blocker and the smoke-test report has been printed.
+- record the merge commit and resulting base commit in `transitions/<phase>.yaml` before launching the next phase or any local verification process;
+- return the updated base branch/head to the supervisor so it can update minimal `run.yaml` pointers before next-phase startup;
+- leave completed-orchestrator teardown, next-phase orchestrator startup, phase-transition sub-agent spawn, local verification setup, and smoke-test report printing to the original supervisor after the merge sub-agent reports `ready_for_supervisor`.
 
-If post-merge verification fails after reconciliation, do not advance `run.yaml`. Stop with a supervisor escalation/handoff or restart a focused fix workflow. Do not silently rebase the phase branch, discard local work, or chain the next phase from the previous phase branch.
+If post-merge verification fails after reconciliation, mark the transition blocked and do not let the supervisor advance `run.yaml`. Stop with a supervisor escalation/handoff or restart a focused fix workflow. Do not silently rebase the phase branch, discard local work, or chain the next phase from the previous phase branch.
 
 ## Dirty Base Worktree Protocol
 
@@ -67,7 +66,7 @@ Do not dump full diffs by default. If a dirty or untracked path appears secret-b
 
 2. Classify dirty paths:
 
-- `supervisor-owned`: run state, inbox, watchdog, event, handoff, or QA artifact files created by the supervisor transition.
+- `supervisor-owned`: run state, inbox, watchdog, event, handoff, or QA artifact files created by the supervisor or merge/transition worker during transition.
 - `local-verification`: dev-server logs, local smoke reports, generated local runtime data under ignored runtime paths.
 - `human-ad-hoc`: anything else.
 - `suspected-secret-or-runtime-data`: secret-bearing or customer/runtime data paths; do not open or print contents.
@@ -141,7 +140,7 @@ Low-risk mechanical decisions may be summarized by category. Critical escalation
 6. Commit or preserve the reconciliation result according to the shape of the merge:
 
 - If the merge created a merge commit, use a message such as `merge: integrate <phase-slug>`.
-- If the merge was a fast-forward with preserved uncommitted local changes, leave those local changes uncommitted and record them in `run.yaml`.
+- If the merge was a fast-forward with preserved uncommitted local changes, leave those local changes uncommitted and record them in `transitions/<phase>.yaml`.
 - If conflict resolution required edits after a fast-forward or merge, commit those edits on the base branch as supervisor reconciliation work, unless they are local verification artifacts that should remain uncommitted.
 
 7. Run post-merge verification. If it fails, make one focused repair attempt when the failure is clearly caused by the reconciliation. Escalate if the fix would require a critical decision or broad reimplementation.

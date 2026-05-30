@@ -1,6 +1,6 @@
 ---
 name: implementation-plans
-description: "Use when the user wants the implementation planning workflow: turn specs, requirements, issues, or approved technical designs into concrete implementation plan documents; decompose large work into sequential smoke-testable phase plans; or reconcile same-plan/cross-plan instructions after completed implementation work."
+description: "Use when the user wants the implementation planning workflow: turn specs, requirements, issues, or approved technical designs into concrete implementation plan documents; decompose large work into foundation-first smoke-testable phase plans with parallel dependency frontiers when safe, including the Phase Architecture Engineer committee lens; or reconcile same-plan/cross-plan instructions after completed implementation work."
 ---
 
 # Implementation Plans
@@ -13,7 +13,9 @@ Announce: "I'm using the implementation-plans skill to coordinate the planning w
 
 Before writing or updating plans, inspect the repo enough to know existing patterns, commands, test setup, and relevant files. Use `/usr/bin/git` when git is needed.
 
-General-purpose implementation workers are the only implementation worker type in the downstream execution workflow. Keep reviewer and fix-worker roles for review and remediation loops, but do not define, preserve, invent, request, or route work through custom repo-specific implementation agents. If a legacy technical design handoff includes a custom implementation-agent roster, ignore it as non-binding historical metadata.
+Implementation plans may use repo-approved specialist worker agents when current repo instructions, installed local skills, or the approved technical design explicitly define them for specific lanes. Use `general-purpose worker` as the default/fallback worker type when no approved specialist is named. Keep reviewer and fix-worker roles for review and remediation loops, but do not define, preserve, invent, request, or route work through unapproved repo-specific implementation agents. If a legacy technical design handoff includes a custom implementation-agent roster, treat it as non-binding until confirmed by current repo instructions or installed local skills.
+
+For phase decomposition, include Ari Chen, Phase Architecture Engineer, as the standing committee member responsible for foundation-first sequencing, dependency frontiers, safe parallel workstreams, and merge-back waves.
 
 When the user asks to plan from the current approved technical design but does not provide a path, look for `docs/architecture/TECHNICAL_DESIGN.md` first.
 
@@ -22,7 +24,7 @@ When the user asks to plan from the current approved technical design but does n
 Load only the reference needed for the current planning mode:
 
 - `references/plan-writing.md` - write one concrete implementation plan from a spec, requirements document, issue, approved design, or ready phase, including the phase orchestrator and worker execution contract.
-- `references/phasing.md` - decompose an approved technical design into sequential smoke-testable phase plans, with phase proposal, phase orchestrator scope, worker lane planning, review, plan-writing agents, and consolidated review.
+- `references/phasing.md` - decompose an approved technical design into foundation-first smoke-testable phase plans, with parallel dependency frontiers when safe, phase proposal, phase orchestrator scope, worker lane planning, review, plan-writing agents, and consolidated review.
 - `references/phases-document.md` - required format and lifecycle for the phase-planning workflow's canonical `docs/plans/SLICES.md` document.
 - `references/planning-agent-prompts.md` - required prompts and return contracts for phase plan-writer and consolidated-review planning agents.
 - `references/task-consistency.md` - update future inactive tasks in one implementation plan after one or more completed tasks changed reality.
@@ -41,7 +43,7 @@ Use `references/plan-writing.md` when:
 Use `references/phasing.md` when:
 
 - The user has an approved technical design that needs decomposition into one or more detailed implementation plan documents.
-- The project should come to life over time through sequential vertical increments that build on each other.
+- The project should come to life over time through a shared foundation phase followed by vertical increments that build on each other, including parallel phase waves when safe.
 - The user asks to split, phase, decompose, or create multiple implementation plans from a design.
 
 Use `references/task-consistency.md` when:
