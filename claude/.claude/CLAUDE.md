@@ -1,3 +1,7 @@
+## Worktree Branch Placement
+
+Keep a repo's root checkout (the root worktree) on the main branch at all times. Never switch the root checkout to a feature branch. When work needs its own branch, create it in a new worktree under `.worktrees/` (e.g. `.worktrees/<branch-name>`) rather than checking the branch out at the root.
+
 ## Git Worktree Isolation
 
 When working inside a git worktree, never create symlinks that point to paths in the main repo or sibling worktrees (including `node_modules`, `.env`, `venv`, data dirs, config files, build artifacts). Worktrees exist to isolate state — symlinking defeats that and causes mutations in one worktree to silently affect others.
@@ -13,6 +17,10 @@ Treat local ports as project- and worktree-local resources. Do not assume defaul
 Before starting any local server or service, check for port conflicts. If the default port is unavailable, use an unused high port via env vars, CLI flags, or existing project config, and tell the user the final URL.
 
 Never kill unrelated processes or share a running service from another repo/worktree unless the user explicitly approves it.
+
+## Human-in-the-Loop Verification URLs
+
+For a locally deployable project, never claim a task is done without giving the human a way to verify it. Return the worktree's local URL(s) — including the specific path to view the change (e.g. `http://localhost:5173/settings`). If it isn't running, give the command to start it and the URL it'll be at.
 
 ## Durable Local/Test Accounts
 
