@@ -181,6 +181,14 @@ require("lazy").setup({
     "nvim-telescope/telescope.nvim",
     tag = "v0.2.1",
     dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {
+      pickers = {
+        -- include dotfiles/dot-dirs (e.g. .claude/, .codex/) but skip the git dir
+        find_files = {
+          find_command = { "fd", "--type", "f", "--hidden", "--exclude", ".git" },
+        },
+      },
+    },
     keys = {
       { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
       { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live grep" },

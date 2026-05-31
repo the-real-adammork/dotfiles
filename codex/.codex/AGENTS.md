@@ -12,18 +12,37 @@ Agents must treat local ports as workspace-local resources. Do not assume defaul
 
 Before starting any local server or service, check for port conflicts. If the default port is unavailable, use an unused high port via env vars, CLI flags, or existing project config, and tell the user the final URL. Never kill unrelated processes or share a running service from another repo/worktree unless the user explicitly approves it.
 
+## Human-in-the-Loop Verification URLs
+
+For a locally deployable project, never claim a task is done without giving the human a way to verify it. Return the worktree's local URL(s) — including the specific path to view the change (e.g. `http://localhost:5173/settings`). If it isn't running, give the command to start it and the URL it'll be at.
+
+## Test & Smoke Test Presentation
+
+Never return a test to run or flow to check unless the agent has already has run that test and its passing, or for UI testing, written a UI test - playwright for web - and verified it to be working as expected.
+
+## Durable Local/Test Accounts
+
+For apps that require login, prefer seeded durable local/test accounts so smoke tests and E2E tests can authenticate repeatably.
+
+- Store local/test account credentials in `account.env`.
+- Add a narrow `.gitignore` rule for `account.env`.
+- Encrypt `account.env` with `git-secret` when available, producing `account.env.secret`.
+- Commit encrypted credentials and git-secret metadata only; never commit plaintext `account.env`.
+- Do not print passwords, tokens, or secret values in logs, docs, comments, or final responses.
+- Verify seeded accounts can authenticate locally before claiming login, smoke, or E2E flows pass.
+
 ## Playbooks
 
 Use this table to route recurring work to the right global skill. Read the skill only when the task matches the topic.
 
-| Topic | Skill |
-| --- | --- |
-| Web smoke testing and Playwright E2E | `~/.codex/skills/websmoketesting/SKILL.md` |
-| Playwright coverage gaps by user flow | `~/.codex/skills/playwright-coverage/SKILL.md` |
-| Design brief of app pages, functionality, and available data | `~/.codex/skills/design-brief/SKILL.md` |
-| Durable local/test account seeding | `~/.codex/skills/account-seeding/SKILL.md` |
+| Topic                                                          | Skill                                              |
+| -------------------------------------------------------------- | -------------------------------------------------- |
+| Web smoke testing and Playwright E2E                           | `~/.codex/skills/websmoketesting/SKILL.md`         |
+| Playwright coverage gaps by user flow                          | `~/.codex/skills/playwright-coverage/SKILL.md`     |
+| Design brief of app pages, functionality, and available data   | `~/.codex/skills/design-brief/SKILL.md`            |
+| Durable local/test account seeding                             | `~/.codex/skills/account-seeding/SKILL.md`         |
 | Researching a high-level idea into an implementation direction | `~/.codex/skills/implementation-research/SKILL.md` |
-| Repo-specific expert researcher profiles | `~/.codex/skills/expert-researcher/SKILL.md` |
-| Repo-specific expert implementation or research agent profiles | `~/.codex/skills/expert-agent/SKILL.md` |
-| Secrets, credentials, env files, API keys | `~/.codex/skills/secrets/SKILL.md` |
-| Git commits and commit messages | `~/.codex/skills/commit/SKILL.md` |
+| Repo-specific expert researcher profiles                       | `~/.codex/skills/expert-researcher/SKILL.md`       |
+| Repo-specific expert implementation or research agent profiles | `~/.codex/skills/expert-agent/SKILL.md`            |
+| Secrets, credentials, env files, API keys                      | `~/.codex/skills/secrets/SKILL.md`                 |
+| Git commits and commit messages                                | `~/.codex/skills/commit/SKILL.md`                  |

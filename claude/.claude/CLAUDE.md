@@ -22,6 +22,10 @@ Never kill unrelated processes or share a running service from another repo/work
 
 For a locally deployable project, never claim a task is done without giving the human a way to verify it. Return the worktree's local URL(s) — including the specific path to view the change (e.g. `http://localhost:5173/settings`). If it isn't running, give the command to start it and the URL it'll be at.
 
+## Test & Smoke Test Presentation
+
+Never return a test to run or flow to check unless the agent has already has run that test and its passing, or for UI testing, written a UI test - playwright for web - and verified it to be working as expected.
+
 ## Durable Local/Test Accounts
 
 For apps that require login, prefer seeded durable local/test accounts so smoke tests and E2E tests can authenticate repeatably.
