@@ -69,6 +69,9 @@ trust_level = "trusted"
 [projects."/Users/adam/Gauntlet/gofundme"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Gauntlet/yourai"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
