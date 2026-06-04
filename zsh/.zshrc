@@ -101,3 +101,10 @@ source <(mcfly init zsh)
 
 # Prompt
 eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/catppuccin-latte.omp.json)"
+
+# bun completions
+[ -s "/Users/adam/.bun/_bun" ] && source "/Users/adam/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
