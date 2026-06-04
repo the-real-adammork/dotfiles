@@ -1,0 +1,62 @@
+• Inside the current implementation-execution workflow, the phase orchestrator is a scheduler/integrator, not an implementer. Given an
+  implementation plan, its cycle is roughly:
+
+  1. Startup
+     The supervisor creates/resumes run.yaml, phase.yaml, and a compact execution manifest, then launches a separate tmux Codex process
+     as the phase orchestrator. The orchestrator reads the manifest, phase state, and supervisor inbox, writes a startup heartbeat, and
+     records orchestrator_started.
+
+  2. Build Active Frontier
+     The orchestrator chooses runnable tasks from the manifest by checking:
+     done/blocked/active status, dependencies, shared-file/resource conflicts, pending plan consistency updates, and safe parallelism.
+     It reads only the selected task section from the phase plan, not the whole plan.
+
+  3. Dispatch Worker Lanes
+     Every implementation-plan task goes to a worker lane, even small, serial, docs, config, or acceptance-prep tasks. The orchestrator
+     uses the manifest’s approved worker agent or falls back to general-purpose worker. It does not edit product code/tests/configs
+     itself.
+
+  4. TDD / Task Execution
+     For behavior work, the normal worker loop is:
+     test-only worker goal -> expected failing test evidence -> orchestrator/reviewer approval -> implementation worker goal -> focused
+     verification.
+     Lower-risk mechanical work uses the smallest meaningful validation command instead.
+
+  5. Worker Result Review
+     After each worker returns, the orchestrator inspects changed files and result YAML, runs the task/lane checkpoint, records compact
+     evidence in phase.yaml, merges mock/fixture disclosures into the ledger, and decides whether to dispatch:
+     reviewer, fix-worker, or blocker-resolver.
+
+  6. Blocker Handling
+     Failed local setup, missing tools, stale deps, port conflicts, generated-file gaps, and non-secret env drift are not immediately
+     human blockers. The orchestrator records the blocker and usually dispatches a blocker-resolver first. Only true escalations go to
+     the supervisor inbox.
+
+  7. Repeat Frontier Loop
+     The orchestrator keeps rebuilding the frontier and dispatching workers until all manifest tasks are integrated and no active lanes
+     remain.
+
+  8. Acceptance Worker
+     Once tasks are integrated, the orchestrator dispatches a separate acceptance worker. Acceptance is not run inline. That worker runs
+     the phase acceptance gate, reconciles service-wiring and mock/fixture evidence, writes the acceptance packet, and writes the phase-
+     transition handoff/report.
+
+  9. Completion Routing
+     If acceptance passes, the orchestrator validates the acceptance result, marks phase lifecycle state complete in phase.yaml, writes
+     request.type: phase_completion to the supervisor inbox with the acceptance packet, transition handoff, and full accepted commit
+     hash, then idles/exits.
+
+  10. Supervisor Transition
+     The watchdog sees the inbox request and wakes the original supervisor thread. The supervisor delegates merge-back to a phase-merge
+     sub-agent, stops the completed orchestrator, advances run.yaml, starts the next phase orchestrator if applicable, then launches a
+     phase-transition sub-agent for local verification and smoke reporting.
+
+  Key boundary: the orchestrator owns phase coordination, phase.yaml, worker dispatch, checkpoints, blocker routing, acceptance-worker
+  dispatch, and supervisor inbox updates. It must not own implementation-plan tasks, patch runtime files, run acceptance inline, merge
+  back to base, start the next phase, or do local verification.
+
+  Relevant local references:
+
+  - codex/.codex/skills/implementation-execution/references/phase-orchestrator.md
+  - codex/.codex/skills/implementation-execution/references/supervisor.md
+  - codex/.codex/skills/implementation-execution/references/worker-tdd.md
