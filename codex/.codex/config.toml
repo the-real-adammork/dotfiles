@@ -72,6 +72,9 @@ trust_level = "trusted"
 [projects."/Users/adam/Gauntlet/yourai"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Gauntlet/nerdy-hyper-ui"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
@@ -103,23 +106,12 @@ enabled = true
 [plugins."superpowers@openai-curated"]
 enabled = true
 
-[plugins."figma@openai-curated"]
-enabled = true
-
 [plugins."browser@openai-bundled"]
-enabled = true
-
-[plugins."documents@openai-primary-runtime"]
-enabled = true
-
-[plugins."spreadsheets@openai-primary-runtime"]
-enabled = true
-
-[plugins."presentations@openai-primary-runtime"]
 enabled = true
 
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
+enabled = false
 
 [mcp_servers.railway]
 url = "https://mcp.railway.com"
