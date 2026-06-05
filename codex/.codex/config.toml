@@ -5,6 +5,9 @@ personality = "pragmatic"
 model = "gpt-5.5"
 model_reasoning_effort = "high"
 approvals_reviewer = "user"
+model_reasoning_summary = "auto"
+hide_agent_reasoning = false
+
 
 notify = ["/Users/adam/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
 
@@ -75,6 +78,21 @@ trust_level = "trusted"
 [projects."/Users/adam/Gauntlet/nerdy-hyper-ui"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Gauntlet/thesis"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Movies"]
+trust_level = "trusted"
+
+[projects."/Users/adam/VVS/VVS_June"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/futureio"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/interview"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
@@ -107,6 +125,14 @@ enabled = true
 enabled = true
 
 [plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."compound-engineering@compound-engineering-plugin"]
+enabled = true
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
 enabled = true
 
 [mcp_servers.linear]
@@ -154,3 +180,9 @@ source = "/Users/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
 last_updated = "2026-05-29T19:38:58Z"
 source_type = "local"
 source = "/Users/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[marketplaces.compound-engineering-plugin]
+last_updated = "2026-06-05T13:59:59Z"
+last_revision = "bb0c9ab4ee596d546f2965222e0ec8c2a097ae53"
+source_type = "git"
+source = "https://github.com/EveryInc/compound-engineering-plugin.git"

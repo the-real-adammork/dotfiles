@@ -179,7 +179,7 @@ require("lazy").setup({
   -- TODO: consider nvim-spectre for dedicated search-and-replace UI
   {
     "nvim-telescope/telescope.nvim",
-    tag = "v0.2.1",
+    tag = "v0.2.2",
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       pickers = {
@@ -195,6 +195,22 @@ require("lazy").setup({
       { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
       { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help tags" },
     },
+    config = function()
+      require("telescope").setup({
+        defaults = {
+          -- live_grep: include hidden files/dirs, but keep .git out
+          vimgrep_arguments = {
+            "rg", "--color=never", "--no-heading", "--with-filename",
+            "--line-number", "--column", "--smart-case",
+            "--hidden", "--glob", "!**/.git/*",
+          },
+        },
+        pickers = {
+          -- find_files: show hidden files too
+          find_files = { hidden = true },
+        },
+      })
+    end,
   },
 
   -- Treesitter

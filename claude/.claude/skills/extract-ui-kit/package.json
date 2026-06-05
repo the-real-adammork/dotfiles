@@ -1,0 +1,10 @@
+{
+  "name": "extract-ui-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Extract a web page's design system (color, spacing, radii, buttons+hover, nav, layout, motion) + typography. Builds on extract-typography's shared lib.",
+  "bin": {
+    "extract-ui-kit": "scripts/extract.mjs"
+  }
+}

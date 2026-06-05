@@ -1,0 +1,16 @@
+{
+  "name": "extract-typography",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Extract a web page's fonts and typographic system into a canonical model",
+  "bin": {
+    "extract-typography": "scripts/extract.mjs"
+  },
+  "scripts": {
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}
