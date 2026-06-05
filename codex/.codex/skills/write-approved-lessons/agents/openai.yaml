@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Approved Lessons"
+  short_description: "Write approved lessons into repo docs and AGENTS.md"
+  default_prompt: "Use the write-approved-lessons skill to create approved lesson docs under docs/lessons and add concise AGENTS.md lesson pointers."
