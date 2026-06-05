@@ -1,5 +1,8 @@
 gh/.config/gh/hosts.yml
 
+# Local linked worktrees
+.worktrees/
+
 # Codex workflow runtime state (not config)
 .codex/workflows/*.db
 .codex/workflows/*.db-*
