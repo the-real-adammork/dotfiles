@@ -67,33 +67,34 @@ trust_level = "trusted"
 [projects."/Users/adam/Gauntlet/futureio"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Gauntlet/interview"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/yourai"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
-[[hooks.PermissionRequest]]
-matcher = "Bash|apply_patch|Edit|Write"
-
-[[hooks.PermissionRequest.hooks]]
-type = "command"
-command = "/Users/adam/.codex/hooks/notify.sh"
-timeout = 5
-
-[[hooks.Stop]]
-
-[[hooks.Stop.hooks]]
-type = "command"
-command = "/Users/adam/.codex/hooks/notify.sh"
-timeout = 5
-
 [hooks.state]
 
-[hooks.state."/Users/adam/.codex/config.toml:permission_request:0:0"]
-trusted_hash = "sha256:77bade0cd8b8bec17e98ff66021c6c031a77a976605a8dedbf27299eb60c9418"
-enabled = true
+[hooks.state."/Users/adam/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:2922768136a9215df6aa89784277b29fbe32ec766586658924cafe0edde25d3c"
 
-[hooks.state."/Users/adam/.codex/config.toml:stop:0:0"]
+[hooks.state."/Users/adam/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:955f83ad81f4f2947334fbf67023f48e499954b9e668a2ac74ee5aaa06e6611b"
+
+[hooks.state."/Users/adam/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:df2c9410b6cf0c94cc014e4451d6c9b0198581bc6b695207f2257b9d5c98896c"
+
+[hooks.state."/Users/adam/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:77bade0cd8b8bec17e98ff66021c6c031a77a976605a8dedbf27299eb60c9418"
+
+[hooks.state."/Users/adam/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:f9aa4829a25ad923cbc6deaeb4021e74c6fb021787f5367af8499f6d5ef70740"
+
+[hooks.state."/Users/adam/.codex/hooks.json:stop:0:1"]
 trusted_hash = "sha256:1a7ccdf1880db27d715c984a54db8fbff1a3d019198251cad942c6ddafd7c96d"
-enabled = true
 
 [plugins."superpowers@openai-curated"]
 enabled = true
@@ -156,7 +157,7 @@ source_type = "local"
 source = "/Users/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
 [marketplaces.compound-engineering-plugin]
-last_updated = "2026-06-04T00:29:30Z"
-last_revision = "63b6b260c345ba70ce9d9a393eeedefb64e4e0a0"
+last_updated = "2026-06-05T13:53:55Z"
+last_revision = "bb0c9ab4ee596d546f2965222e0ec8c2a097ae53"
 source_type = "git"
 source = "https://github.com/EveryInc/compound-engineering-plugin.git"
