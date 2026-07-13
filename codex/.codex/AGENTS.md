@@ -1,3 +1,7 @@
+## Worktree Branch Placement
+
+Keep a repository's root checkout on its main branch. When work needs a separate branch, create it in a linked worktree under `.worktrees/<branch-name>/` instead of switching the root checkout away from main.
+
 ## Git Worktree Isolation
 
 When working inside a git worktree, never create symlinks that point to paths in the main repo or sibling worktrees, including `node_modules`, `.env`, `venv`, data dirs, config files, or build artifacts. Worktrees exist to isolate state; symlinking defeats that and causes mutations in one worktree to silently affect others.
