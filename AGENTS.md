@@ -5,11 +5,13 @@
 Every change must be reproducible on a fresh machine via `./install.sh`.
 
 When adding a tool or dependency:
+
 - Add the formula/cask to `Brewfile` (or `Brewfile.macos` for macOS-only)
 - If it needs setup beyond brew (e.g. cargo install, git clone), add a step to `install.sh`
 - Config files go in a stow package directory (e.g. `toolname/.config/toolname/`)
 
 When removing a tool:
+
 - Remove it from `Brewfile`/`Brewfile.macos` and `install.sh`
 - Remove its stow package directory and any references in other configs (e.g. `.zshrc`)
 
@@ -34,10 +36,6 @@ The repository root is the main worktree and should stay on `main`.
 All non-main branches, implementation plans, feature work, fixes, and task execution must happen in linked worktrees under `.worktrees/<branch-or-plan-name>/`.
 
 Agents must not start implementation work in the main worktree unless the user explicitly asks to work in main.
-
-## Lessons
-
-- Linear implementation workflows: prefer the two-layer supervisor-owned task loop; keep native sub-agent dispatch at the supervisor level and use task/review/fix/merge workers for bounded work. See [docs/lessons/2026-05-21-supervisor-mediated-subagents.md](docs/lessons/2026-05-21-supervisor-mediated-subagents.md).
 
 ## Secrets and Credentials
 

@@ -118,29 +118,6 @@
       "mcp__pencil"
     ]
   },
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "permission_prompt|idle_prompt|elicitation_dialog",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/notify.sh"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/notify.sh"
-          }
-        ]
-      }
-    ]
-  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
@@ -182,6 +159,7 @@
     }
   },
   "effortLevel": "xhigh",
+  "tui": "default",
   "skipDangerousModePermissionPrompt": true,
   "theme": "light",
   "editorMode": "vim",

@@ -1,17 +1,5 @@
 {
   "hooks": {
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "command": "/Users/adam/.codex/hooks/notify.sh",
-            "timeout": 5,
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash|apply_patch|Edit|Write"
-      }
-    ],
     "PostToolUse": [
       {
         "hooks": [
@@ -39,11 +27,6 @@
         "hooks": [
           {
             "command": "bash /Users/adam/.tmux/plugins/tmux-agent-sidebar/hook.sh codex stop",
-            "type": "command"
-          },
-          {
-            "command": "/Users/adam/.codex/hooks/notify.sh",
-            "timeout": 5,
             "type": "command"
           }
         ],
