@@ -2,8 +2,8 @@ approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 web_search = "live"
 personality = "pragmatic"
-model = "gpt-5.5"
-model_reasoning_effort = "high"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
 approvals_reviewer = "user"
 model_reasoning_summary = "auto"
 hide_agent_reasoning = false
@@ -93,8 +93,27 @@ trust_level = "trusted"
 [projects."/Users/adam/Gauntlet/interview"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Gauntlet/yr2"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/many-lessons"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/bestie"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/profile-bio-nerdy"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/nxt-visuals"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/allnxt/nxt"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+"gpt-5.6-sol" = 4
 
 [[hooks.PermissionRequest]]
 matcher = "Bash|apply_patch|Edit|Write"
@@ -133,7 +152,6 @@ enabled = true
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
-enabled = true
 
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
@@ -143,15 +161,17 @@ enabled = false
 url = "https://mcp.railway.com"
 enabled = false
 
+[mcp_servers.nxt]
+url = "https://nxt.fly.dev/mcp"
+
 [mcp_servers.serena]
 command = "serena"
 args = ["start-mcp-server", "--context=codex", "--project-from-cwd"]
 enabled = false
 
 [mcp_servers.node_repl]
-args = []
 command = "/Applications/Codex.app/Contents/Resources/node_repl"
-startup_timeout_sec = 120
+startup_timeout_sec = 120.0
 
 [mcp_servers.node_repl.env]
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
@@ -164,6 +184,9 @@ NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/node"
 NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "167fdf579477181fba1773c1efb067b00c5a64fe85dafb50a2001bde198dc739"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/adam/.codex"
 NODE_REPL_UNTRUSTED_ENV_ALLOWLIST = "BROWSER_USE_MARKETPLACE_NAME"
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
 
 [desktop]
 ambient-suggestions-enabled = false
@@ -182,7 +205,7 @@ source_type = "local"
 source = "/Users/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
 [marketplaces.compound-engineering-plugin]
-last_updated = "2026-06-05T13:59:59Z"
-last_revision = "bb0c9ab4ee596d546f2965222e0ec8c2a097ae53"
+last_updated = "2026-07-10T18:36:59Z"
+last_revision = "3519336ecdf204e418a325d961a834abd8507d89"
 source_type = "git"
 source = "https://github.com/EveryInc/compound-engineering-plugin.git"
