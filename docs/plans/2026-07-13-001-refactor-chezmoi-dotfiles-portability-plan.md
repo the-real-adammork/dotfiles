@@ -56,7 +56,7 @@ Out of scope:
 
 This plan supersedes the no-templating and Stow-only constraints in `docs/plans/2026-03-06-dotfiles-management-design.md` and `docs/plans/2026-03-06-dotfiles-implementation.md`. It preserves their useful constraints: `install.sh` remains the public bootstrap interface, package installation remains declared in Brewfiles, and behavior is verified in isolated synthetic home directories.
 
-Before the mixed Codex and Claude files are migrated, the accepted `origin/main` configuration changes must be integrated. The target state includes the tmux agent sidebar, Codex `gpt-5.6-sol` with medium reasoning, Claude `opus[1m]`, the accepted plugin/runtime additions, and the accepted enabled/disabled MCP choices. Existing uncommitted application changes in `codex/.codex/config.toml` must be classified and reconciled rather than overwritten or bundled accidentally with this plan.
+The reconciled baseline includes the tmux agent sidebar, Codex `gpt-5.6-sol` with medium reasoning, Claude `opus[1m]`, the accepted plugin/runtime additions, and the accepted enabled/disabled MCP choices. It also introduces `codex/.codex/hooks.json`, the Claude `hiroppy` marketplace entry, and the `hiroppy/tmux-agent-sidebar` TPM plugin. These are inputs to the mixed-config policy and migration inventory, not separate prerequisites. Existing application-generated marketplace revisions in `codex/.codex/config.toml` remain local-state candidates and must not be mistaken for portable intent.
 
 ## Requirements
 
@@ -94,6 +94,7 @@ Before the mixed Codex and Claude files are migrated, the accepted `origin/main`
 - `install.sh` is already the single bootstrap and owns Homebrew, Stow, Cargo, and tool setup. It is the correct compatibility boundary for the migration.
 - `Brewfile` already contains `jq`, `yq`, and `lefthook`, which are sufficient for semantic JSON/TOML projections and a repository commit gate. `pre-commit` is also declared but has no repository configuration and is redundant for this design.
 - `codex/.codex/config.toml` and `claude/.claude/settings.json` are directly stowed, even though their applications update portable and local fields in the same live file.
+- The reconciled sidebar integration spans `tmux/.tmux.conf`, `codex/.codex/hooks.json`, Codex hook trust state, and Claude plugin/marketplace settings. Its hook event mapping and enablement are portable, while its home-relative plugin command/path and trusted hashes are machine-local or templated.
 - Hard-coded source-machine paths exist in zsh, Vim/Neovim, Git, tmux-related configuration, and application command paths. `/opt/homebrew` assumptions also need an architecture-aware boundary.
 - There is no root test harness today. Existing design documents already favor isolated temporary homes, so the new suite should exercise the real installer and render flow without touching the operator's home.
 
@@ -286,11 +287,12 @@ Expose the drift check as a standalone verification entry point in this unit. De
 
 **Requirements:** R2, R3, R4, R5, R6, R11
 
-**Depends on:** U1, U2, and integration of the accepted remote configuration baseline.
+**Depends on:** U1 and U2.
 
 **Files:**
 
 - `chezmoi/` sources and modifiers for `.codex/config.toml`, `.codex/hooks.json`, and `.claude/settings.json`
+- transitional `tmux/.tmux.conf` sidebar declaration and its eventual `chezmoi/` source
 - `config/policies/codex.toml`
 - `config/policies/claude.toml`
 - `config/managed-targets.toml`
@@ -301,7 +303,9 @@ Expose the drift check as a standalone verification entry point in this unit. De
 
 **Approach:**
 
-Encode the accepted portable decisions in tracked source: the selected models and reasoning settings, tmux agent sidebar, hooks file, plugins, runtimes, MCP definitions, and accepted enablement choices. Template home-relative command paths and application locations where possible.
+Encode the accepted portable decisions in tracked source: the selected models and reasoning settings, tmux agent sidebar, hook event mapping, hooks file, plugins, runtimes, MCP definitions, and accepted enablement choices. Template the Codex hook commands and Claude `hiroppy` marketplace path from the destination home. Treat Codex hook trusted hashes and marketplace timestamps/revisions as local state.
+
+Install and verify `hiroppy/tmux-agent-sidebar` through the existing TPM bootstrap before enabling the Codex or Claude sidebar hooks. During the transition, the Stow-owned `tmux/.tmux.conf` supplies the plugin declaration; U4 migrates that declaration and its portable color choices to chezmoi. A missing plugin must leave hooks disabled with a clear remediation instead of installing a broken command path.
 
 For Codex, preserve as local at minimum project trust, hook runtime state, NUX state, marketplace timestamps/revisions/cache sources, trusted-client hashes, and app metadata. For Claude, keep authentication and trust state outside `settings.json` unmanaged, and preserve any policy-classified application metadata in the mixed file. Explicitly exclude Codex authentication files, Claude account files, and keychain material from target inventory.
 
@@ -316,6 +320,7 @@ After both policies are installed and initial baselines are recorded, activate L
 - Seed every declared local field; apply and re-apply preserve it exactly.
 - Add an unknown key inside each portable namespace; modifiers stop without replacing the file. Add an unknown key outside those namespaces; modifiers preserve it and emit a review warning.
 - Complete one application launch/exit round trip after the first adoption; the rewritten file remains classified, passes drift checks, and is idempotent on the next apply.
+- Render the sidebar integration under two home paths; Codex hook commands and Claude marketplace paths follow the destination home, TPM installs the expected plugin, and hook activation occurs only after its `hook.sh` is executable.
 - Include representative auth files adjacent to each config; adoption leaves them untouched and uninspected.
 - Simulate an application write between read and replacement; the newer configuration remains intact.
 
@@ -337,7 +342,7 @@ After both policies are installed and initial baselines are recorded, activate L
 
 **Approach:**
 
-Replace source-user paths with home-relative configuration or chezmoi facts. Discover the Homebrew prefix and executable locations instead of committing `/opt/homebrew` or a source-machine binary path. Use application lookup and guarded platform conditions for optional tools.
+Replace source-user paths with home-relative configuration or chezmoi facts. Discover the Homebrew prefix and executable locations instead of committing `/opt/homebrew` or a source-machine binary path. Use application lookup and guarded platform conditions for optional tools. Preserve the sidebar TPM declaration and portable color configuration when `tmux/.tmux.conf` changes ownership from Stow to chezmoi.
 
 Move Git identity, signing key, and signing enablement to a machine-local include or local chezmoi data. Keep portable Git behavior tracked. Bootstrap may prompt for missing identity only when installing the Git group interactively; non-interactive runs must explain the missing local choice and leave signing disabled rather than inventing values.
 

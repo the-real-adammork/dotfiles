@@ -5,11 +5,13 @@
 Every change must be reproducible on a fresh machine via `./install.sh`.
 
 When adding a tool or dependency:
+
 - Add the formula/cask to `Brewfile` (or `Brewfile.macos` for macOS-only)
 - If it needs setup beyond brew (e.g. cargo install, git clone), add a step to `install.sh`
 - Config files go in a stow package directory (e.g. `toolname/.config/toolname/`)
 
 When removing a tool:
+
 - Remove it from `Brewfile`/`Brewfile.macos` and `install.sh`
 - Remove its stow package directory and any references in other configs (e.g. `.zshrc`)
 

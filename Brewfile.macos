@@ -3,10 +3,12 @@
 # -----------------------------------------------------------------------------
 # macOS-only formulae
 # -----------------------------------------------------------------------------
+tap "facebook/fb"
+
 brew "cocoapods"          # iOS dev
+brew "idb-companion"      # companion process for ios-simulator-mcp
 brew "mas"                # Mac App Store CLI
 brew "pinentry-mac"       # GPG pinentry for macOS
-brew "terminal-notifier"  # macOS notifications from scripts
 
 # -----------------------------------------------------------------------------
 # Terminal / fonts

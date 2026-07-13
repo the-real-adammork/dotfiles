@@ -73,6 +73,22 @@ else
     warn "Homebrew not available, skipping package installation."
 fi
 
+# --- IDB client (required by ios-simulator-mcp) ---
+if [[ "$OS" == "Darwin" ]]; then
+    if command -v pipx &>/dev/null; then
+        info "Installing IDB Python client..."
+        if pipx list --short | awk '{print $1}' | grep -qx "fb-idb"; then
+            pipx upgrade fb-idb
+        else
+            pipx install fb-idb
+        fi
+        pipx ensurepath
+        ok "IDB Python client installed"
+    else
+        warn "pipx not found, skipping IDB Python client install."
+    fi
+fi
+
 # --- Rust (via rustup from Brewfile) ---
 if command -v rustup-init &>/dev/null || command -v rustup &>/dev/null; then
     if [ ! -d "$HOME/.cargo" ]; then
@@ -195,19 +211,6 @@ fi
 # Install/update tmux plugins declared in tmux.conf (runs after stow below
 # would be ideal, but install_plugins only needs the config readable — we
 # re-run it at the end to ensure stowed config is active).
-
-# --- claude-notify (macOS notification tool) ---
-if [[ "$OS" == "Darwin" ]]; then
-    info "Building claude-notify..."
-    APP_DIR="$HOME/.local/bin/claude-notify.app"
-    mkdir -p "$APP_DIR/Contents/MacOS"
-    cp "$DOTS_DIR/notify/src/Info.plist" "$APP_DIR/Contents/"
-    swiftc -o "$APP_DIR/Contents/MacOS/claude-notify" \
-        "$DOTS_DIR/notify/src/claude-notify.swift" \
-        -framework Cocoa -framework UserNotifications 2>/dev/null
-    codesign --force --sign - "$APP_DIR" 2>/dev/null
-    ok "claude-notify built"
-fi
 
 # --- scm_breeze (git shortcuts, sourced from .zshrc) ---
 if [ ! -d "$HOME/.scm_breeze" ]; then

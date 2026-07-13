@@ -375,6 +375,41 @@ require("lazy").setup({
 vim.opt.winborder = "rounded"
 vim.diagnostic.config({ float = { border = "rounded" } })
 
+local function use_plain_underlines()
+  local groups = {
+    "DiagnosticUnderlineError",
+    "DiagnosticUnderlineWarn",
+    "DiagnosticUnderlineInfo",
+    "DiagnosticUnderlineHint",
+    "DiagnosticUnderlineOk",
+    "SpellBad",
+    "SpellCap",
+    "SpellRare",
+    "SpellLocal",
+  }
+
+  for _, group in ipairs(groups) do
+    local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+    if next(hl) ~= nil then
+      hl.sp = nil
+      if hl.undercurl then
+        hl.undercurl = nil
+        hl.underline = true
+      end
+      if hl.cterm and hl.cterm.undercurl then
+        hl.cterm.undercurl = nil
+        hl.cterm.underline = true
+      end
+      vim.api.nvim_set_hl(0, group, hl)
+    end
+  end
+end
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+  callback = use_plain_underlines,
+})
+use_plain_underlines()
+
 -- Settings
 vim.opt.confirm = true
 vim.opt.startofline = false

@@ -8,8 +8,7 @@ approvals_reviewer = "user"
 model_reasoning_summary = "auto"
 hide_agent_reasoning = false
 
-
-notify = ["/Users/adam/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+service_tier = "default"
 
 [sandbox_workspace_write]
 network_access = true
@@ -22,7 +21,6 @@ goals = true
 
 [notice]
 hide_full_access_warning = true
-hide_rate_limit_model_nudge = true
 
 [projects."/Users/adam/dots"]
 trust_level = "trusted"
@@ -72,9 +70,6 @@ trust_level = "trusted"
 [projects."/Users/adam/Gauntlet/gofundme"]
 trust_level = "trusted"
 
-[projects."/Users/adam/Gauntlet/yourai"]
-trust_level = "trusted"
-
 [projects."/Users/adam/Gauntlet/nerdy-hyper-ui"]
 trust_level = "trusted"
 
@@ -99,7 +94,34 @@ trust_level = "trusted"
 [projects."/Users/adam/Gauntlet/many-lessons"]
 trust_level = "trusted"
 
+[projects."/Users/adam/Gauntlet/yourai"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/casual-contacts"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/st6"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/factory"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/nclusion-system-design"]
+trust_level = "trusted"
+
 [projects."/Users/adam/Gauntlet/bestie"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Gauntlet/tax-filer"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Movies/bestie"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/passport-renewal"]
+trust_level = "trusted"
+
+[projects."/Users/adam/Projects/profile-bio"]
 trust_level = "trusted"
 
 [projects."/Users/adam/Projects/profile-bio-nerdy"]
@@ -115,38 +137,54 @@ trust_level = "trusted"
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
 
-[[hooks.PermissionRequest]]
-matcher = "Bash|apply_patch|Edit|Write"
-
-[[hooks.PermissionRequest.hooks]]
-type = "command"
-command = "/Users/adam/.codex/hooks/notify.sh"
-timeout = 5
-
-[[hooks.Stop]]
-
-[[hooks.Stop.hooks]]
-type = "command"
-command = "/Users/adam/.codex/hooks/notify.sh"
-timeout = 5
-
 [hooks.state]
 
-[hooks.state."/Users/adam/.codex/config.toml:permission_request:0:0"]
-trusted_hash = "sha256:77bade0cd8b8bec17e98ff66021c6c031a77a976605a8dedbf27299eb60c9418"
-enabled = true
+[hooks.state."/Users/adam/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:2922768136a9215df6aa89784277b29fbe32ec766586658924cafe0edde25d3c"
 
-[hooks.state."/Users/adam/.codex/config.toml:stop:0:0"]
+[hooks.state."/Users/adam/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:955f83ad81f4f2947334fbf67023f48e499954b9e668a2ac74ee5aaa06e6611b"
+
+[hooks.state."/Users/adam/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:df2c9410b6cf0c94cc014e4451d6c9b0198581bc6b695207f2257b9d5c98896c"
+
+[hooks.state."/Users/adam/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:77bade0cd8b8bec17e98ff66021c6c031a77a976605a8dedbf27299eb60c9418"
+
+[hooks.state."/Users/adam/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:f9aa4829a25ad923cbc6deaeb4021e74c6fb021787f5367af8499f6d5ef70740"
+
+[hooks.state."/Users/adam/.codex/hooks.json:stop:0:1"]
 trusted_hash = "sha256:1a7ccdf1880db27d715c984a54db8fbff1a3d019198251cad942c6ddafd7c96d"
-enabled = true
 
 [plugins."superpowers@openai-curated"]
 enabled = true
 
-[plugins."browser@openai-bundled"]
+[plugins."compound-engineering@compound-engineering-plugin"]
 enabled = true
 
-[plugins."compound-engineering@compound-engineering-plugin"]
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
 enabled = true
 
 [mcp_servers.context7]
@@ -170,20 +208,48 @@ args = ["start-mcp-server", "--context=codex", "--project-from-cwd"]
 enabled = false
 
 [mcp_servers.node_repl]
-command = "/Applications/Codex.app/Contents/Resources/node_repl"
-startup_timeout_sec = 120.0
+args = []
+command = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
 
 [mcp_servers.node_repl.env]
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-BROWSER_USE_MARKETPLACE_NAME = "openai-bundled"
-CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
-CODEX_HOME = "/Users/adam/.codex"
 NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = ""
-NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/node"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "167fdf579477181fba1773c1efb067b00c5a64fe85dafb50a2001bde198dc739"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/adam/.codex"
-NODE_REPL_UNTRUSTED_ENV_ALLOWLIST = "BROWSER_USE_MARKETPLACE_NAME"
+CODEX_HOME = "/Users/adam/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,9f3594de71104f9f06015712cef546902a47ab57709ebf93db6e6081d8e92364"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.707.31123"
+CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
+
+[mcp_servers.adobe-illustrator]
+url = "http://localhost:18412/v1/mcp"
+bearer_token_env_var = "ADOBE_ILLUSTRATOR_MCP_BEARER_TOKEN"
+enabled = false
+
+[mcp_servers.XcodeBuildMCP]
+command = "npx"
+args = ["-y", "xcodebuildmcp@latest", "mcp"]
+
+[mcp_servers.ios-simulator]
+command = "npx"
+args = ["-y", "ios-simulator-mcp@latest"]
+startup_timeout_sec = 60.0
+tool_timeout_sec = 120.0
+
+[mcp_servers.ios-simulator.env]
+IOS_SIMULATOR_MCP_IDB_PATH = "/Users/adam/.local/bin/idb"
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
 
 [mcp_servers.figma]
 url = "https://mcp.figma.com/mcp"
@@ -193,19 +259,21 @@ ambient-suggestions-enabled = false
 preventSleepWhileRunning = false
 keepRemoteControlAwakeWhilePluggedIn = false
 conversationDetailMode = "STEPS_COMMANDS"
+followUpQueueMode = "queue"
+dock-icon-preference = "codex-system"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-29T18:52:04Z"
+last_updated = "2026-07-09T22:10:33Z"
 source_type = "local"
 source = "/Users/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-29T19:38:58Z"
+last_updated = "2026-07-10T01:39:04Z"
 source_type = "local"
 source = "/Users/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
 [marketplaces.compound-engineering-plugin]
-last_updated = "2026-07-10T18:36:59Z"
-last_revision = "3519336ecdf204e418a325d961a834abd8507d89"
+last_updated = "2026-07-13T21:26:15Z"
+last_revision = "ea5a200c811544a7337f6e1594ac9572b96e86fb"
 source_type = "git"
 source = "https://github.com/EveryInc/compound-engineering-plugin.git"
