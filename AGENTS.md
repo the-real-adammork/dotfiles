@@ -27,6 +27,12 @@ Dependencies and configs must stay in sync. If a config references a binary, tha
 - Machine-local state, backups, checkpoints, and portable baselines live under `${XDG_STATE_HOME:-$HOME/.local/state}/dots`, never in the repository.
 - Authentication targets listed as unmanaged must not be opened, copied, projected, or logged.
 
+## Configuration Changes and Drift
+
+- When changing or encountering drift in managed config, classify it: track deliberate cross-machine behavior, keep machine/account/runtime state local, never track credentials, and discard accidental noise.
+- Make obvious classifications and update the source or policy autonomously; ask only when a change represents a genuine user preference.
+- Run staged drift checks before committing and fail closed on ambiguous or potentially sensitive drift.
+
 ## Repo Structure
 
 - `chezmoi/` - canonical source state rendered into `$HOME`
