@@ -2,16 +2,18 @@
 
 ## Repeatability
 
-Every change must be reproducible on a fresh machine via `./install.sh`.
+Every required change must be reproducible on a fresh machine via `./install.sh`.
+Standalone optional macOS apps are reproducible via `./install-optional-macos.sh`.
 
 When adding a tool or dependency:
-- Add the formula/cask to `Brewfile` (or `Brewfile.macos` for macOS-only)
+- Add the formula/cask to `Brewfile` (or `Brewfile.macos` for required macOS-only tools)
+- Put standalone, nonessential macOS apps in `Brewfile.macos.optional`
 - If it needs setup beyond brew (e.g. cargo install, git clone), add a step to `install.sh`
 - Portable config source goes under `chezmoi/` using chezmoi source-state names
 - Mixed application config must have a policy under `config/policies/` and a portable overlay under `config/portable/`
 
 When removing a tool:
-- Remove it from `Brewfile`/`Brewfile.macos` and `install.sh`
+- Remove it from the applicable Brewfile and installer
 - Remove its chezmoi source and any references in other configs (e.g. `.zshrc`)
 
 Dependencies and configs must stay in sync. If a config references a binary, that binary must be tracked in `Brewfile` or `install.sh`.
@@ -38,7 +40,9 @@ Dependencies and configs must stay in sync. If a config references a binary, tha
 - `scripts/dotfiles-state` - validate, apply, preview, adopt, rollback, baseline, and drift interface
 - `Brewfile` — cross-platform CLI tools
 - `Brewfile.macos` — macOS-only tools and casks
+- `Brewfile.macos.optional` — standalone, nonessential macOS apps
 - `install.sh` — full bootstrap: brew, cargo, chezmoi, and setup steps
+- `install-optional-macos.sh` — opt-in macOS apps and vendor downloads
 - `tests/portability/` - isolated synthetic-home acceptance suite
 - `ITEMS.md` — outstanding TODO items
 

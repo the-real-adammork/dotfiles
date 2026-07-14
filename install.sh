@@ -47,16 +47,6 @@ if ! command -v brew &>/dev/null; then
     fi
 fi
 
-# --- Rosetta 2 (needed for Intel-only MAS apps: 3Hub, Color Picker) ---
-if [[ "$OS" == "Darwin" ]] && [[ "$(uname -m)" == "arm64" ]]; then
-    if ! /usr/bin/pgrep -q oahd; then
-        info "Installing Rosetta 2..."
-        /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-    else
-        ok "Rosetta 2 already installed"
-    fi
-fi
-
 if command -v brew &>/dev/null; then
     info "Installing shared tools from Brewfile..."
     brew bundle --file="$DOTS_DIR/Brewfile"
@@ -160,57 +150,6 @@ if install_group_selected claude; then
     else
         warn "npm not found, skipping Claude Code install."
     fi
-fi
-
-# --- SoulseekQt (no brew cask available) ---
-if [[ "$OS" == "Darwin" ]] && ! [ -d "/Applications/SoulseekQt.app" ]; then
-    info "Installing SoulseekQt..."
-    SLSK_URL="https://f004.backblazeb2.com/file/SoulseekQt/SoulseekQt-2025-10-11.dmg"
-    TMP_DMG="/tmp/SoulseekQt.dmg"
-    curl -fsSL "$SLSK_URL" -o "$TMP_DMG"
-    MOUNT=$(hdiutil attach "$TMP_DMG" -nobrowse | sed -n 's|.*\(/Volumes/.*\)|\1|p')
-    cp -R "$MOUNT"/*.app /Applications/
-    hdiutil detach "$MOUNT" -force 2>/dev/null
-    rm "$TMP_DMG"
-    ok "SoulseekQt installed"
-else
-    ok "SoulseekQt already installed"
-fi
-
-# --- Spek (no brew cask available) ---
-if [[ "$OS" == "Darwin" ]] && ! [ -d "/Applications/Spek.app" ]; then
-    info "Installing Spek..."
-    SPEK_URL="https://github.com/alexkay/spek/releases/download/v0.8.5/spek-0.8.5-beta.dmg"
-    TMP_DMG="/tmp/Spek.dmg"
-    curl -fsSL "$SPEK_URL" -o "$TMP_DMG"
-    MOUNT=$(hdiutil attach "$TMP_DMG" -nobrowse | sed -n 's|.*\(/Volumes/.*\)|\1|p')
-    cp -R "$MOUNT"/*.app /Applications/
-    hdiutil detach "$MOUNT" -force 2>/dev/null
-    rm "$TMP_DMG"
-    ok "Spek installed"
-else
-    ok "Spek already installed"
-fi
-
-# --- Rekordbox 6 (pinned version, not available via brew) ---
-if [[ "$OS" == "Darwin" ]] && ! ls -d /Applications/rekordbox* &>/dev/null; then
-    info "Installing Rekordbox 6..."
-    RB_URL="https://cdn.rekordbox.com/files/20250610145702/Install_rekordbox_6_8_6.pkg_.zip"
-    TMP_ZIP="/tmp/rekordbox6.zip"
-    TMP_DIR="/tmp/rekordbox6"
-    curl -fsSL "$RB_URL" -o "$TMP_ZIP"
-    mkdir -p "$TMP_DIR"
-    unzip -qo "$TMP_ZIP" -d "$TMP_DIR"
-    PKG=$(find "$TMP_DIR" -name "*.pkg" -type f | head -1)
-    if [ -n "$PKG" ]; then
-        sudo installer -pkg "$PKG" -target /
-        ok "Rekordbox 6 installed"
-    else
-        warn "No .pkg found in archive, skipping Rekordbox install"
-    fi
-    rm -rf "$TMP_ZIP" "$TMP_DIR"
-else
-    ok "Rekordbox already installed"
 fi
 
 # --- TPM (Tmux Plugin Manager) ---

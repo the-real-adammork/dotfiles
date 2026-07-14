@@ -20,11 +20,6 @@ cask "font-monaspace"
 cask "font-symbols-only-nerd-font"
 
 # -----------------------------------------------------------------------------
-# Creative suite
-# -----------------------------------------------------------------------------
-cask "adobe-creative-cloud"
-
-# -----------------------------------------------------------------------------
 # Dev / cloud
 # -----------------------------------------------------------------------------
 cask "codex"
@@ -41,7 +36,6 @@ cask "google-chrome"
 # -----------------------------------------------------------------------------
 # Communication
 # -----------------------------------------------------------------------------
-cask "discord"
 cask "signal"
 cask "slack"
 cask "telegram"
@@ -61,38 +55,13 @@ cask "gpg-suite"
 # -----------------------------------------------------------------------------
 # Databases
 # -----------------------------------------------------------------------------
-cask "postico"
 cask "postgres-app"
 
 # -----------------------------------------------------------------------------
 # Utilities
 # -----------------------------------------------------------------------------
-cask "backblaze"
 cask "blackhole-16ch"
-cask "daisydisk"
-cask "hazel"
 cask "moom"
-cask "switchresx"
-
-# -----------------------------------------------------------------------------
-# Media / audio
-# -----------------------------------------------------------------------------
-cask "ableton-live-suite"
-cask "audacity"
-cask "obs"
-cask "optimus-player"
-cask "qbittorrent"
-# rekordbox — pinned to v6, installed from vendor PKG in install.sh
-# cask "rekordbox"
-cask "soundsource"
-cask "transmission"
-cask "vlc"
-
-# -----------------------------------------------------------------------------
-# Manual installs (automated in install.sh via curl + hdiutil)
-# -----------------------------------------------------------------------------
-# SoulseekQt — https://www.slsknet.org (URL is date-stamped, update as needed)
-# Spek       — https://github.com/alexkay/spek/releases
 
 # -----------------------------------------------------------------------------
 # Vendor downloads (not automatable — re-download from vendor when needed)
@@ -104,6 +73,3 @@ cask "vlc"
 # Mac App Store
 # -----------------------------------------------------------------------------
 mas "Xcode", id: 497799835
-mas "Shazam", id: 897118787
-mas "3Hub", id: 427515976
-mas "Color Picker", id: 641027709

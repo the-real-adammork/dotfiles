@@ -10,6 +10,13 @@ cd ~/dots
 ./install.sh
 ```
 
+This installs the required day-one macOS apps and development tools. Install the
+nonessential creative, media, utility, and App Store apps later with:
+
+```bash
+./install-optional-macos.sh
+```
+
 ## Selective Install
 
 ```bash
@@ -59,3 +66,7 @@ After a verified apply/adoption, initialize semantic baselines with `scripts/dot
 3. Declare its logical group and platform in `config/managed-targets.toml`.
 4. Add a semantic policy before managing any application-mutated file.
 5. Run `tests/portability/run.sh` and re-run `./install.sh`.
+
+Apps that no tracked configuration or tool depends on may instead go in
+`Brewfile.macos.optional`; any additional setup belongs in
+`install-optional-macos.sh`.

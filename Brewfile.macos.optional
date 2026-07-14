@@ -1,0 +1,34 @@
+# Brewfile.macos.optional — nonessential macOS apps installed on demand
+
+# Creative suite
+cask "adobe-creative-cloud"
+
+# Communication
+cask "discord"
+
+# Databases
+cask "postico"
+
+# Utilities
+cask "backblaze"
+cask "daisydisk"
+cask "hazel"
+cask "switchresx"
+
+# Media / audio
+cask "ableton-live-suite"
+cask "audacity"
+cask "obs"
+cask "optimus-player"
+cask "qbittorrent"
+cask "soundsource"
+cask "transmission"
+cask "vlc"
+
+# Mac App Store
+mas "Shazam", id: 897118787
+mas "3Hub", id: 427515976
+mas "Color Picker", id: 641027709
+
+# Installed from vendor downloads by install-optional-macos.sh:
+# SoulseekQt, Spek, and Rekordbox 6.
