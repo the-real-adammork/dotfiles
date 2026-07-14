@@ -1,0 +1,148 @@
+schema_version = 1
+migration_version = 1
+
+[[targets]]
+group = "alacritty"
+path = ".alacritty.yml"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "bat"
+path = ".config/bat"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "claude"
+path = ".claude"
+owner = "chezmoi"
+platform = "any"
+policy = "claude"
+
+[[targets]]
+group = "codex"
+path = ".codex"
+owner = "chezmoi"
+platform = "darwin"
+policy = "codex"
+
+[[targets]]
+group = "gh"
+path = ".config/gh/config.yml"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "git"
+path = ".gitconfig"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "git"
+path = ".config/git/ignore"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "ghostty"
+path = ".config/ghostty"
+owner = "chezmoi"
+platform = "darwin"
+
+[[targets]]
+group = "herdr"
+path = ".config/herdr"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "lib_sh"
+path = "lib_sh"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "ncdu"
+path = ".config/ncdu"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "nvim"
+path = ".config/nvim"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "oh-my-posh"
+path = ".config/oh-my-posh"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "ranger"
+path = ".config/ranger"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "scm_breeze"
+path = ".git.scmbrc"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "tig"
+path = ".tigrc"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "tmux"
+path = ".tmux.conf"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "vim"
+path = ".vimrc"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "yazi"
+path = ".config/yazi"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "zsh"
+path = ".zprofile"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "zsh"
+path = ".zshenv"
+owner = "chezmoi"
+platform = "any"
+
+[[targets]]
+group = "zsh"
+path = ".zshrc"
+owner = "chezmoi"
+platform = "any"
+
+[[unmanaged]]
+path = ".config/gh/hosts.yml"
+reason = "GitHub CLI authentication state"
+
+[[unmanaged]]
+path = ".codex/auth.json"
+reason = "Codex authentication state"
+
+[[unmanaged]]
+path = ".claude/.credentials.json"
+reason = "Claude authentication state"

@@ -218,13 +218,13 @@ NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/cua_nod
 NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/adam/.codex"
 CODEX_HOME = "/Users/adam/.codex"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,9f3594de71104f9f06015712cef546902a47ab57709ebf93db6e6081d8e92364"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,e2cad16d8d9f60f09c9f0951ec7dfdd9e8f59dedd06045c0b6827dc8fa8322f0"
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
 NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.707.31123"
+BROWSER_USE_CODEX_APP_VERSION = "26.707.62119"
 CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
 
 [mcp_servers.adobe-illustrator]
@@ -263,17 +263,17 @@ followUpQueueMode = "queue"
 dock-icon-preference = "codex-system"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-07-09T22:10:33Z"
+last_updated = "2026-07-13T23:36:30Z"
 source_type = "local"
 source = "/Users/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-07-10T01:39:04Z"
+last_updated = "2026-07-14T00:23:38Z"
 source_type = "local"
 source = "/Users/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
 [marketplaces.compound-engineering-plugin]
-last_updated = "2026-07-13T21:26:15Z"
-last_revision = "ea5a200c811544a7337f6e1594ac9572b96e86fb"
+last_updated = "2026-07-13T22:30:20Z"
+last_revision = "cc970bc0ef2232fd39f5a2d3620a51b35eb51660"
 source_type = "git"
 source = "https://github.com/EveryInc/compound-engineering-plugin.git"

@@ -1,0 +1,11 @@
+schema_version = 1
+format = "json"
+portable_file = "config/portable/claude.json"
+portable_roots = [
+  "permissions", "model", "statusLine", "enabledPlugins", "extraKnownMarketplaces",
+  "effortLevel", "tui", "skipDangerousModePermissionPrompt", "theme", "editorMode",
+  "agentPushNotifEnabled",
+]
+local_roots = []
+local_paths = []
+safe_sensitive_keys = []

@@ -1,0 +1,4 @@
+pre-commit:
+  commands:
+    portable-dotfiles-drift:
+      run: scripts/dotfiles-state drift --staged

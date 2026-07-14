@@ -1,0 +1,15 @@
+[core]
+	pager = diff-so-fancy | less --tabs=4 -RFX
+[interactive]
+	diffFilter = diff-so-fancy --patch
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[credential]
+	helper = osxkeychain
+[pull]
+	rebase = false
+[include]
+	path = ~/.config/git/local

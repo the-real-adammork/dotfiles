@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implementation Execution"
+  short_description: "Run phase plans with YAML state"
+  default_prompt: "Use the implementation-execution skill to run the approved implementation slices from docs/plans/SLICES.md with this session as supervisor, a new tmux pane for the phase orchestrator, a same-session supervisor watchdog, orchestrator-spawned bounded workers, TDD gates, YAML state, and phase acceptance evidence."

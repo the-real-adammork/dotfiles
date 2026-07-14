@@ -1,0 +1,52 @@
+{{- if eq (env "DOTFILES_SIDEBAR_ENABLED") "1" }}
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "bash {{ .chezmoi.homeDir }}/.tmux/plugins/tmux-agent-sidebar/hook.sh codex activity-log",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bash {{ .chezmoi.homeDir }}/.tmux/plugins/tmux-agent-sidebar/hook.sh codex session-start",
+            "type": "command"
+          }
+        ],
+        "matcher": "startup|resume"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "bash {{ .chezmoi.homeDir }}/.tmux/plugins/tmux-agent-sidebar/hook.sh codex stop",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "bash {{ .chezmoi.homeDir }}/.tmux/plugins/tmux-agent-sidebar/hook.sh codex user-prompt-submit",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  }
+}
+{{- else }}
+{{ fail "tmux agent sidebar hook is unavailable; refusing to disable managed Codex hooks" }}
+{{- end }}

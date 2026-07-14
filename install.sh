@@ -2,7 +2,8 @@
 set -euo pipefail
 
 DOTS_DIR="$(cd "$(dirname "$0")" && pwd)"
-SKIP_DIRS="docs .git"
+source "$DOTS_DIR/scripts/claude-plugins.sh"
+source "$DOTS_DIR/scripts/install-groups.sh"
 ONLY=""
 
 # Parse arguments
@@ -60,6 +61,10 @@ if command -v brew &>/dev/null; then
     info "Installing shared tools from Brewfile..."
     brew bundle --file="$DOTS_DIR/Brewfile"
     if [[ "$OS" == "Darwin" && -f "$DOTS_DIR/Brewfile.macos" ]]; then
+        # Homebrew may require explicit trust for third-party taps before it
+        # will load their formulae from a Brewfile.
+        brew tap getsentry/xcodebuildmcp
+        brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp
         info "Installing macOS tools from Brewfile.macos..."
         brew bundle --file="$DOTS_DIR/Brewfile.macos"
     fi
@@ -135,19 +140,26 @@ else
     warn "uv not found, skipping PDF to Markdown Python dependencies."
 fi
 
+# --- Serena MCP server (referenced by Codex config) ---
+if install_group_selected codex; then
+    if command -v uv &>/dev/null; then
+        info "Installing Serena MCP server..."
+        uv tool install --upgrade serena-agent
+        ok "Serena MCP server installed"
+    else
+        warn "uv not found, skipping Serena MCP server install."
+    fi
+fi
+
 # --- Claude Code (CLI) ---
-if command -v npm &>/dev/null; then
-    info "Installing Claude Code..."
-    npm install -g @anthropic-ai/claude-code
-    info "Adding Claude Code plugin marketplace..."
-    claude plugin marketplace add anthropics/claude-plugins-official || true
-    info "Installing Claude Code plugins..."
-    claude plugin install superpowers@claude-plugins-official
-    claude plugin install frontend-design@claude-plugins-official
-    claude plugin install typescript-lsp@claude-plugins-official
-    ok "Claude Code installed"
-else
-    warn "npm not found, skipping Claude Code install."
+if install_group_selected claude; then
+    if command -v npm &>/dev/null; then
+        info "Installing Claude Code..."
+        npm install -g @anthropic-ai/claude-code
+        ok "Claude Code installed"
+    else
+        warn "npm not found, skipping Claude Code install."
+    fi
 fi
 
 # --- SoulseekQt (no brew cask available) ---
@@ -204,7 +216,7 @@ fi
 # --- TPM (Tmux Plugin Manager) ---
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     info "Installing TPM..."
-    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+    /usr/bin/git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 else
     ok "TPM already installed"
 fi
@@ -215,7 +227,7 @@ fi
 # --- scm_breeze (git shortcuts, sourced from .zshrc) ---
 if [ ! -d "$HOME/.scm_breeze" ]; then
     info "Installing scm_breeze..."
-    git clone https://github.com/scmbreeze/scm_breeze.git "$HOME/.scm_breeze"
+    /usr/bin/git clone https://github.com/scmbreeze/scm_breeze.git "$HOME/.scm_breeze"
     "$HOME/.scm_breeze/install.sh"
     # Upstream installer appends a hardcoded-path source line to .zshrc.
     # The stowed .zshrc already has an equivalent $HOME-based line, so
@@ -234,7 +246,7 @@ fi
 # --- Oh My Zsh ---
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     info "Installing Oh My Zsh..."
-    git clone https://github.com/ohmyzsh/ohmyzsh "$HOME/.oh-my-zsh"
+    /usr/bin/git clone https://github.com/ohmyzsh/ohmyzsh "$HOME/.oh-my-zsh"
     ok "Oh My Zsh installed"
 else
     ok "Oh My Zsh already installed"
@@ -246,80 +258,56 @@ mkdir -p "$ZSH_CUSTOM/plugins"
 for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
     if [ ! -d "$ZSH_CUSTOM/plugins/$plugin" ]; then
         info "Installing $plugin..."
-        git clone "https://github.com/zsh-users/$plugin" "$ZSH_CUSTOM/plugins/$plugin"
+        /usr/bin/git clone "https://github.com/zsh-users/$plugin" "$ZSH_CUSTOM/plugins/$plugin"
     fi
 done
 
-# --- Stow ---
-if ! command -v stow &>/dev/null; then
-    echo "Error: stow is not installed. Install it and re-run."
+# Codex and Claude hooks are managed fail-closed: provision the shared hook
+# before chezmoi renders either integration.
+if install_any_group_selected codex claude; then
+    SIDEBAR_DIR="$HOME/.tmux/plugins/tmux-agent-sidebar"
+    if [[ ! -d "$SIDEBAR_DIR" ]]; then
+        info "Installing tmux agent sidebar source..."
+        /usr/bin/git clone https://github.com/hiroppy/tmux-agent-sidebar "$SIDEBAR_DIR"
+    fi
+
+    if [[ -d "$SIDEBAR_DIR" && ! -x "$SIDEBAR_DIR/bin/tmux-agent-sidebar" ]]; then
+        info "Installing tmux agent sidebar binary..."
+        "$SIDEBAR_DIR/install-wizard.sh" download-binary
+    fi
+
+    if [[ ! -x "$SIDEBAR_DIR/hook.sh" ]]; then
+        echo "Error: tmux agent sidebar hook is unavailable: $SIDEBAR_DIR/hook.sh"
+        exit 1
+    fi
+
+    if install_group_selected claude && command -v claude &>/dev/null; then
+        info "Reconciling Claude marketplaces and plugins from portable config..."
+        reconcile_claude_plugins "$DOTS_DIR/config/portable/claude.json"
+    fi
+fi
+
+# --- Chezmoi ---
+if ! command -v chezmoi &>/dev/null; then
+    echo "Error: chezmoi is not installed. Install it and re-run."
     exit 1
 fi
 
-# Discover packages (top-level dirs, excluding SKIP_DIRS)
-packages=()
-for dir in "$DOTS_DIR"/*/; do
-    pkg="$(basename "$dir")"
-    skip=false
-    for s in $SKIP_DIRS; do
-        [[ "$pkg" == "$s" ]] && skip=true
-    done
-    $skip && continue
-    packages+=("$pkg")
-done
+info "Validating chezmoi ownership and source state..."
+"$DOTS_DIR/scripts/dotfiles-state" validate
 
-# Filter to --only if provided
+apply_args=()
 if [[ -n "$ONLY" ]]; then
-    IFS=',' read -ra selected <<< "$ONLY"
-    filtered=()
-    for pkg in "${selected[@]}"; do
-        pkg="$(echo "$pkg" | xargs)"  # trim whitespace
-        if [[ -d "$DOTS_DIR/$pkg" ]]; then
-            filtered+=("$pkg")
-        else
-            warn "Package not found: $pkg"
-        fi
-    done
-    packages=("${filtered[@]}")
+    apply_args+=(--only "$ONLY")
 fi
 
-# Resolve stow conflicts from a previous dotfiles clone or leftover files.
-# Uses stow's own dry-run to detect conflicts, then removes stale symlinks
-# and empties directories so stow can take over.
-info "Resolving stow conflicts..."
-for pkg in "${packages[@]}"; do
-    (stow -d "$DOTS_DIR" -t "$HOME" -n --restow "$pkg" 2>&1 || true) | while IFS= read -r line; do
-        target=$(echo "$line" | sed -n 's/.*existing target is not owned by stow: *//p')
-        [ -z "$target" ] && continue
-        full="$HOME/$target"
-        if [ -L "$full" ]; then
-            warn "  Removing stale symlink: ~/$target"
-            rm "$full"
-        elif [ -d "$full" ]; then
-            # Remove stale symlinks inside the directory, then remove if empty
-            find "$full" -type l | while read -r link; do
-                link_dest="$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$link" 2>/dev/null || echo "")"
-                case "$link_dest" in
-                    "$DOTS_DIR/"*) ;;
-                    *) warn "  Removing stale symlink: $link"
-                       rm "$link" ;;
-                esac
-            done
-            # Remove empty parent dirs up to $HOME so stow can tree-fold
-            find "$full" -depth -type d -empty -delete 2>/dev/null
-            if [ ! -d "$full" ]; then
-                warn "  Removed empty dir: ~/$target"
-            fi
-        fi
-    done
-done
-
-# Stow each package
-info "Stowing packages..."
-for pkg in "${packages[@]}"; do
-    info "  Stowing $pkg"
-    stow -d "$DOTS_DIR" -t "$HOME" --restow "$pkg"
-done
+info "Applying portable dotfiles with chezmoi..."
+if ! "$DOTS_DIR/scripts/dotfiles-state" apply "${apply_args[@]}"; then
+    warn "Existing Stow-owned targets require reviewed adoption."
+    warn "Run: $DOTS_DIR/scripts/dotfiles-state preview"
+    warn "Then, after reviewing the diff: $DOTS_DIR/scripts/dotfiles-state adopt --yes"
+    exit 1
+fi
 
 # --- Tmux plugins (after stow so tmux.conf is in place) ---
 if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
@@ -327,9 +315,21 @@ if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
     "$HOME/.tmux/plugins/tpm/bin/install_plugins"
 fi
 
+if install_any_group_selected codex claude; then
+    info "Enabling tmux agent sidebar integrations..."
+    integration_groups=()
+    for group in codex claude; do
+        install_group_selected "$group" && integration_groups+=("$group")
+    done
+    info "Initializing portable mixed-config baselines..."
+    for group in "${integration_groups[@]}"; do
+        "$DOTS_DIR/scripts/dotfiles-state" baseline "$group"
+    done
+    if command -v lefthook &>/dev/null; then
+        lefthook install
+    fi
+fi
+
 # --- Summary ---
 echo ""
-ok "Done! Stowed ${#packages[@]} packages:"
-for pkg in "${packages[@]}"; do
-    echo "  - $pkg"
-done
+ok "Done! Portable dotfiles are managed by chezmoi."

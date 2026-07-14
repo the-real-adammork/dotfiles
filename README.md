@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal configuration files and system setup.
+Portable personal configuration and system setup, rendered with chezmoi while preserving machine-local and account-local state.
 
 ## Quick Start
 
@@ -16,52 +16,46 @@ cd ~/dots
 ./install.sh --only tmux,nvim,zsh
 ```
 
-## Manual Stow
+## Preview and Apply
 
 ```bash
-cd ~/dots
-stow tmux      # symlinks tmux config
-stow -D tmux   # removes tmux symlinks
+scripts/dotfiles-state validate
+scripts/dotfiles-state preview
+scripts/dotfiles-state apply --only tmux
 ```
 
 ## Structure
 
-Each top-level directory is a stow package mirroring `~`:
+Portable source lives under `chezmoi/`. Logical groups and platform constraints are declared in `config/managed-targets.toml`; physical source layout is no longer the `--only` interface.
 
-| Package     | Config files                  |
-|-------------|-------------------------------|
-| act         | `.actrc`                      |
-| alacritty   | `.alacritty.yml`              |
-| bash        | `.bash_profile`               |
-| claude      | `.claude/{settings,hooks,commands,skills,agents}` |
-| codex       | `.codex/{config.toml,AGENTS.md,hooks,rules,skills}` |
-| coc         | `.config/coc/memos.json`      |
-| gh          | `.config/gh/{config,hosts}.yml` |
-| git         | `.gitconfig`, `.config/git/ignore` |
-| lvim        | `.config/lvim/{config.lua,ftplugin/}` |
-| nvim        | `.config/nvim/init.vim`       |
-| ranger      | `.config/ranger/rc.conf`      |
-| scm_breeze  | `.scmbrc`                     |
-| tig         | `.tigrc`                      |
-| tmux        | `.tmux.conf`                  |
-| vim         | `.vimrc`                      |
-| yarn        | `.yarnrc`                     |
-| zsh         | `.zshrc`, `.zshenv`, `.zprofile`, `.p10k.zsh` |
+Codex and Claude settings are mixed files. Tracked overlays contain portable choices; modifiers preserve project trust, hook trust, app metadata, marketplace revisions, and other declared local state. Authentication files are unmanaged.
 
-## Single Package on Another Machine
+## Existing-machine Adoption
 
-To sync just one package (e.g., claude) to another computer without running the full install:
+Legacy Stow symlinks are never overwritten by an ordinary apply. Review the complete dry run, then explicitly adopt:
 
 ```bash
-git clone git@github.com:<username>/dotfiles.git ~/dots
-cd ~/dots
-stow claude
+scripts/dotfiles-state preview
+scripts/dotfiles-state adopt --yes
 ```
 
-The only dependency is `stow` (`brew install stow` / `apt install stow` / `dnf install stow`).
+For a bounded migration, preview and adopt the same logical groups:
+
+```bash
+scripts/dotfiles-state preview --only zsh,git
+scripts/dotfiles-state adopt --only zsh,git --yes
+```
+
+Private backups and transaction checkpoints are stored under `${XDG_STATE_HOME:-$HOME/.local/state}/dots`. Restore the latest adoption backup with `scripts/dotfiles-state rollback`.
+
+## Capturing and Checking Drift
+
+After a verified apply/adoption, initialize semantic baselines with `scripts/dotfiles-state baseline`. Review a live portable change with `scripts/dotfiles-state capture codex` (or `claude`), then persist it with `--write` and stage the resulting portable overlay. Run `scripts/dotfiles-state drift` manually; Lefthook runs `scripts/dotfiles-state drift --staged` before commits. Portable changes must be represented by staged source, while declared local-only drift is allowed.
 
 ## Adding a New Package
 
-1. Create a directory: `mkdir -p newpkg/.config/newpkg`
-2. Add config files mirroring their home directory path
-3. Run `stow newpkg` or re-run `./install.sh`
+1. Add the formula/cask to the appropriate Brewfile when the config references a new binary.
+2. Add the target under `chezmoi/` using chezmoi source-state naming.
+3. Declare its logical group and platform in `config/managed-targets.toml`.
+4. Add a semantic policy before managing any application-mutated file.
+5. Run `tests/portability/run.sh` and re-run `./install.sh`.

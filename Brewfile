@@ -5,11 +5,13 @@
 # Load-bearing for dotfiles
 # -----------------------------------------------------------------------------
 brew "stow"
+brew "chezmoi"
 brew "tmux"
 brew "neovim"
 brew "tig"
 brew "ranger"
 brew "yazi"
+brew "herdr"
 brew "ripgrep"
 brew "bat"
 brew "eza"

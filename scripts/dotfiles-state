@@ -1,0 +1,901 @@
+#!/usr/bin/env python3
+"""Transactional chezmoi adoption and semantic mixed-config drift checks."""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+import tomllib
+
+REPO = Path(__file__).resolve().parent.parent
+SOURCE = REPO / "chezmoi"
+MANIFEST = REPO / "config/managed-targets.toml"
+STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "dots"
+SENSITIVE_NAME = re.compile(r"(^|[_-])(token|secret|password|credential|oauth|private[_-]?key|authorization)($|[_-])", re.I)
+SENSITIVE_VALUE_PATTERNS = (
+    re.compile(r"\b[a-z][a-z0-9+.-]*://[^\s/:@]+:[^\s/@]+@", re.I),
+    re.compile(
+        r"\b[a-z][a-z0-9+.-]*://[^\s?#]+[^\s#]*[?&]"
+        r"(?:access[_-]?token|api[_-]?key|token|secret|password|credential)=[^\s&#]+",
+        re.I,
+    ),
+    re.compile(r"\bauthorization\s*[:=]\s*(?:bearer|basic)\s+\S+", re.I),
+    re.compile(r"^\s*(?:bearer|basic)\s+\S+\s*$", re.I),
+    re.compile(
+        r"(?:^|\s)--?(?:access[-_]?token|api[-_]?key|token|secret|password|passwd|credential)"
+        r"(?:=|\s+)\S+",
+        re.I,
+    ),
+)
+
+
+class DotfilesError(RuntimeError):
+    pass
+
+
+def tool_env(home: Path | None = None) -> dict[str, str]:
+    env = {**os.environ, "DOTFILES_REPO": str(REPO)}
+    hook = (home or Path.home()) / ".tmux/plugins/tmux-agent-sidebar/hook.sh"
+    env["DOTFILES_SIDEBAR_ENABLED"] = "1" if os.access(hook, os.X_OK) else "0"
+    return env
+
+
+def run(
+    args: list[str],
+    *,
+    input_text: str | None = None,
+    check: bool = True,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        args,
+        input=input_text,
+        text=True,
+        capture_output=True,
+        check=check,
+        env=env or tool_env(),
+    )
+
+
+def load_policy(name: str) -> dict:
+    with (REPO / "config/policies" / f"{name}.toml").open("rb") as fh:
+        return tomllib.load(fh)
+
+
+def parse_document(text: str, fmt: str) -> dict:
+    if not text.strip():
+        return {}
+    if fmt == "json":
+        value = json.loads(text)
+    else:
+        value = json.loads(run(["yq", "-p=toml", "-o=json", "."], input_text=text).stdout)
+    if not isinstance(value, dict):
+        raise DotfilesError("mixed configuration root must be a map")
+    return value
+
+
+def dump_document(value: dict, fmt: str) -> str:
+    encoded = json.dumps(value, indent=2, sort_keys=False) + "\n"
+    if fmt == "json":
+        return encoded
+    return run(["yq", "-p=json", "-o=toml", "."], input_text=encoded).stdout
+
+
+def staged_file(path: Path) -> str:
+    rel = path.relative_to(REPO).as_posix()
+    proc = run(["/usr/bin/git", "show", f":{rel}"], check=False)
+    if proc.returncode != 0:
+        raise DotfilesError(f"staged portable source missing: {rel}")
+    return proc.stdout
+
+
+def codex_resources() -> dict[str, str]:
+    override = os.environ.get("DOTFILES_CODEX_RESOURCES")
+    candidates = [override] if override else []
+    candidates += [
+        "/Applications/Codex.app/Contents/Resources",
+        "/Applications/ChatGPT.app/Contents/Resources",
+    ]
+    for candidate in filter(None, candidates):
+        root = Path(candidate)
+        cua = root / "cua_node"
+        if (cua / "bin/node_repl").is_file() and (cua / "bin/node").is_file() and (cua / "lib/node_modules").is_dir():
+            return {
+                "__CODEX_NODE_REPL__": str(cua / "bin/node_repl"),
+                "__CODEX_NODE__": str(cua / "bin/node"),
+                "__CODEX_NODE_MODULES__": str(cua / "lib/node_modules"),
+                "__CODEX_CLI__": str(root / "codex"),
+            }
+        if (root / "node_repl").is_file() and (root / "node").is_file():
+            return {
+                "__CODEX_NODE_REPL__": str(root / "node_repl"),
+                "__CODEX_NODE__": str(root / "node"),
+                "__CODEX_NODE_MODULES__": "",
+                "__CODEX_CLI__": str(root / "codex"),
+            }
+    raise DotfilesError("no complete Codex/ChatGPT node_repl resource layout found")
+
+
+def replace_tokens(value, *, reverse: bool = False):
+    home = str(Path.home())
+    resources = codex_resources() if not reverse and "__CODEX_" in json.dumps(value) else {}
+    if isinstance(value, dict):
+        return {key: replace_tokens(item, reverse=reverse) for key, item in value.items()}
+    if isinstance(value, list):
+        return [replace_tokens(item, reverse=reverse) for item in value]
+    if isinstance(value, str):
+        if reverse:
+            value = value.replace(home, "__HOME__")
+            try:
+                for token, rendered in codex_resources().items():
+                    value = value.replace(rendered, token)
+            except DotfilesError:
+                pass
+        else:
+            value = value.replace("__HOME__", home)
+            for token, replacement in resources.items():
+                value = value.replace(token, replacement)
+    return value
+
+
+def path_matches(path: tuple[str, ...], declared: list[tuple[str, ...]]) -> bool:
+    return any(path[: len(item)] == item for item in declared)
+
+
+def sensitive_scan(value, safe: set[str], path: tuple[str, ...] = ()) -> None:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            key_text = str(key)
+            if SENSITIVE_NAME.search(key_text) and key_text not in safe and not key_text.endswith("_env_var"):
+                raise DotfilesError(f"sensitive-looking field rejected at {'.'.join(path + (key_text,))}")
+            sensitive_scan(item, safe, path + (key_text,))
+    elif isinstance(value, list):
+        for item in value:
+            sensitive_scan(item, safe, path)
+    elif isinstance(value, str):
+        if any(pattern.search(value) for pattern in SENSITIVE_VALUE_PATTERNS):
+            location = ".".join(path) or "<root>"
+            raise DotfilesError(f"credential-bearing value rejected at {location}")
+
+
+def validate_shape(live, portable, local_paths: list[tuple[str, ...]], path: tuple[str, ...]) -> None:
+    if path_matches(path, local_paths):
+        return
+    if isinstance(live, dict) and isinstance(portable, dict):
+        for key, item in live.items():
+            child = path + (str(key),)
+            if key not in portable and not path_matches(child, local_paths):
+                raise DotfilesError(f"unknown field inside portable namespace: {'.'.join(child)}")
+            if key in portable:
+                validate_shape(item, portable[key], local_paths, child)
+
+
+def overlay(live, portable, local_paths: list[tuple[str, ...]], path: tuple[str, ...] = ()):
+    if path_matches(path, local_paths):
+        return copy.deepcopy(live)
+    if isinstance(portable, dict):
+        result = copy.deepcopy(live) if isinstance(live, dict) else {}
+        for key, item in portable.items():
+            result[key] = overlay(result.get(key), item, local_paths, path + (str(key),))
+        return result
+    return copy.deepcopy(portable)
+
+
+def project_live(live, portable, local_paths: list[tuple[str, ...]], path: tuple[str, ...] = ()):
+    if path_matches(path, local_paths):
+        return None
+    if isinstance(portable, dict):
+        result = {}
+        source = live if isinstance(live, dict) else {}
+        for key, shape in portable.items():
+            child_path = path + (str(key),)
+            if key in source and not path_matches(child_path, local_paths):
+                result[key] = project_live(source[key], shape, local_paths, child_path)
+        return result
+    return copy.deepcopy(live)
+
+
+def portable_source(name: str, *, staged: bool = False) -> tuple[dict, dict]:
+    policy = load_policy(name)
+    path = REPO / policy["portable_file"]
+    text = staged_file(path) if staged else path.read_text()
+    portable = replace_tokens(parse_document(text, policy["format"]))
+    return policy, portable
+
+
+def merge_config(name: str, live: dict, *, staged: bool = False) -> tuple[dict, dict]:
+    policy, portable = portable_source(name, staged=staged)
+    roots = set(policy["portable_roots"])
+    local_roots = set(policy.get("local_roots", []))
+    local_paths = [tuple(item.split(".")) for item in policy.get("local_paths", [])]
+    safe = set(policy.get("safe_sensitive_keys", []))
+    sensitive_scan(live, safe)
+    for root in roots:
+        if root in live and root in portable:
+            validate_shape(live[root], portable[root], local_paths, (root,))
+    for root in live:
+        if root not in roots and root not in local_roots:
+            print(f"warning: preserving unclassified local root: {root}", file=sys.stderr)
+    merged = copy.deepcopy(live)
+    for root in roots:
+        if root in portable:
+            merged[root] = overlay(live.get(root), portable[root], local_paths, (root,))
+    projection = {
+        root: project_live(live[root], portable[root], local_paths, (root,))
+        for root in policy["portable_roots"]
+        if root in live and root in portable
+    }
+    return merged, projection
+
+
+def candidate_projection(name: str, *, staged: bool) -> dict:
+    policy, portable = portable_source(name, staged=staged)
+    return {root: portable[root] for root in policy["portable_roots"] if root in portable}
+
+
+def target_for(name: str) -> Path:
+    return Path.home() / (".codex/config.toml" if name == "codex" else ".claude/settings.json")
+
+
+def ensure_private_state() -> None:
+    STATE.mkdir(parents=True, exist_ok=True)
+    STATE.chmod(0o700)
+    (STATE / "baselines").mkdir(exist_ok=True)
+    (STATE / "backups").mkdir(exist_ok=True)
+
+
+def write_private(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+    path.chmod(0o600)
+
+
+def cmd_merge(args) -> int:
+    policy = load_policy(args.name)
+    live = parse_document(sys.stdin.read(), policy["format"])
+    merged, _ = merge_config(args.name, live)
+    sys.stdout.write(dump_document(merged, policy["format"]))
+    return 0
+
+
+def cmd_validate(_args) -> int:
+    with MANIFEST.open("rb") as fh:
+        manifest = tomllib.load(fh)
+    paths: set[str] = set()
+    for entry in manifest.get("targets", []):
+        path = entry["path"].strip("/")
+        if path in paths:
+            raise DotfilesError(f"duplicate target ownership: {path}")
+        if entry.get("owner") != "chezmoi":
+            raise DotfilesError(f"unsupported desired owner for {path}")
+        paths.add(path)
+    unmanaged = {item["path"].strip("/") for item in manifest.get("unmanaged", [])}
+    if paths & unmanaged:
+        raise DotfilesError(f"managed/unmanaged overlap: {sorted(paths & unmanaged)}")
+    proc = run(
+        [
+            "chezmoi",
+            "--source",
+            str(SOURCE),
+            "--destination",
+            str(Path.home()),
+            "managed",
+            "--include",
+            "files,symlinks",
+            "--path-style",
+            "absolute",
+        ],
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise DotfilesError(proc.stderr.strip() or "chezmoi source validation failed")
+    # Chezmoi reports destination paths, so validate them lexically. Resolving
+    # a live path would follow a legacy Stow symlink into this repository and
+    # incorrectly reject the exact state that the adoption workflow supports.
+    home = Path(os.path.abspath(os.path.normpath(Path.home())))
+    unmanaged_paths = [home / item for item in unmanaged]
+    declared_roots = [home / item for item in sorted(paths)]
+    managed_paths: list[Path] = []
+    for raw in proc.stdout.splitlines():
+        managed_path = Path(os.path.abspath(os.path.normpath(raw)))
+        try:
+            managed_path.relative_to(home)
+        except ValueError as exc:
+            raise DotfilesError(f"chezmoi reported managed path outside home: {managed_path}") from exc
+        if any(managed_path == item or item in managed_path.parents for item in unmanaged_paths):
+            raise DotfilesError(f"chezmoi source overlaps unmanaged target: {managed_path.relative_to(home)}")
+        matches = [root for root in declared_roots if managed_path == root or root in managed_path.parents]
+        if not matches:
+            raise DotfilesError(
+                f"chezmoi-managed path has no manifest owner: {managed_path.relative_to(home)}"
+            )
+        if len(matches) > 1:
+            owners = ", ".join(str(item.relative_to(home)) for item in matches)
+            raise DotfilesError(
+                f"chezmoi-managed path has ambiguous manifest owners: "
+                f"{managed_path.relative_to(home)} ({owners})"
+            )
+        managed_paths.append(managed_path)
+    current = "darwin" if platform.system() == "Darwin" else "linux"
+    applicable_roots = [
+        home / item["path"].strip("/")
+        for item in manifest.get("targets", [])
+        if item.get("platform", "any") in ("any", current)
+    ]
+    empty_roots = [
+        root.relative_to(home)
+        for root in applicable_roots
+        if not any(path == root or root in path.parents for path in managed_paths)
+    ]
+    if empty_roots:
+        raise DotfilesError(
+            "manifest target has no chezmoi-managed source: "
+            + ", ".join(str(item) for item in empty_roots)
+        )
+    print(f"manifest valid: {len(paths)} managed entries, {len(unmanaged)} unmanaged entries")
+    return 0
+
+
+def cmd_baseline(args) -> int:
+    ensure_private_state()
+    names = [args.name] if args.name else ["codex", "claude"]
+    for name in names:
+        target = target_for(name)
+        if not target.exists():
+            continue
+        policy = load_policy(name)
+        live = parse_document(target.read_text(), policy["format"])
+        _, projection = merge_config(name, live)
+        write_private(STATE / "baselines" / f"{name}.json", json.dumps(projection, sort_keys=True) + "\n")
+        print(f"baseline initialized: {name}")
+    return 0
+
+
+def cmd_drift(args) -> int:
+    failed = False
+    if not verify_chezmoi_state(staged=args.staged):
+        print("error: uncaptured drift in chezmoi-managed targets", file=sys.stderr)
+        failed = True
+    for name in ("codex", "claude"):
+        target = target_for(name)
+        if not target.exists():
+            continue
+        baseline_path = STATE / "baselines" / f"{name}.json"
+        if not baseline_path.exists():
+            print(f"error: no baseline for {name}; run dotfiles-state baseline {name}", file=sys.stderr)
+            failed = True
+            continue
+        policy = load_policy(name)
+        live = parse_document(target.read_text(), policy["format"])
+        _, live_projection = merge_config(name, live)
+        candidate = candidate_projection(name, staged=args.staged)
+        baseline = json.loads(baseline_path.read_text())
+        if live_projection == baseline or live_projection == candidate:
+            print(f"drift clean: {name}")
+        else:
+            print(f"error: uncaptured portable drift: {name}", file=sys.stderr)
+            failed = True
+    return 1 if failed else 0
+
+
+def staged_candidate_repo(root: Path) -> Path:
+    """Build a private source tree strictly from the Git index."""
+    scope = ["chezmoi", "config", "scripts"]
+    untracked = run(["/usr/bin/git", "ls-files", "--others", "--exclude-standard", "--", *scope])
+    if untracked.stdout.splitlines():
+        listed = ", ".join(untracked.stdout.splitlines()[:5])
+        suffix = " ..." if len(untracked.stdout.splitlines()) > 5 else ""
+        raise DotfilesError(
+            f"untracked dotfiles source must be staged before drift checking: {listed}{suffix}"
+        )
+    indexed = run(["/usr/bin/git", "ls-files", "--cached", "--", *scope])
+    indexed_paths = set(indexed.stdout.splitlines())
+
+    for rel in indexed_paths:
+        blob = subprocess.run(
+            ["/usr/bin/git", "show", f":{rel}"],
+            cwd=REPO,
+            capture_output=True,
+            check=True,
+            env=tool_env(),
+        ).stdout
+        candidate = root / rel
+        candidate.parent.mkdir(parents=True, exist_ok=True)
+        candidate.write_bytes(blob)
+        mode = run(["/usr/bin/git", "ls-files", "-s", "--", rel]).stdout.split(maxsplit=1)[0]
+        candidate.chmod(0o755 if mode == "100755" else 0o644)
+    return root
+
+
+def verify_chezmoi_state(*, staged: bool) -> bool:
+    """Compare managed leaves without treating mixed-dir runtime state as drift."""
+    home = Path.home()
+    if not staged:
+        managed = subprocess.run(
+            chezmoi_args(home, "managed", "--path-style", "absolute"),
+            text=True,
+            capture_output=True,
+            env=tool_env(),
+        )
+        if managed.returncode != 0:
+            return False
+        semantic_targets = {target_for("codex"), target_for("claude")}
+        leaves = [
+            raw
+            for raw in managed.stdout.splitlines()
+            if Path(raw) not in semantic_targets and not Path(raw).is_dir()
+        ]
+        proc = subprocess.run(
+            chezmoi_args(home, "verify", *leaves),
+            text=True,
+            capture_output=True,
+            env=tool_env(),
+        )
+        return proc.returncode == 0
+
+    with tempfile.TemporaryDirectory(prefix="dots-staged-") as temporary:
+        candidate_repo = staged_candidate_repo(Path(temporary))
+        env = {**tool_env(), "DOTFILES_REPO": str(candidate_repo)}
+        proc = subprocess.run(
+            [
+                "chezmoi",
+                "--source",
+                str(candidate_repo / "chezmoi"),
+                "--destination",
+                str(home),
+                "status",
+                "--path-style",
+                "absolute",
+            ],
+            text=True,
+            capture_output=True,
+            env=env,
+        )
+        if proc.returncode != 0:
+            return False
+        changed = [line[3:] for line in proc.stdout.splitlines() if len(line) > 3]
+        for raw_target in changed:
+            target = Path(raw_target)
+            if target.is_dir():
+                continue
+            rendered = subprocess.run(
+                [
+                    "chezmoi",
+                    "--source",
+                    str(candidate_repo / "chezmoi"),
+                    "--destination",
+                    str(home),
+                    "cat",
+                    str(target),
+                ],
+                capture_output=True,
+                env=env,
+            )
+            if rendered.returncode != 0 or not target.is_file():
+                return False
+            candidate_source = str(candidate_repo / "chezmoi").encode()
+            normalized = rendered.stdout.replace(candidate_source, str(SOURCE).encode())
+            if candidate_source not in rendered.stdout or normalized != target.read_bytes():
+                return False
+            working = subprocess.run(
+                chezmoi_args(home, "verify", str(target)),
+                text=True,
+                capture_output=True,
+                env=tool_env(),
+            )
+            if working.returncode != 0:
+                return False
+        return True
+
+
+def cmd_capture(args) -> int:
+    target = target_for(args.name)
+    if not target.exists():
+        raise DotfilesError(f"live target missing: {target}")
+    policy = load_policy(args.name)
+    live = parse_document(target.read_text(), policy["format"])
+    _, projection = merge_config(args.name, live)
+    destination = REPO / policy["portable_file"]
+    if not args.write:
+        print(f"capture preview valid: {args.name}; rerun with --write to update {destination.relative_to(REPO)}")
+        return 0
+    destination.write_text(dump_document(replace_tokens(projection, reverse=True), policy["format"]))
+    print(f"captured portable projection: {destination.relative_to(REPO)}")
+    return 0
+
+
+def chezmoi_args(home: Path, *rest: str) -> list[str]:
+    return ["chezmoi", "--source", str(SOURCE), "--destination", str(home), *rest]
+
+
+def managed_in_scope(home: Path, selected_roots: list[Path]) -> list[Path]:
+    managed = run(
+        chezmoi_args(home, "managed", "--path-style", "absolute"),
+        env=tool_env(home),
+    ).stdout.splitlines()
+    return [
+        Path(raw)
+        for raw in managed
+        if any(Path(raw) == root or root in Path(raw).parents for root in selected_roots)
+    ]
+
+
+def remove_node(path: Path) -> None:
+    if path.is_symlink() or (path.exists() and not path.is_dir()):
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
+
+
+def selected_targets(groups: str | None) -> list[str]:
+    with MANIFEST.open("rb") as fh:
+        manifest = tomllib.load(fh)
+    selected = {item.strip() for item in groups.split(",")} if groups else None
+    current = "darwin" if platform.system() == "Darwin" else "linux"
+    known = {item["group"] for item in manifest["targets"]}
+    if selected:
+        unknown = selected - known
+        if unknown:
+            raise DotfilesError(f"unknown logical group(s): {', '.join(sorted(unknown))}")
+    targets = [
+        item["path"]
+        for item in manifest["targets"]
+        if (not selected or item["group"] in selected)
+        and item.get("platform", "any") in ("any", current)
+    ]
+    if selected and not targets:
+        raise DotfilesError(
+            f"selected logical group(s) are unavailable on {current}: {', '.join(sorted(selected))}"
+        )
+    return targets
+
+
+def declared_unmanaged_targets() -> list[Path]:
+    with MANIFEST.open("rb") as fh:
+        manifest = tomllib.load(fh)
+    return [Path(item["path"].strip("/")) for item in manifest.get("unmanaged", [])]
+
+
+def cmd_apply(args) -> int:
+    home = Path(args.home).expanduser().resolve() if args.home else Path.home()
+    targets = selected_targets(args.only)
+    selected_roots = [home / rel for rel in targets]
+    adoption_candidates = list(dict.fromkeys(selected_roots + managed_in_scope(home, selected_roots)))
+    for target in adoption_candidates:
+        if target.is_symlink():
+            resolved = target.resolve()
+            if resolved == REPO or REPO in resolved.parents:
+                raise DotfilesError(
+                    f"legacy Stow target requires reviewed adoption: {target}; "
+                    "run preview, then dotfiles-state adopt --yes"
+                )
+    absolute_targets = [str(home / item) for item in targets]
+    for target in absolute_targets:
+        Path(target).parent.mkdir(parents=True, exist_ok=True)
+    proc = subprocess.run(
+        chezmoi_args(home, "apply", "--force", *absolute_targets),
+        text=True,
+        env=tool_env(home),
+    )
+    return proc.returncode
+
+
+def cmd_preview(args) -> int:
+    home = Path(args.home).expanduser().resolve() if args.home else Path.home()
+    targets = [str(home / item) for item in selected_targets(args.only)]
+    proc = subprocess.run(
+        chezmoi_args(home, "apply", "--dry-run", "--verbose", *targets),
+        text=True,
+        env=tool_env(home),
+    )
+    return proc.returncode
+
+
+def cmd_adopt(args) -> int:
+    home = Path(args.home).expanduser().resolve() if args.home else Path.home()
+    if not args.yes:
+        raise DotfilesError("adoption requires --yes after reviewing preview and backup location")
+    selected = selected_targets(args.only)
+    ensure_private_state()
+    stamp = subprocess.check_output(["date", "+%Y%m%d-%H%M%S"], text=True).strip() + f"-{os.getpid()}"
+    backup = STATE / "backups" / stamp
+    backup.mkdir(parents=True, mode=0o700)
+    checkpoint = STATE / "adoption.json"
+    selected_roots = [home / item for item in selected]
+    for target in selected_roots:
+        target.parent.mkdir(parents=True, exist_ok=True)
+    folded_directories: list[dict[str, str]] = []
+    unmanaged_targets = declared_unmanaged_targets()
+    for target in selected_roots:
+        if not target.is_symlink():
+            continue
+        referent = target.resolve(strict=False)
+        if not referent.is_dir():
+            continue
+        rel = target.relative_to(home)
+        unmanaged_descendants: list[str] = []
+        for unmanaged in unmanaged_targets:
+            try:
+                unmanaged_descendants.append(unmanaged.relative_to(rel).as_posix())
+            except ValueError:
+                continue
+        folded_directories.append(
+            {
+                "target": rel.as_posix(),
+                "link": os.readlink(target),
+                "referent": str(referent),
+                "unmanaged": unmanaged_descendants,
+            }
+        )
+    managed = managed_in_scope(home, selected_roots)
+    original_nodes: list[dict[str, str]] = []
+    for target in managed:
+        rel = target.relative_to(home).as_posix()
+        if target.is_symlink():
+            original_nodes.append({"path": rel, "type": "symlink", "link": os.readlink(target)})
+        elif target.is_file():
+            original_nodes.append({"path": rel, "type": "file"})
+        elif target.is_dir():
+            original_nodes.append({"path": rel, "type": "directory"})
+        elif target.exists():
+            raise DotfilesError(f"unsupported existing target type: {target}")
+        else:
+            original_nodes.append({"path": rel, "type": "missing"})
+    hashes: dict[str, str] = {}
+    unmanaged_relpaths = {path.as_posix() for path in declared_unmanaged_targets()}
+    for target in managed:
+        if any(
+            target == home / item["target"] or home / item["target"] in target.parents
+            for item in folded_directories
+        ):
+            continue
+        if not target.exists() and not target.is_symlink():
+            continue
+        rel = target.relative_to(home)
+        if rel.as_posix() in unmanaged_relpaths:
+            continue
+        if target.is_symlink() and target.resolve().is_dir():
+            continue
+        if target.is_file() and not target.is_symlink():
+            data = target.read_bytes()
+            hashes[str(target)] = hashlib.sha256(data).hexdigest()
+            dest = backup / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(data)
+            dest.chmod(0o600)
+    checkpoint_data = {
+        "status": "backed_up",
+        "backup": str(backup),
+        "home": str(home),
+        "groups": sorted({item.strip() for item in args.only.split(",")}) if args.only else ["all"],
+        "folded_directories": folded_directories,
+        "original_nodes": original_nodes,
+    }
+    write_private(checkpoint, json.dumps(checkpoint_data) + "\n")
+
+    materialized: list[dict[str, str]] = []
+    try:
+        for item in folded_directories:
+            target = home / item["target"]
+            target.unlink()
+            referent = Path(item["referent"])
+            unmanaged = {Path(path) for path in item.get("unmanaged", [])}
+
+            def ignore_unmanaged(directory: str, names: list[str]) -> set[str]:
+                base = Path(directory).relative_to(referent)
+                return {name for name in names if base / name in unmanaged}
+
+            # Copy portable/runtime state, but never read or copy declared
+            # credentials. Move those exact nodes into the live tree instead.
+            shutil.copytree(referent, target, symlinks=True, ignore=ignore_unmanaged)
+            for relative in unmanaged:
+                source = referent / relative
+                destination = target / relative
+                if source.exists() or source.is_symlink():
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    source.rename(destination)
+            materialized.append(item)
+    except OSError as exc:
+        for item in reversed(materialized):
+            target = home / item["target"]
+            referent = Path(item["referent"])
+            for relative_text in item.get("unmanaged", []):
+                relative = Path(relative_text)
+                source = target / relative
+                destination = referent / relative
+                if source.exists() or source.is_symlink():
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    source.rename(destination)
+            remove_node(target)
+            os.symlink(item["link"], target, target_is_directory=True)
+        checkpoint_data["status"] = "failed"
+        write_private(checkpoint, json.dumps(checkpoint_data) + "\n")
+        raise DotfilesError(f"failed to materialize folded directory: {exc}") from exc
+
+    gate_value = os.environ.get("DOTFILES_TEST_CONCURRENT_GATE")
+    if gate_value:
+        gate = Path(gate_value)
+        gate.with_suffix(".ready").touch()
+        for _ in range(100):
+            if gate.with_suffix(".release").exists():
+                break
+            time.sleep(0.05)
+        else:
+            raise DotfilesError("concurrent-write test gate timed out")
+
+    gitconfig = home / ".gitconfig"
+    local_git = home / ".config/git/local"
+    if (home / ".gitconfig") in selected_roots and gitconfig.exists() and not local_git.exists():
+        values = {}
+        for key in ("user.name", "user.email", "user.signingkey", "commit.gpgsign"):
+            proc = run(["/usr/bin/git", "config", "--file", str(gitconfig), "--get", key], check=False)
+            if proc.returncode == 0 and proc.stdout.strip():
+                values[key] = proc.stdout.strip()
+        if values:
+            lines = ["[user]"]
+            for key in ("name", "email", "signingkey"):
+                if f"user.{key}" in values:
+                    lines.append(f"\t{key} = {values[f'user.{key}']}")
+            if "commit.gpgsign" in values and "user.signingkey" in values:
+                lines += ["[commit]", f"\tgpgsign = {values['commit.gpgsign']}"]
+            write_private(local_git, "\n".join(lines) + "\n")
+    for path, digest in hashes.items():
+        if hashlib.sha256(Path(path).read_bytes()).hexdigest() != digest:
+            raise DotfilesError(f"concurrent write detected before apply: {path}")
+    if os.environ.get("DOTFILES_TEST_FAIL_ADOPTION_APPLY") == "1":
+        proc = subprocess.CompletedProcess([], 1)
+    else:
+        proc = subprocess.run(
+            chezmoi_args(home, "apply", "--force", "--verbose", *[str(item) for item in selected_roots]),
+            text=True,
+            env=tool_env(home),
+        )
+    if proc.returncode != 0:
+        try:
+            restore_adoption_state(checkpoint_data, status="failed_rolled_back")
+        except (DotfilesError, OSError) as exc:
+            checkpoint_data["status"] = "failed"
+            write_private(checkpoint, json.dumps(checkpoint_data) + "\n")
+            raise DotfilesError(
+                f"chezmoi apply failed and automatic rollback failed: {exc}; backup retained at {backup}"
+            ) from exc
+        raise DotfilesError(f"chezmoi apply failed; pre-adoption topology restored; backup retained at {backup}")
+    checkpoint_data["status"] = "complete"
+    write_private(checkpoint, json.dumps(checkpoint_data) + "\n")
+    backups = sorted((STATE / "backups").iterdir(), reverse=True)
+    for expired in backups[5:]:
+        shutil.rmtree(expired)
+    print(f"adoption complete; backup: {backup}")
+    if home == Path.home():
+        groups = set(checkpoint_data["groups"])
+        for name in ("codex", "claude"):
+            if "all" in groups or name in groups:
+                cmd_baseline(argparse.Namespace(name=name))
+    return 0
+
+
+def restore_adoption_state(state: dict, *, status: str) -> Path:
+    backup = Path(state["backup"])
+    home = Path(state["home"])
+    if not backup.is_dir():
+        raise DotfilesError("recorded backup is unavailable")
+    folded = state.get("folded_directories", [])
+    folded_targets = [home / item["target"] for item in folded]
+    folded_backups = [backup / item["target"] for item in folded]
+    original_nodes = state.get("original_nodes", [])
+    for item in sorted(original_nodes, key=lambda entry: len(Path(entry["path"]).parts), reverse=True):
+        target = home / item["path"]
+        if any(target == root or root in target.parents for root in folded_targets):
+            continue
+        if item["type"] == "missing":
+            remove_node(target)
+        elif item["type"] == "symlink":
+            remove_node(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.symlink(item["link"], target)
+        elif item["type"] == "directory":
+            if target.exists() and not target.is_dir():
+                remove_node(target)
+            target.mkdir(parents=True, exist_ok=True)
+        elif item["type"] == "file":
+            remove_node(target)
+            source = backup / item["path"]
+            if not source.is_file():
+                raise DotfilesError(f"recorded file backup is unavailable: {item['path']}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    if not original_nodes:
+        for source in backup.rglob("*"):
+            if any(source == root or root in source.parents for root in folded_backups):
+                continue
+            if source.is_file():
+                target = home / source.relative_to(backup)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
+    for item in folded:
+        target = home / item["target"]
+        referent = Path(item["referent"])
+        for relative_text in item.get("unmanaged", []):
+            relative = Path(relative_text)
+            source = target / relative
+            destination = referent / relative
+            if source.exists() or source.is_symlink():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                source.rename(destination)
+        remove_node(target)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        os.symlink(item["link"], target, target_is_directory=True)
+    state["status"] = status
+    write_private(STATE / "adoption.json", json.dumps(state) + "\n")
+    return backup
+
+
+def cmd_rollback(args) -> int:
+    checkpoint = STATE / "adoption.json"
+    if not checkpoint.exists():
+        raise DotfilesError("no adoption checkpoint found")
+    state = json.loads(checkpoint.read_text())
+    backup = restore_adoption_state(state, status="rolled_back")
+    print(f"rollback restored backup: {backup}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    sub = parser.add_subparsers(dest="command", required=True)
+    merge = sub.add_parser("merge-mixed")
+    merge.add_argument("name", choices=["codex", "claude"])
+    merge.set_defaults(func=cmd_merge)
+    validate = sub.add_parser("validate")
+    validate.set_defaults(func=cmd_validate)
+    baseline = sub.add_parser("baseline")
+    baseline.add_argument("name", nargs="?", choices=["codex", "claude"])
+    baseline.set_defaults(func=cmd_baseline)
+    drift = sub.add_parser("drift")
+    drift.add_argument("--staged", action="store_true")
+    drift.set_defaults(func=cmd_drift)
+    preview = sub.add_parser("preview")
+    preview.add_argument("--home")
+    preview.add_argument("--only")
+    preview.set_defaults(func=cmd_preview)
+    adopt = sub.add_parser("adopt")
+    adopt.add_argument("--home")
+    adopt.add_argument("--only")
+    adopt.add_argument("--yes", action="store_true")
+    adopt.set_defaults(func=cmd_adopt)
+    apply_cmd = sub.add_parser("apply")
+    apply_cmd.add_argument("--home")
+    apply_cmd.add_argument("--only")
+    apply_cmd.set_defaults(func=cmd_apply)
+    rollback = sub.add_parser("rollback")
+    rollback.set_defaults(func=cmd_rollback)
+    capture = sub.add_parser("capture")
+    capture.add_argument("name", choices=["codex", "claude"])
+    capture.add_argument("--write", action="store_true")
+    capture.set_defaults(func=cmd_capture)
+    return parser
+
+
+def main() -> int:
+    try:
+        args = build_parser().parse_args()
+        return args.func(args)
+    except (DotfilesError, json.JSONDecodeError, tomllib.TOMLDecodeError, subprocess.CalledProcessError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

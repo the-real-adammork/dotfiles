@@ -8,21 +8,34 @@ When adding a tool or dependency:
 
 - Add the formula/cask to `Brewfile` (or `Brewfile.macos` for macOS-only)
 - If it needs setup beyond brew (e.g. cargo install, git clone), add a step to `install.sh`
-- Config files go in a stow package directory (e.g. `toolname/.config/toolname/`)
+- Portable config source goes under `chezmoi/` using chezmoi source-state names.
+- Mixed application config must have a policy under `config/policies/` and a portable overlay under `config/portable/`.
 
 When removing a tool:
 
 - Remove it from `Brewfile`/`Brewfile.macos` and `install.sh`
-- Remove its stow package directory and any references in other configs (e.g. `.zshrc`)
+- Remove its chezmoi source and any references in other configs (e.g. `.zshrc`).
 
 Dependencies and configs must stay in sync. If a config references a binary, that binary must be tracked in `Brewfile` or `install.sh`.
 
+## Dotfile Ownership
+
+- `chezmoi/` is canonical portable source state.
+- `config/managed-targets.toml` declares every managed or intentionally unmanaged target and its logical `--only` group.
+- Legacy top-level Stow packages are migration-only rollback sources. Do not edit them for new portable changes.
+- Never let Stow and chezmoi actively own the same target. Existing Stow symlinks must pass `scripts/dotfiles-state preview` and explicit transactional adoption before replacement.
+- Machine-local state, backups, checkpoints, and portable baselines live under `${XDG_STATE_HOME:-$HOME/.local/state}/dots`, never in the repository.
+- Authentication targets listed as unmanaged must not be opened, copied, projected, or logged.
+
 ## Repo Structure
 
-- Each top-level directory is a GNU Stow package symlinked into `$HOME`
+- `chezmoi/` - canonical source state rendered into `$HOME`
+- `config/portable/` and `config/policies/` - portable intent and mixed-file ownership rules
+- `scripts/dotfiles-state` - validate, apply, preview, adopt, rollback, baseline, and drift interface
 - `Brewfile` - cross-platform CLI tools
 - `Brewfile.macos` - macOS-only tools and casks
-- `install.sh` - full bootstrap: brew, cargo, stow, and setup steps
+- `install.sh` - full bootstrap: brew, cargo, chezmoi, and setup steps
+- `tests/portability/` - isolated synthetic-home acceptance suite
 - `ITEMS.md` - outstanding TODO items
 
 ## Git

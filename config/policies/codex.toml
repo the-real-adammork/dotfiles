@@ -1,0 +1,20 @@
+schema_version = 1
+format = "toml"
+portable_file = "config/portable/codex.toml"
+portable_roots = [
+  "approval_policy", "sandbox_mode", "web_search", "personality", "model",
+  "model_reasoning_effort", "approvals_reviewer", "model_reasoning_summary",
+  "hide_agent_reasoning", "service_tier", "sandbox_workspace_write", "features",
+  "notice", "plugins", "mcp_servers", "desktop", "marketplaces",
+]
+local_roots = ["projects", "tui", "hooks"]
+local_paths = [
+  "mcp_servers.node_repl.env.NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S",
+  "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_BUILD_FLAVOR",
+  "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_VERSION",
+  "marketplaces.openai-bundled",
+  "marketplaces.openai-primary-runtime",
+  "marketplaces.compound-engineering-plugin.last_updated",
+  "marketplaces.compound-engineering-plugin.last_revision",
+]
+safe_sensitive_keys = ["bearer_token_env_var"]

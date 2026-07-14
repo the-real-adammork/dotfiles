@@ -1,0 +1,128 @@
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+web_search = "live"
+personality = "pragmatic"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+approvals_reviewer = "user"
+model_reasoning_summary = "auto"
+hide_agent_reasoning = false
+service_tier = "default"
+
+[sandbox_workspace_write]
+network_access = true
+
+[features]
+hooks = true
+apps = false
+js_repl = false
+goals = true
+
+[notice]
+hide_full_access_warning = true
+
+[plugins."superpowers@openai-curated"]
+enabled = true
+
+[plugins."compound-engineering@compound-engineering-plugin"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+
+[mcp_servers.linear]
+url = "https://mcp.linear.app/mcp"
+enabled = false
+
+[mcp_servers.railway]
+url = "https://mcp.railway.com"
+enabled = false
+
+[mcp_servers.nxt]
+url = "https://nxt.fly.dev/mcp"
+
+[mcp_servers.serena]
+command = "serena"
+args = ["start-mcp-server", "--context=codex", "--project-from-cwd"]
+enabled = false
+
+[mcp_servers.node_repl]
+args = []
+command = "__CODEX_NODE_REPL__"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "__CODEX_NODE_MODULES__"
+NODE_REPL_NODE_PATH = "__CODEX_NODE__"
+NODE_REPL_TRUSTED_CODE_PATHS = "__HOME__/.codex"
+CODEX_HOME = "__HOME__/.codex"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
+CODEX_CLI_PATH = "__CODEX_CLI__"
+
+[mcp_servers.adobe-illustrator]
+url = "http://localhost:18412/v1/mcp"
+bearer_token_env_var = "ADOBE_ILLUSTRATOR_MCP_BEARER_TOKEN"
+enabled = false
+
+[mcp_servers.XcodeBuildMCP]
+command = "xcodebuildmcp"
+args = ["mcp"]
+
+[mcp_servers.ios-simulator]
+command = "npx"
+args = ["-y", "ios-simulator-mcp@latest"]
+startup_timeout_sec = 60
+tool_timeout_sec = 120
+
+[mcp_servers.ios-simulator.env]
+IOS_SIMULATOR_MCP_IDB_PATH = "__HOME__/.local/bin/idb"
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+
+[desktop]
+ambient-suggestions-enabled = false
+preventSleepWhileRunning = false
+keepRemoteControlAwakeWhilePluggedIn = false
+conversationDetailMode = "STEPS_COMMANDS"
+followUpQueueMode = "queue"
+dock-icon-preference = "codex-system"
+
+[marketplaces.compound-engineering-plugin]
+source_type = "git"
+source = "https://github.com/EveryInc/compound-engineering-plugin.git"

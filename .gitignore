@@ -1,4 +1,3 @@
-gh/.config/gh/hosts.yml
 
 # Local linked worktrees
 .worktrees/
@@ -28,3 +27,4 @@ claude/.claude/shell-snapshots/
 claude/.claude/skills/web-design
 claude/.claude/tasks/
 claude/.claude/image-cache
+gh/.config/gh/hosts.yml

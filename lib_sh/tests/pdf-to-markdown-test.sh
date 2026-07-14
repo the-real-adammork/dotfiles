@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SCRIPT="$REPO_DIR/lib_sh/lib_sh/pdf-to-markdown"
+SCRIPT="${PDF_TO_MARKDOWN_SCRIPT:-$REPO_DIR/lib_sh/lib_sh/pdf-to-markdown}"
 
 fail() {
     printf 'not ok - %s\n' "$1" >&2

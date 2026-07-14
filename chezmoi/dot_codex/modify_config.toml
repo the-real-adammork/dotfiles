@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+repo="${DOTFILES_REPO:-}"
+if [[ -z "$repo" ]]; then
+  source_dir="$(chezmoi source-path)"
+  [[ -x "$source_dir/../scripts/dotfiles-state" ]] && repo="$source_dir/.."
+  [[ -x "$source_dir/scripts/dotfiles-state" ]] && repo="$source_dir"
+fi
+exec python3 "$repo/scripts/dotfiles-state" merge-mixed codex
