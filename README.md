@@ -10,6 +10,10 @@ cd ~/dots
 ./install.sh
 ```
 
+On macOS, the bootstrap may request an administrator password to select the
+full Xcode installation and complete its first-launch setup. This accepts the
+Xcode license and installs required components automatically.
+
 This installs the required day-one macOS apps and development tools. Install the
 nonessential creative, media, utility, and App Store apps later with:
 

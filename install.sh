@@ -57,6 +57,22 @@ if command -v brew &>/dev/null; then
         brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp
         info "Installing macOS tools from Brewfile.macos..."
         brew bundle --file="$DOTS_DIR/Brewfile.macos"
+
+        # Select the full Xcode installation and complete its one-time setup.
+        # -runFirstLaunch accepts the license and installs required components.
+        XCODE_DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+        if [[ -d "$XCODE_DEVELOPER_DIR" ]]; then
+            if [[ "$(/usr/bin/xcode-select -p 2>/dev/null || true)" != "$XCODE_DEVELOPER_DIR" ]]; then
+                info "Selecting Xcode developer tools..."
+                sudo /usr/bin/xcode-select --switch "$XCODE_DEVELOPER_DIR"
+            fi
+            if ! /usr/bin/xcodebuild -checkFirstLaunchStatus &>/dev/null; then
+                info "Accepting the Xcode license and installing first-launch components..."
+                sudo /usr/bin/xcodebuild -runFirstLaunch
+            else
+                ok "Xcode first-launch setup already complete"
+            fi
+        fi
     fi
     for formula in ffmpeg-full imagemagick-full; do
         if brew list --formula "$formula" &>/dev/null; then

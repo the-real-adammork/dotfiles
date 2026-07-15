@@ -253,6 +253,13 @@ macos_bundle_line="$(rg -n -F -m1 'brew bundle --file="$DOTS_DIR/Brewfile.macos"
   echo "XcodeBuildMCP tap must be trusted before the macOS Brewfile is loaded" >&2
   exit 1
 }
+xcode_select_line="$(rg -n -F -m1 'sudo /usr/bin/xcode-select --switch "$XCODE_DEVELOPER_DIR"' "$REPO/install.sh" | cut -d: -f1)"
+xcode_first_launch_line="$(rg -n -F -m1 'sudo /usr/bin/xcodebuild -runFirstLaunch' "$REPO/install.sh" | cut -d: -f1)"
+assert_contains "$REPO/install.sh" '/usr/bin/xcodebuild -checkFirstLaunchStatus'
+[[ -n "$xcode_select_line" && -n "$xcode_first_launch_line" && "$macos_bundle_line" -lt "$xcode_select_line" && "$xcode_select_line" -lt "$xcode_first_launch_line" ]] || {
+  echo "Xcode first-launch setup must run after the macOS Brewfile installs Xcode" >&2
+  exit 1
+}
 
 jq -e --arg sidebar "$HOME/.tmux/plugins/tmux-agent-sidebar/hook.sh" '
   (.hooks | keys | sort) == ["PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"] and
