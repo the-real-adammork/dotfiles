@@ -3,6 +3,7 @@ set -euo pipefail
 
 DOTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$DOTS_DIR/scripts/claude-plugins.sh"
+source "$DOTS_DIR/scripts/codex-plugins.sh"
 source "$DOTS_DIR/scripts/install-groups.sh"
 ONLY=""
 
@@ -265,6 +266,11 @@ if install_any_group_selected codex claude; then
     if install_group_selected claude && command -v claude &>/dev/null; then
         info "Reconciling Claude marketplaces and plugins from portable config..."
         reconcile_claude_plugins "$DOTS_DIR/config/portable/claude.json"
+    fi
+
+    if install_group_selected codex && command -v codex &>/dev/null; then
+        info "Reconciling Codex marketplaces and plugins from portable config..."
+        reconcile_codex_plugins "$DOTS_DIR/config/portable/codex-plugins.json"
     fi
 fi
 

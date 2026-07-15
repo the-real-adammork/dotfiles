@@ -14,6 +14,7 @@ local_paths = [
   "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_VERSION",
   "marketplaces.openai-bundled",
   "marketplaces.openai-primary-runtime",
+  "marketplaces.openai-curated",
   "marketplaces.compound-engineering-plugin.last_updated",
   "marketplaces.compound-engineering-plugin.last_revision",
 ]

@@ -1,0 +1,26 @@
+{
+  "marketplaces": {
+    "openai-curated": {
+      "probePlugin": "figma@openai-curated",
+      "bootstrap": {
+        "source": "https://github.com/openai/plugins.git",
+        "path": ".tmp/plugins",
+        "shaPath": ".tmp/plugins.sha",
+        "sparsePaths": [
+          ".agents/plugins",
+          "plugins/figma",
+          "plugins/superpowers"
+        ]
+      }
+    },
+    "compound-engineering-plugin": {
+      "source": "EveryInc/compound-engineering-plugin",
+      "probePlugin": "compound-engineering@compound-engineering-plugin"
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@openai-curated": true,
+    "figma@openai-curated": true,
+    "compound-engineering@compound-engineering-plugin": true
+  }
+}

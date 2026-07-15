@@ -24,6 +24,9 @@ hide_full_access_warning = true
 [plugins."superpowers@openai-curated"]
 enabled = true
 
+[plugins."figma@openai-curated"]
+enabled = true
+
 [plugins."compound-engineering@compound-engineering-plugin"]
 enabled = true
 
