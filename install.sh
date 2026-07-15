@@ -103,12 +103,25 @@ if [[ "$OS" == "Darwin" ]]; then
 fi
 
 # --- Rust (via rustup from Brewfile) ---
+cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+rustup_bin=""
+if command -v brew &>/dev/null && rustup_prefix="$(brew --prefix rustup 2>/dev/null)"; then
+    rustup_bin="$rustup_prefix/bin"
+fi
+export PATH="$cargo_home/bin${rustup_bin:+:$rustup_bin}:$PATH"
 if command -v rustup-init &>/dev/null || command -v rustup &>/dev/null; then
-    if [ ! -f "$HOME/.cargo/env" ]; then
+    if ! command -v cargo &>/dev/null; then
         info "Initializing Rust toolchain..."
-        rustup-init -y --no-modify-path 2>/dev/null || rustup default stable
+        if command -v rustup-init &>/dev/null; then
+            rustup-init -y --no-modify-path
+        else
+            rustup default stable
+        fi
     fi
-    source "$HOME/.cargo/env"
+    if ! command -v cargo &>/dev/null; then
+        echo "Error: Rust initialization did not install cargo in $cargo_home/bin"
+        exit 1
+    fi
     info "Installing tree-sitter CLI via cargo..."
     cargo install tree-sitter-cli
 else
