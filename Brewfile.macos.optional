@@ -18,6 +18,7 @@ cask "switchresx"
 # Media / audio
 cask "ableton-live-suite"
 cask "audacity"
+cask "blackhole-16ch"
 cask "obs"
 cask "optimus-player"
 cask "qbittorrent"

@@ -53,6 +53,8 @@ if command -v brew &>/dev/null; then
     if [[ "$OS" == "Darwin" && -f "$DOTS_DIR/Brewfile.macos" ]]; then
         # Homebrew may require explicit trust for third-party taps before it
         # will load their formulae from a Brewfile.
+        brew tap facebook/fb
+        brew trust --formula facebook/fb/idb-companion
         brew tap getsentry/xcodebuildmcp
         brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp
         info "Installing macOS tools from Brewfile.macos..."

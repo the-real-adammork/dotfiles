@@ -262,6 +262,7 @@ require("lazy").setup({
         "ruff",
         "stylua",
         "shfmt",
+        "goimports",
         "sql-formatter",
         "ktlint",
       },

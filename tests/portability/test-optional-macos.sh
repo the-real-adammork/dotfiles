@@ -36,7 +36,7 @@ bash -n "$OPTIONAL_INSTALLER"
 
 optional_casks=(
     adobe-creative-cloud discord postico backblaze daisydisk hazel switchresx
-    ableton-live-suite audacity obs optimus-player qbittorrent soundsource
+    ableton-live-suite audacity blackhole-16ch obs optimus-player qbittorrent soundsource
     transmission vlc
 )
 optional_mas=(
@@ -73,9 +73,10 @@ for cask in "${basic_casks[@]}"; do
     assert_active "$BASE" "$entry"
     assert_not_active "$OPTIONAL" "$entry"
 done
+assert_not_active "$BASE" 'cask "hive-app"'
 
 # Unmentioned macOS packages remain part of the day-one setup.
-for cask in telegram docker-desktop gpg-suite postgres-app blackhole-16ch; do
+for cask in telegram docker-desktop gpg-suite postgres-app; do
     assert_active "$BASE" "cask \"$cask\""
 done
 assert_active "$BASE" 'mas "Xcode", id: 497799835'

@@ -209,6 +209,11 @@ assert_not_contains "$HOME/.codex/config.toml" "__HOME__"
 assert_not_contains "$HOME/.codex/config.toml" "__CODEX_"
 assert_not_contains "$REPO/install.sh" 'apply --only codex,claude'
 assert_contains "$REPO/install.sh" 'uv tool install --upgrade serena-agent'
+mason_tool_installer_block="$(sed -n '/WhoIsSethDaniel\/mason-tool-installer.nvim/,/^  },$/p' "$REPO/chezmoi/dot_config/nvim/init.lua")"
+[[ "$mason_tool_installer_block" == *'"goimports"'* ]] || {
+  echo "Neovim uses goimports but Mason does not install it" >&2
+  exit 1
+}
 if rg -n '^[[:space:]]*git clone ' "$REPO/install.sh" >/dev/null; then
   echo "install.sh must use /usr/bin/git for clones" >&2
   exit 1
@@ -246,9 +251,17 @@ PY
 
 assert_contains "$REPO/Brewfile.macos" 'tap "getsentry/xcodebuildmcp"'
 assert_contains "$REPO/Brewfile.macos" 'brew "xcodebuildmcp"'
+assert_contains "$REPO/Brewfile.macos" 'tap "facebook/fb"'
+assert_contains "$REPO/Brewfile.macos" 'brew "idb-companion"'
+idb_tap_line="$(rg -n -F -m1 'brew tap facebook/fb' "$REPO/install.sh" | cut -d: -f1)"
+idb_trust_line="$(rg -n -F -m1 'brew trust --formula facebook/fb/idb-companion' "$REPO/install.sh" | cut -d: -f1)"
 xbmcp_tap_line="$(rg -n -F -m1 'brew tap getsentry/xcodebuildmcp' "$REPO/install.sh" | cut -d: -f1)"
 xbmcp_trust_line="$(rg -n -F -m1 'brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp' "$REPO/install.sh" | cut -d: -f1)"
 macos_bundle_line="$(rg -n -F -m1 'brew bundle --file="$DOTS_DIR/Brewfile.macos"' "$REPO/install.sh" | cut -d: -f1)"
+[[ -n "$idb_tap_line" && -n "$idb_trust_line" && "$idb_tap_line" -lt "$idb_trust_line" && "$idb_trust_line" -lt "$macos_bundle_line" ]] || {
+  echo "IDB companion tap must be trusted before the macOS Brewfile is loaded" >&2
+  exit 1
+}
 [[ -n "$xbmcp_tap_line" && -n "$xbmcp_trust_line" && "$xbmcp_tap_line" -lt "$xbmcp_trust_line" && "$xbmcp_trust_line" -lt "$macos_bundle_line" ]] || {
   echo "XcodeBuildMCP tap must be trusted before the macOS Brewfile is loaded" >&2
   exit 1
