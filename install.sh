@@ -243,7 +243,18 @@ if install_any_group_selected codex claude; then
 
     if [[ -d "$SIDEBAR_DIR" && ! -x "$SIDEBAR_DIR/bin/tmux-agent-sidebar" ]]; then
         info "Installing tmux agent sidebar binary..."
-        "$SIDEBAR_DIR/install-wizard.sh" download-binary
+        sidebar_stderr="$(mktemp "${TMPDIR:-/tmp}/dots-sidebar.XXXXXX")"
+        if "$SIDEBAR_DIR/install-wizard.sh" download-binary 2>"$sidebar_stderr"; then
+            cat "$sidebar_stderr" >&2
+        elif [[ -x "$SIDEBAR_DIR/bin/tmux-agent-sidebar" ]]; then
+            warn "Sidebar binary installed; tmux config reload deferred until tmux starts."
+        else
+            cat "$sidebar_stderr" >&2
+            rm -f "$sidebar_stderr"
+            echo "Error: tmux agent sidebar binary installation failed" >&2
+            exit 1
+        fi
+        rm -f "$sidebar_stderr"
     fi
 
     if [[ ! -x "$SIDEBAR_DIR/hook.sh" ]]; then
