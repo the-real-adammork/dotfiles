@@ -104,7 +104,7 @@ fi
 
 # --- Rust (via rustup from Brewfile) ---
 if command -v rustup-init &>/dev/null || command -v rustup &>/dev/null; then
-    if [ ! -d "$HOME/.cargo" ]; then
+    if [ ! -f "$HOME/.cargo/env" ]; then
         info "Initializing Rust toolchain..."
         rustup-init -y --no-modify-path 2>/dev/null || rustup default stable
     fi
