@@ -209,6 +209,9 @@ assert_not_contains "$HOME/.codex/config.toml" "__HOME__"
 assert_not_contains "$HOME/.codex/config.toml" "__CODEX_"
 assert_not_contains "$REPO/install.sh" 'apply --only codex,claude'
 assert_contains "$REPO/install.sh" 'uv tool install --upgrade serena-agent'
+assert_contains "$REPO/Brewfile" 'brew "git-secret"'
+assert_contains "$REPO/install.sh" 'mise use --global node@lts python@3 ruby@latest pnpm@latest'
+assert_not_contains "$REPO/Brewfile" 'brew "pnpm"'
 mason_tool_installer_block="$(sed -n '/WhoIsSethDaniel\/mason-tool-installer.nvim/,/^  },$/p' "$REPO/chezmoi/dot_config/nvim/init.lua")"
 [[ "$mason_tool_installer_block" == *'"goimports"'* ]] || {
   echo "Neovim uses goimports but Mason does not install it" >&2

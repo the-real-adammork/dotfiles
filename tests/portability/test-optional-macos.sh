@@ -67,7 +67,7 @@ for entry in "${optional_mas[@]}"; do
     assert_not_active "$BASE" "$entry"
 done
 
-basic_casks=(brave-browser signal slack chatgpt 1password moom)
+basic_casks=(brave-browser signal slack chatgpt 1password moom tailscale-app)
 for cask in "${basic_casks[@]}"; do
     entry="cask \"$cask\""
     assert_active "$BASE" "$entry"

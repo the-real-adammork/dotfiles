@@ -25,6 +25,7 @@ cask "font-symbols-only-nerd-font"
 cask "codex"
 cask "docker-desktop"
 cask "gcloud-cli"
+cask "tailscale-app"
 
 # -----------------------------------------------------------------------------
 # Browsers

@@ -136,10 +136,10 @@ else
     warn "bat not found, skipping theme cache build."
 fi
 
-# --- Mise (version manager for node, python, ruby) ---
+# --- Mise (version manager for node, python, ruby, and pnpm) ---
 if command -v mise &>/dev/null; then
     info "Setting up mise..."
-    mise use --global node@lts python@3 ruby@latest
+    mise use --global node@lts python@3 ruby@latest pnpm@latest
     mise install
     export PATH="$HOME/.local/share/mise/shims:$PATH"
 else
