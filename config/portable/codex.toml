@@ -3,7 +3,6 @@ sandbox_mode = "workspace-write"
 web_search = "live"
 personality = "pragmatic"
 model = "gpt-5.6-sol"
-model_reasoning_effort = "medium"
 approvals_reviewer = "user"
 model_reasoning_summary = "auto"
 hide_agent_reasoning = false
@@ -114,6 +113,10 @@ enabled = false
 
 [mcp_servers.figma]
 url = "https://mcp.figma.com/mcp"
+
+[mcp_servers.supabase]
+command = "__HOME__/lib_sh/supabase-mcp"
+args = []
 
 [desktop]
 ambient-suggestions-enabled = false

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v gopass >/dev/null 2>&1; then
+  echo "supabase-mcp: gopass is not installed" >&2
+  exit 1
+fi
+
+supabase_access_token="$(gopass show -o supabase/mcp-token 2>/dev/null)" || {
+  echo "supabase-mcp: could not read supabase/mcp-token from gopass" >&2
+  exit 1
+}
+
+if [[ -z "$supabase_access_token" ]]; then
+  echo "supabase-mcp: supabase/mcp-token is empty" >&2
+  exit 1
+fi
+
+export SUPABASE_ACCESS_TOKEN="$supabase_access_token"
+unset supabase_access_token
+
+exec npx -y mcp-remote@0.1.38 \
+  "https://mcp.supabase.com/mcp?read_only=true" \
+  --transport http-only \
+  --header 'Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}'
