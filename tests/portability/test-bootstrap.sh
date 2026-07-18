@@ -250,7 +250,13 @@ xcodebuild_mcp = config["mcp_servers"]["XcodeBuildMCP"]
 assert xcodebuild_mcp["command"] == "xcodebuildmcp"
 assert xcodebuild_mcp["args"] == ["mcp"]
 assert config["mcp_servers"]["ios-simulator"]["env"]["IOS_SIMULATOR_MCP_IDB_PATH"] == str(home / ".local/bin/idb")
+supabase_mcp = config["mcp_servers"]["supabase"]
+assert supabase_mcp["command"] == str(home / "lib_sh/supabase-mcp")
+assert supabase_mcp["args"] == []
 PY
+
+assert_contains "$HOME/lib_sh/supabase-mcp" 'gopass show -o supabase/mcp-token'
+assert_contains "$HOME/lib_sh/supabase-mcp" 'Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}'
 
 assert_contains "$REPO/Brewfile.macos" 'tap "getsentry/xcodebuildmcp"'
 assert_contains "$REPO/Brewfile.macos" 'brew "xcodebuildmcp"'
