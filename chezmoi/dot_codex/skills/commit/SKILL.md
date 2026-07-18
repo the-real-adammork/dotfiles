@@ -24,7 +24,7 @@ Use this flow only when the user explicitly asks for a subagent, commit subagent
 
 - The parent agent always owns file staging and the actual `/usr/bin/git commit` in the real workspace.
 - The subagent must never stage files, commit, amend, reset, clean, push, or change repository state.
-- Spawn exactly one subagent with model `gpt-5.3-codex-spark` and reasoning effort `low`.
+- Spawn exactly one subagent with model `gpt-5.6-terra` and reasoning effort `low`.
 - Give the subagent only the relevant status and diff text needed to write the message.
 - Ask the subagent to return exactly this format:
 
