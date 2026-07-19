@@ -82,7 +82,7 @@ function codex-commit() {
   if [[ $# -gt 0 ]]; then
     prompt="$prompt Additional user instructions: $*"
   fi
-  codex exec -m gpt-5.3-codex-spark -c model_reasoning_effort='"low"' -s danger-full-access -C "$PWD" "$prompt"
+  codex exec -m gpt-5.6-terra -c model_reasoning_effort='"low"' -s danger-full-access -C "$PWD" "$prompt"
 }
 
 alias cxc='codex-commit'

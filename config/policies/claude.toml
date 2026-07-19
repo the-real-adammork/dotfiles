@@ -7,5 +7,7 @@ portable_roots = [
   "agentPushNotifEnabled",
 ]
 local_roots = []
-local_paths = []
+local_paths = [
+  "enabledPlugins.figma@claude-plugins-official",
+]
 safe_sensitive_keys = []

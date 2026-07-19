@@ -363,21 +363,62 @@ def cmd_baseline(args) -> int:
     return 0
 
 
+def staged_changeset() -> set[str]:
+    """Repo-relative paths staged for commit (index vs HEAD)."""
+    proc = run(["/usr/bin/git", "diff", "--cached", "--name-only"], check=False)
+    return {line.strip() for line in proc.stdout.splitlines() if line.strip()}
+
+
+def portable_sources(name: str, policy: dict) -> set[str]:
+    """Repo-relative source files whose change puts NAME's portable drift in scope."""
+    return {policy["portable_file"], f"config/policies/{name}.toml"}
+
+
+def target_source_rel(candidate_repo: Path, home: Path, env: dict, target: str) -> str | None:
+    """Repo-relative chezmoi source that renders TARGET, or None if unresolved."""
+    proc = subprocess.run(
+        [
+            "chezmoi",
+            "--source",
+            str(candidate_repo / "chezmoi"),
+            "--destination",
+            str(home),
+            "source-path",
+            target,
+        ],
+        text=True,
+        capture_output=True,
+        env=env,
+    )
+    if proc.returncode != 0:
+        return None
+    try:
+        return Path(proc.stdout.strip()).relative_to(candidate_repo).as_posix()
+    except ValueError:
+        return None
+
+
 def cmd_drift(args) -> int:
     failed = False
-    if not verify_chezmoi_state(staged=args.staged):
+    # In --staged mode (the pre-commit hook) restrict drift checks to targets
+    # touched by the staged changeset so unrelated in-flight drift never blocks a
+    # focused commit. A plain `drift` run keeps auditing the whole managed tree.
+    changeset = staged_changeset() if args.staged else None
+    if not verify_chezmoi_state(staged=args.staged, changeset=changeset):
         print("error: uncaptured drift in chezmoi-managed targets", file=sys.stderr)
         failed = True
     for name in ("codex", "claude"):
         target = target_for(name)
         if not target.exists():
             continue
+        policy = load_policy(name)
+        if changeset is not None and not (portable_sources(name, policy) & changeset):
+            continue
         baseline_path = STATE / "baselines" / f"{name}.json"
         if not baseline_path.exists():
             print(f"error: no baseline for {name}; run dotfiles-state baseline {name}", file=sys.stderr)
             failed = True
             continue
-        policy = load_policy(name)
         live = parse_document(target.read_text(), policy["format"])
         _, live_projection = merge_config(name, live)
         candidate = candidate_projection(name, staged=args.staged)
@@ -390,16 +431,24 @@ def cmd_drift(args) -> int:
     return 1 if failed else 0
 
 
-def staged_candidate_repo(root: Path) -> Path:
-    """Build a private source tree strictly from the Git index."""
+def staged_candidate_repo(root: Path, changeset: set[str] | None = None) -> Path:
+    """Build a private source tree strictly from the Git index.
+
+    Untracked source is not part of the commit, so in changeset-scoped mode it is
+    reported but does not block: the candidate reflects exactly what would be
+    committed, and any staged file that depends on missing source still fails its
+    own in-scope render check.
+    """
     scope = ["chezmoi", "config", "scripts"]
     untracked = run(["/usr/bin/git", "ls-files", "--others", "--exclude-standard", "--", *scope])
-    if untracked.stdout.splitlines():
-        listed = ", ".join(untracked.stdout.splitlines()[:5])
-        suffix = " ..." if len(untracked.stdout.splitlines()) > 5 else ""
-        raise DotfilesError(
-            f"untracked dotfiles source must be staged before drift checking: {listed}{suffix}"
-        )
+    untracked_paths = [line for line in untracked.stdout.splitlines() if line.strip()]
+    if untracked_paths:
+        listed = ", ".join(untracked_paths[:5])
+        suffix = " ..." if len(untracked_paths) > 5 else ""
+        message = f"untracked dotfiles source not included in drift check: {listed}{suffix}"
+        if changeset is None:
+            raise DotfilesError(message)
+        print(f"note: {message}", file=sys.stderr)
     indexed = run(["/usr/bin/git", "ls-files", "--cached", "--", *scope])
     indexed_paths = set(indexed.stdout.splitlines())
 
@@ -419,7 +468,7 @@ def staged_candidate_repo(root: Path) -> Path:
     return root
 
 
-def verify_chezmoi_state(*, staged: bool) -> bool:
+def verify_chezmoi_state(*, staged: bool, changeset: set[str] | None = None) -> bool:
     """Compare managed leaves without treating mixed-dir runtime state as drift."""
     home = Path.home()
     if not staged:
@@ -446,8 +495,37 @@ def verify_chezmoi_state(*, staged: bool) -> bool:
         return proc.returncode == 0
 
     with tempfile.TemporaryDirectory(prefix="dots-staged-") as temporary:
-        candidate_repo = staged_candidate_repo(Path(temporary))
+        candidate_repo = staged_candidate_repo(Path(temporary), changeset)
         env = {**tool_env(), "DOTFILES_REPO": str(candidate_repo)}
+        # Mixed portable files (codex/claude) are governed by the portable
+        # projection check, not raw chezmoi rendering; rendering them re-runs the
+        # policy merge, so exclude them from status entirely, as the non-staged
+        # branch excludes them from verify.
+        semantic_targets = {target_for("codex"), target_for("claude")}
+        managed = subprocess.run(
+            [
+                "chezmoi",
+                "--source",
+                str(candidate_repo / "chezmoi"),
+                "--destination",
+                str(home),
+                "managed",
+                "--path-style",
+                "absolute",
+            ],
+            text=True,
+            capture_output=True,
+            env=env,
+        )
+        if managed.returncode != 0:
+            return False
+        leaves = [
+            raw
+            for raw in managed.stdout.splitlines()
+            if raw.strip() and Path(raw) not in semantic_targets and not Path(raw).is_dir()
+        ]
+        if not leaves:
+            return True
         proc = subprocess.run(
             [
                 "chezmoi",
@@ -458,6 +536,7 @@ def verify_chezmoi_state(*, staged: bool) -> bool:
                 "status",
                 "--path-style",
                 "absolute",
+                *leaves,
             ],
             text=True,
             capture_output=True,
@@ -466,10 +545,16 @@ def verify_chezmoi_state(*, staged: bool) -> bool:
         if proc.returncode != 0:
             return False
         changed = [line[3:] for line in proc.stdout.splitlines() if len(line) > 3]
+        skipped: list[str] = []
         for raw_target in changed:
             target = Path(raw_target)
             if target.is_dir():
                 continue
+            if changeset is not None:
+                source_rel = target_source_rel(candidate_repo, home, env, raw_target)
+                if source_rel is None or source_rel not in changeset:
+                    skipped.append(raw_target)
+                    continue
             rendered = subprocess.run(
                 [
                     "chezmoi",
@@ -497,6 +582,13 @@ def verify_chezmoi_state(*, staged: bool) -> bool:
             )
             if working.returncode != 0:
                 return False
+        if skipped:
+            preview = ", ".join(sorted(skipped)[:5]) + (" ..." if len(skipped) > 5 else "")
+            print(
+                f"note: {len(skipped)} managed target(s) drift outside the staged "
+                f"changeset; skipped: {preview}",
+                file=sys.stderr,
+            )
         return True
 
 
