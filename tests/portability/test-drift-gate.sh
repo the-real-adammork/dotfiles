@@ -27,6 +27,12 @@ index="$FIXTURE_ROOT/git-index"
 export GIT_INDEX_FILE="$index"
 /usr/bin/git -C "$REPO" read-tree HEAD
 /usr/bin/git -C "$REPO" add -- chezmoi config scripts
+scope_candidate="$FIXTURE_ROOT/codex-scope.toml"
+cp "$REPO/config/portable/codex.toml" "$scope_candidate"
+printf '\n# staged drift scope fixture\n' >> "$scope_candidate"
+scope_blob="$(/usr/bin/git -C "$REPO" hash-object -w "$scope_candidate")"
+/usr/bin/git -C "$REPO" update-index --add --cacheinfo \
+    "100644,$scope_blob,config/portable/codex.toml"
 if "$REPO/scripts/dotfiles-state" drift --staged >/dev/null 2>&1; then
     echo "uncaptured drift unexpectedly matched staged source" >&2
     exit 1
