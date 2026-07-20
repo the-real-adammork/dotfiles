@@ -71,7 +71,6 @@ args = ["start-mcp-server", "--context=codex", "--project-from-cwd"]
 enabled = false
 
 [mcp_servers.node_repl]
-args = []
 command = "__CODEX_NODE_REPL__"
 startup_timeout_sec = 120
 
@@ -116,7 +115,6 @@ url = "https://mcp.figma.com/mcp"
 
 [mcp_servers.supabase]
 command = "__HOME__/lib_sh/supabase-mcp"
-args = []
 
 [desktop]
 ambient-suggestions-enabled = false

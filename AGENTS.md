@@ -24,8 +24,8 @@ Dependencies and configs must stay in sync. If a config references a binary, tha
 
 - `chezmoi/` is canonical portable source state.
 - `config/managed-targets.toml` declares every managed or intentionally unmanaged target and its logical `--only` group.
-- Legacy top-level Stow packages are migration-only rollback sources. Do not edit them for new portable changes.
-- Never let Stow and chezmoi actively own the same target. Existing Stow symlinks must pass `scripts/dotfiles-state preview` and explicit transactional adoption before replacement.
+- Legacy Stow sources have been retired; all tracked dotfiles are owned by chezmoi.
+- Existing-machine Stow symlinks must pass `scripts/dotfiles-state preview` and explicit transactional adoption before replacement.
 - Machine-local state, backups, checkpoints, and portable baselines live under `${XDG_STATE_HOME:-$HOME/.local/state}/dots`, never in the repository.
 - Authentication targets listed as unmanaged must not be opened, copied, projected, or logged.
 

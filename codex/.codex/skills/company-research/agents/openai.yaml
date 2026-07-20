@@ -1,4 +1,0 @@
-interface:
-  display_name: "Company Research"
-  short_description: "Research company markets, products, stack, and ICP"
-  default_prompt: "Use $company-research to research a company from its URL."

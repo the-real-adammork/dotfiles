@@ -7,24 +7,3 @@
 .codex/workflows/*.db-*
 .codex/workflows/*.sqlite
 .codex/workflows/*.sqlite-*
-
-# Claude Code runtime state (not config)
-claude/.claude/.credentials.json
-claude/.claude/backups/
-claude/.claude/cache/
-claude/.claude/file-history/
-claude/.claude/history.jsonl
-claude/.claude/.last-cleanup
-claude/.claude/.last-update-result.json
-claude/.claude/mcp-needs-auth-cache.json
-claude/.claude/paste-cache/
-claude/.claude/plugins/
-claude/.claude/projects/
-claude/.claude/session-env/
-claude/.claude/telemetry/
-claude/.claude/sessions/
-claude/.claude/shell-snapshots/
-claude/.claude/skills/web-design
-claude/.claude/tasks/
-claude/.claude/image-cache
-gh/.config/gh/hosts.yml

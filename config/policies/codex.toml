@@ -13,6 +13,7 @@ local_paths = [
   "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_BUILD_FLAVOR",
   "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_VERSION",
   "mcp_servers.figma.enabled",
+  "mcp_servers.atlassian",
   "marketplaces.openai-bundled",
   "marketplaces.openai-primary-runtime",
   "marketplaces.compound-engineering-plugin.last_updated",

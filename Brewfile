@@ -4,7 +4,6 @@
 # -----------------------------------------------------------------------------
 # Load-bearing for dotfiles
 # -----------------------------------------------------------------------------
-brew "stow"
 brew "chezmoi"
 brew "tmux"
 brew "neovim"
@@ -25,7 +24,7 @@ brew "rustup"
 # After install: rustup default stable
 # tree-sitter CLI: cargo install tree-sitter-cli
 
-brew "gh"                       # has its own stow package (gh/.config/gh/)
+brew "gh"
 # zsh-autosuggestions and zsh-syntax-highlighting are cloned directly
 # into ~/.oh-my-zsh/custom/plugins/ by install.sh
 
@@ -64,7 +63,6 @@ brew "ninja"
 brew "pandoc"
 brew "pipx"
 brew "poppler"
-brew "pre-commit"
 brew "resvg"
 brew "sevenzip"
 brew "tealdeer"

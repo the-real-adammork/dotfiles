@@ -1,4 +1,0 @@
-interface:
-  display_name: "Account Seeding"
-  short_description: "Durable accounts encrypted with git-secret"
-  default_prompt: "Use the account-seeding skill to add durable local/test accounts and store their credentials safely with git-secret."

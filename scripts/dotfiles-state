@@ -434,10 +434,8 @@ def cmd_drift(args) -> int:
 def staged_candidate_repo(root: Path, changeset: set[str] | None = None) -> Path:
     """Build a private source tree strictly from the Git index.
 
-    Untracked source is not part of the commit, so in changeset-scoped mode it is
-    reported but does not block: the candidate reflects exactly what would be
-    committed, and any staged file that depends on missing source still fails its
-    own in-scope render check.
+    Untracked source is not part of the commit and therefore fails closed rather
+    than allowing a staged drift check to validate an incomplete candidate.
     """
     scope = ["chezmoi", "config", "scripts"]
     untracked = run(["/usr/bin/git", "ls-files", "--others", "--exclude-standard", "--", *scope])
@@ -445,10 +443,8 @@ def staged_candidate_repo(root: Path, changeset: set[str] | None = None) -> Path
     if untracked_paths:
         listed = ", ".join(untracked_paths[:5])
         suffix = " ..." if len(untracked_paths) > 5 else ""
-        message = f"untracked dotfiles source not included in drift check: {listed}{suffix}"
-        if changeset is None:
-            raise DotfilesError(message)
-        print(f"note: {message}", file=sys.stderr)
+        message = f"untracked dotfiles source must be staged before drift checking: {listed}{suffix}"
+        raise DotfilesError(message)
     indexed = run(["/usr/bin/git", "ls-files", "--cached", "--", *scope])
     indexed_paths = set(indexed.stdout.splitlines())
 

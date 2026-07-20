@@ -190,9 +190,7 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
 else
     ok "TPM already installed"
 fi
-# Install/update tmux plugins declared in tmux.conf (runs after stow below
-# would be ideal, but install_plugins only needs the config readable — we
-# re-run it at the end to ensure stowed config is active).
+# Install/update tmux plugins after chezmoi applies tmux.conf below.
 
 # --- scm_breeze (git shortcuts, sourced from .zshrc) ---
 if [ ! -d "$HOME/.scm_breeze" ]; then
@@ -200,10 +198,9 @@ if [ ! -d "$HOME/.scm_breeze" ]; then
     /usr/bin/git clone https://github.com/scmbreeze/scm_breeze.git "$HOME/.scm_breeze"
     "$HOME/.scm_breeze/install.sh"
     # Upstream installer appends a hardcoded-path source line to .zshrc.
-    # The stowed .zshrc already has an equivalent $HOME-based line, so
+    # The managed .zshrc already has an equivalent $HOME-based line, so
     # strip any duplicate scm_breeze source lines, keeping the first.
-    ZSHRC="$DOTS_DIR/zsh/.zshrc"
-    [ -f "$HOME/.zshrc" ] && [ ! -L "$HOME/.zshrc" ] && ZSHRC="$HOME/.zshrc"
+    ZSHRC="$HOME/.zshrc"
     if [ -f "$ZSHRC" ]; then
         awk '/scm_breeze\.sh/ { if (seen++) next } { print }' "$ZSHRC" > "$ZSHRC.tmp" \
             && mv "$ZSHRC.tmp" "$ZSHRC"
@@ -290,7 +287,7 @@ if ! "$DOTS_DIR/scripts/dotfiles-state" apply "${apply_args[@]}"; then
     exit 1
 fi
 
-# --- Tmux plugins (after stow so tmux.conf is in place) ---
+# --- Tmux plugins (after chezmoi so tmux.conf is in place) ---
 if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
     info "Installing tmux plugins via TPM..."
     "$HOME/.tmux/plugins/tpm/bin/install_plugins"

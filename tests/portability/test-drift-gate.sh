@@ -16,7 +16,7 @@ fi
 "$REPO/scripts/dotfiles-state" apply --home "$HOME" --only zsh >/dev/null
 "$REPO/scripts/dotfiles-state" drift >/dev/null
 
-sed -i '' 's/model_reasoning_effort = "medium"/model_reasoning_effort = "low"/' "$HOME/.codex/config.toml"
+sed -i '' 's/model = "gpt-5.6-sol"/model = "gpt-5.6-terra"/' "$HOME/.codex/config.toml"
 if "$REPO/scripts/dotfiles-state" drift >/dev/null 2>&1; then
     echo "uncaptured portable drift unexpectedly passed" >&2
     exit 1
@@ -33,7 +33,7 @@ if "$REPO/scripts/dotfiles-state" drift --staged >/dev/null 2>&1; then
 fi
 
 candidate="$FIXTURE_ROOT/codex-candidate.toml"
-sed 's/model_reasoning_effort = "medium"/model_reasoning_effort = "low"/' \
+sed 's/model = "gpt-5.6-sol"/model = "gpt-5.6-terra"/' \
     "$REPO/config/portable/codex.toml" > "$candidate"
 blob="$(/usr/bin/git -C "$REPO" hash-object -w "$candidate")"
 /usr/bin/git -C "$REPO" update-index --add --cacheinfo \
@@ -45,7 +45,7 @@ chmod 751 "$HOME/.config/gh"
 "$REPO/scripts/dotfiles-state" drift --staged >/dev/null
 
 # Local-only drift passes against the unchanged staged portable source.
-sed -i '' 's/model_reasoning_effort = "low"/model_reasoning_effort = "medium"/' "$HOME/.codex/config.toml"
+sed -i '' 's/model = "gpt-5.6-terra"/model = "gpt-5.6-sol"/' "$HOME/.codex/config.toml"
 printf '\n[projects."%s/local-only"]\ntrust_level = "trusted"\n' "$HOME" >> "$HOME/.codex/config.toml"
 /usr/bin/git -C "$REPO" add -- config/portable/codex.toml
 "$REPO/scripts/dotfiles-state" drift --staged >/dev/null

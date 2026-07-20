@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/helpers/common.sh"
 new_fixture
 
-cp "$REPO/zsh/.zshrc" "$HOME/.zshrc"
+cp "$REPO/chezmoi/dot_zshrc.tmpl" "$HOME/.zshrc"
 gate="$FIXTURE_ROOT/concurrent-gate"
 DOTFILES_TEST_CONCURRENT_GATE="$gate" \
     "$REPO/scripts/dotfiles-state" adopt --home "$HOME" --only zsh --yes \
