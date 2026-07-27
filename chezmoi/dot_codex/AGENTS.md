@@ -20,9 +20,20 @@ Before starting any local server or service, check for port conflicts. If the de
 
 For a locally deployable project, never claim a task is done without giving the human a way to verify it. Return the worktree's local URL(s) — including the specific path to view the change (e.g. `http://localhost:5173/settings`). If it isn't running, give the command to start it and the URL it'll be at.
 
-## Test & Smoke Test Presentation
+## Test & Smoke Test Policy
 
-Never return a test to run or flow to check unless the agent has already has run that test and its passing, or for UI testing, written a UI test - playwright for web - and verified it to be working as expected.
+Do not write or run Playwright tests by default during routine implementation. Prefer the project's existing fast checks, such as type checks, linting, unit tests, and narrowly targeted integration tests.
+
+Use Playwright when:
+
+- The user explicitly asks for browser or end-to-end testing.
+- Reproducing or preventing a browser-specific regression.
+- A change affects a critical multi-step user journey, such as authentication, checkout, destructive actions, or data persistence.
+- Performing an agreed release, PR, or feature-completion verification pass.
+
+When Playwright is warranted, first look for existing coverage and run the smallest relevant test set. Add or broaden tests only when the behavior is important enough to preserve as durable end-to-end coverage; do not create a Playwright test solely because a UI file changed.
+
+Do not ask the user to run automated tests that the agent has not run successfully. For UI changes, provide the local verification URL and clearly distinguish what the agent verified from any optional manual observations, without making handoff contingent on writing a new Playwright test.
 
 ## Durable Local/Test Accounts
 
