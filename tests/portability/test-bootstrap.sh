@@ -212,6 +212,11 @@ assert_contains "$REPO/install.sh" 'uv tool install --upgrade serena-agent'
 assert_contains "$REPO/Brewfile" 'brew "git-secret"'
 assert_contains "$REPO/install.sh" 'mise use --global node@lts python@3 ruby@latest pnpm@latest'
 assert_not_contains "$REPO/Brewfile" 'brew "pnpm"'
+assert_contains "$REPO/install.sh" 'homebrew_restart_native "$0" "$@"'
+assert_contains "$REPO/install.sh" 'homebrew_bootstrap "$OS"'
+assert_contains "$REPO/chezmoi/dot_zprofile" '"/opt/homebrew/bin/brew"'
+assert_contains "$REPO/chezmoi/dot_zprofile" 'shellenv'
+assert_not_contains "$REPO/chezmoi/dot_zprofile" 'proc_translated'
 mason_tool_installer_block="$(sed -n '/WhoIsSethDaniel\/mason-tool-installer.nvim/,/^  },$/p' "$REPO/chezmoi/dot_config/nvim/init.lua")"
 [[ "$mason_tool_installer_block" == *'"goimports"'* ]] || {
   echo "Neovim uses goimports but Mason does not install it" >&2
