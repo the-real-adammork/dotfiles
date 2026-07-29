@@ -1,6 +1,19 @@
-if command -v brew >/dev/null 2>&1; then
-  eval "$(brew shellenv)"
+homebrew_bin=""
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  homebrew_bin="/opt/homebrew/bin/brew"
+elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  homebrew_bin="/home/linuxbrew/.linuxbrew/bin/brew"
+elif [[ -x /usr/local/bin/brew ]]; then
+  homebrew_bin="/usr/local/bin/brew"
+elif (( $+commands[brew] )); then
+  homebrew_bin="$commands[brew]"
 fi
 
+if [[ -n "$homebrew_bin" ]]; then
+  eval "$("$homebrew_bin" shellenv)"
+fi
+unset homebrew_bin
+
 # Toolbox
-export PATH="$PATH:/usr/local/bin"
+path=($path /usr/local/bin)
+typeset -U path

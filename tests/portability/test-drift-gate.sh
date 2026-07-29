@@ -16,7 +16,7 @@ fi
 "$REPO/scripts/dotfiles-state" apply --home "$HOME" --only zsh >/dev/null
 "$REPO/scripts/dotfiles-state" drift >/dev/null
 
-sed -i '' 's/model_reasoning_effort = "medium"/model_reasoning_effort = "low"/' "$HOME/.codex/config.toml"
+sed -i '' 's/model = "gpt-5.6-sol"/model = "gpt-5.6-terra"/' "$HOME/.codex/config.toml"
 if "$REPO/scripts/dotfiles-state" drift >/dev/null 2>&1; then
     echo "uncaptured portable drift unexpectedly passed" >&2
     exit 1
@@ -27,13 +27,19 @@ index="$FIXTURE_ROOT/git-index"
 export GIT_INDEX_FILE="$index"
 /usr/bin/git -C "$REPO" read-tree HEAD
 /usr/bin/git -C "$REPO" add -- chezmoi config scripts
+scope_candidate="$FIXTURE_ROOT/codex-scope.toml"
+cp "$REPO/config/portable/codex.toml" "$scope_candidate"
+printf '\n# staged drift scope fixture\n' >> "$scope_candidate"
+scope_blob="$(/usr/bin/git -C "$REPO" hash-object -w "$scope_candidate")"
+/usr/bin/git -C "$REPO" update-index --add --cacheinfo \
+    "100644,$scope_blob,config/portable/codex.toml"
 if "$REPO/scripts/dotfiles-state" drift --staged >/dev/null 2>&1; then
     echo "uncaptured drift unexpectedly matched staged source" >&2
     exit 1
 fi
 
 candidate="$FIXTURE_ROOT/codex-candidate.toml"
-sed 's/model_reasoning_effort = "medium"/model_reasoning_effort = "low"/' \
+sed 's/model = "gpt-5.6-sol"/model = "gpt-5.6-terra"/' \
     "$REPO/config/portable/codex.toml" > "$candidate"
 blob="$(/usr/bin/git -C "$REPO" hash-object -w "$candidate")"
 /usr/bin/git -C "$REPO" update-index --add --cacheinfo \
@@ -45,7 +51,7 @@ chmod 751 "$HOME/.config/gh"
 "$REPO/scripts/dotfiles-state" drift --staged >/dev/null
 
 # Local-only drift passes against the unchanged staged portable source.
-sed -i '' 's/model_reasoning_effort = "low"/model_reasoning_effort = "medium"/' "$HOME/.codex/config.toml"
+sed -i '' 's/model = "gpt-5.6-terra"/model = "gpt-5.6-sol"/' "$HOME/.codex/config.toml"
 printf '\n[projects."%s/local-only"]\ntrust_level = "trusted"\n' "$HOME" >> "$HOME/.codex/config.toml"
 /usr/bin/git -C "$REPO" add -- config/portable/codex.toml
 "$REPO/scripts/dotfiles-state" drift --staged >/dev/null
@@ -56,11 +62,11 @@ unstaged_source="$REPO/chezmoi/dot_unstaged-drift-fixture"
 trap 'rm -f "$unstaged_source"; rm -rf "$FIXTURE_ROOT"' EXIT
 printf 'unstaged fixture\n' > "$unstaged_source"
 error="$FIXTURE_ROOT/unstaged-error"
-if "$REPO/scripts/dotfiles-state" drift --staged >/dev/null 2>"$error"; then
-    echo "staged drift accepted an untracked chezmoi source" >&2
+if ! "$REPO/scripts/dotfiles-state" drift --staged >/dev/null 2>"$error"; then
+    echo "staged drift failed instead of excluding an untracked chezmoi source" >&2
     exit 1
 fi
-assert_contains "$error" "untracked dotfiles source must be staged before drift checking"
+assert_contains "$error" "untracked dotfiles source not included in drift check"
 rm "$unstaged_source"
 unset GIT_INDEX_FILE
 

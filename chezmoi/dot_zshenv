@@ -1,8 +1,24 @@
-cargo_paths="${CARGO_HOME:-$HOME/.cargo}/bin"
-if command -v brew &>/dev/null && rustup_prefix="$(brew --prefix rustup 2>/dev/null)"; then
-    cargo_paths="$cargo_paths:$rustup_prefix/bin"
+cargo_paths=("${CARGO_HOME:-$HOME/.cargo}/bin")
+rustup_bin=""
+for rustup_bin in \
+    /opt/homebrew/opt/rustup/bin \
+    /home/linuxbrew/.linuxbrew/opt/rustup/bin \
+    /usr/local/opt/rustup/bin; do
+    if [[ -d "$rustup_bin" ]]; then
+        break
+    fi
+    rustup_bin=""
+done
+
+if [[ -z "$rustup_bin" ]] \
+    && command -v brew >/dev/null 2>&1 \
+    && rustup_prefix="$(brew --prefix rustup 2>/dev/null)"; then
+    rustup_bin="$rustup_prefix/bin"
 fi
-export PATH="$cargo_paths:$PATH"
-unset cargo_paths rustup_prefix
+
+[[ -n "$rustup_bin" ]] && cargo_paths+=("$rustup_bin")
+path=($cargo_paths $path)
+typeset -U path
+unset cargo_paths rustup_bin rustup_prefix
 export EDITOR="nvim"
 unset BAT_CONFIG_PATH

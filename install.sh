@@ -2,6 +2,12 @@
 set -euo pipefail
 
 DOTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$DOTS_DIR/scripts/homebrew-bootstrap.sh"
+
+# Universal macOS binaries inherit a translated parent's architecture. Restart
+# the bootstrap natively so Apple Silicon machines always select ARM Homebrew.
+homebrew_restart_native "$0" "$@"
+
 source "$DOTS_DIR/scripts/claude-plugins.sh"
 source "$DOTS_DIR/scripts/codex-plugins.sh"
 source "$DOTS_DIR/scripts/install-groups.sh"
@@ -35,18 +41,7 @@ OS="$(uname -s)"
 info "Detected OS: $OS"
 
 # --- Homebrew ---
-if ! command -v brew &>/dev/null; then
-    if [[ "$OS" == "Darwin" ]]; then
-        info "Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        # Ensure brew is on PATH for this session (Apple Silicon)
-        if [[ -x /opt/homebrew/bin/brew ]]; then
-            eval "$(/opt/homebrew/bin/brew shellenv)"
-        fi
-    else
-        warn "Homebrew not found. Install packages manually or install Linuxbrew."
-    fi
-fi
+homebrew_bootstrap "$OS"
 
 if command -v brew &>/dev/null; then
     info "Installing shared tools from Brewfile..."
