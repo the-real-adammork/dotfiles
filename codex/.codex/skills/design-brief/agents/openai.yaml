@@ -1,4 +1,0 @@
-interface:
-  display_name: "Design Brief"
-  short_description: "Inventory app pages, flows, and usable data"
-  default_prompt: "Use $design-brief to create a docs/designs brief covering current pages, functionality, and available backend data fields."

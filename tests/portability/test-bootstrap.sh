@@ -240,10 +240,11 @@ with config_path.open("rb") as handle:
 
 assert config["model"] == "gpt-5.6-sol"
 assert "model_reasoning_effort" not in config
+assert "atlassian" not in config["mcp_servers"]
 
 node_repl = config["mcp_servers"]["node_repl"]
 assert node_repl["command"] == str(resources / "cua_node/bin/node_repl")
-assert node_repl["args"] == []
+assert "args" not in node_repl
 assert node_repl["startup_timeout_sec"] == 120
 env = node_repl["env"]
 assert env["NODE_REPL_NODE_PATH"] == str(resources / "cua_node/bin/node")
@@ -257,7 +258,7 @@ assert xcodebuild_mcp["args"] == ["mcp"]
 assert config["mcp_servers"]["ios-simulator"]["env"]["IOS_SIMULATOR_MCP_IDB_PATH"] == str(home / ".local/bin/idb")
 supabase_mcp = config["mcp_servers"]["supabase"]
 assert supabase_mcp["command"] == str(home / "lib_sh/supabase-mcp")
-assert supabase_mcp["args"] == []
+assert "args" not in supabase_mcp
 PY
 
 assert_contains "$HOME/lib_sh/supabase-mcp" 'gopass show -o supabase/mcp-token'

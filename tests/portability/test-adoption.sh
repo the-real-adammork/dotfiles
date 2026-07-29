@@ -3,10 +3,18 @@ set -euo pipefail
 source "$(dirname "$0")/helpers/common.sh"
 new_fixture
 
-ln -s "$REPO/zsh/.zshrc" "$HOME/.zshrc"
-ln -s "$REPO/tmux/.tmux.conf" "$HOME/.tmux.conf"
+legacy_stow="$(mktemp -d "$REPO/.legacy-stow-test.XXXXXX")"
+trap 'rm -rf "$legacy_stow" "$FIXTURE_ROOT"' EXIT
+mkdir -p "$legacy_stow/zsh" "$legacy_stow/tmux" "$legacy_stow/bat/.config/bat" "$legacy_stow/codex/.codex"
+cp "$REPO/chezmoi/dot_zshrc.tmpl" "$legacy_stow/zsh/.zshrc"
+cp "$REPO/chezmoi/dot_tmux.conf" "$legacy_stow/tmux/.tmux.conf"
+cp "$REPO/chezmoi/dot_config/bat/config" "$legacy_stow/bat/.config/bat/config"
+cp "$REPO/config/portable/codex.toml" "$legacy_stow/codex/.codex/config.toml"
+
+ln -s "$legacy_stow/zsh/.zshrc" "$HOME/.zshrc"
+ln -s "$legacy_stow/tmux/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
-ln -s "$REPO/bat/.config/bat" "$HOME/.config/bat"
+ln -s "$legacy_stow/bat/.config/bat" "$HOME/.config/bat"
 # Source validation is lexical and must permit the legacy symlink topology
 # that preview/adopt are responsible for replacing.
 "$REPO/scripts/dotfiles-state" validate >/dev/null
@@ -34,14 +42,14 @@ jq -e '.status == "complete" and .groups == ["bat", "gh", "git", "zsh"]' "$XDG_S
 printf 'changed\n' > "$HOME/.zshrc"
 "$REPO/scripts/dotfiles-state" rollback >/dev/null
 assert_not_contains "$HOME/.zshrc" 'changed'
-[[ -L "$HOME/.zshrc" && "$(readlink "$HOME/.zshrc")" == "$REPO/zsh/.zshrc" ]] || { echo "rollback did not restore file symlink topology" >&2; exit 1; }
-[[ -L "$HOME/.config/bat" && "$(readlink "$HOME/.config/bat")" == "$REPO/bat/.config/bat" ]] || { echo "rollback did not restore directory symlink topology" >&2; exit 1; }
+[[ -L "$HOME/.zshrc" && "$(readlink "$HOME/.zshrc")" == "$legacy_stow/zsh/.zshrc" ]] || { echo "rollback did not restore file symlink topology" >&2; exit 1; }
+[[ -L "$HOME/.config/bat" && "$(readlink "$HOME/.config/bat")" == "$legacy_stow/bat/.config/bat" ]] || { echo "rollback did not restore directory symlink topology" >&2; exit 1; }
 [[ -L "$HOME/.tmux.conf" ]] || { echo "rollback changed unrelated tmux target" >&2; exit 1; }
 
 mkdir -p "$HOME/.codex"
 printf 'nested-auth-sentinel\n' > "$HOME/.codex/auth.json"
 nested_auth_sentinel="$(shasum -a 256 "$HOME/.codex/auth.json" | awk '{print $1}')"
-ln -s "$REPO/codex/.codex/config.toml" "$HOME/.codex/config.toml"
+ln -s "$legacy_stow/codex/.codex/config.toml" "$HOME/.codex/config.toml"
 if "$REPO/scripts/dotfiles-state" apply --home "$HOME" --only codex >/dev/null 2>&1; then
     echo "nested legacy Stow target was overwritten without adoption" >&2
     exit 1
@@ -86,12 +94,12 @@ rm "$HOME/.codex"
 [[ ! -e "$HOME/.codex" && ! -L "$HOME/.codex" ]] || { echo "rollback retained target created by adoption" >&2; exit 1; }
 
 # A failed chezmoi apply restores the original topology automatically.
-ln -sf "$REPO/zsh/.zshrc" "$HOME/.zshrc"
+ln -sf "$legacy_stow/zsh/.zshrc" "$HOME/.zshrc"
 if DOTFILES_TEST_FAIL_ADOPTION_APPLY=1 "$REPO/scripts/dotfiles-state" adopt --home "$HOME" --only zsh --yes >/dev/null 2>&1; then
     echo "injected adoption apply failure unexpectedly succeeded" >&2
     exit 1
 fi
-[[ -L "$HOME/.zshrc" && "$(readlink "$HOME/.zshrc")" == "$REPO/zsh/.zshrc" ]] || { echo "failed adoption did not restore original symlink" >&2; exit 1; }
+[[ -L "$HOME/.zshrc" && "$(readlink "$HOME/.zshrc")" == "$legacy_stow/zsh/.zshrc" ]] || { echo "failed adoption did not restore original symlink" >&2; exit 1; }
 [[ ! -e "$HOME/.zprofile" && ! -L "$HOME/.zprofile" ]] || { echo "failed adoption retained newly created target" >&2; exit 1; }
 jq -e '.status == "failed_rolled_back" and .groups == ["zsh"]' "$XDG_STATE_HOME/dots/adoption.json" >/dev/null
 

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Commit"
-  short_description: "Create safe Conventional Commits"
-  default_prompt: "Use $commit to inspect my changes and create a focused Conventional Commit."

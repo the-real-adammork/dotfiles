@@ -41,9 +41,9 @@ Portable source lives under `chezmoi/`. Logical groups and platform constraints 
 
 Codex and Claude settings are mixed files. Tracked overlays contain portable choices; modifiers preserve project trust, hook trust, app metadata, marketplace revisions, and other declared local state. Authentication files are unmanaged.
 
-## Existing-machine Adoption
+## One-time Existing-machine Adoption
 
-Legacy Stow symlinks are never overwritten by an ordinary apply. Review the complete dry run, then explicitly adopt:
+Older checkouts may have left Stow symlinks in `$HOME`. They are never overwritten by an ordinary apply. Review the complete dry run, then explicitly adopt:
 
 ```bash
 scripts/dotfiles-state preview

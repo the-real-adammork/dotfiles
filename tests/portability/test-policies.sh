@@ -3,12 +3,35 @@ set -euo pipefail
 source "$(dirname "$0")/helpers/common.sh"
 new_fixture
 
-cp "$REPO/codex/.codex/config.toml" "$FIXTURE_ROOT/codex.toml"
-sed -i '' "s#/Users/adam#$HOME#g" "$FIXTURE_ROOT/codex.toml"
+cat > "$FIXTURE_ROOT/codex.toml" <<EOF
+model_reasoning_effort = "medium"
+EOF
+cat "$REPO/config/portable/codex.toml" >> "$FIXTURE_ROOT/codex.toml"
+cat >> "$FIXTURE_ROOT/codex.toml" <<EOF
+
+[projects."$HOME/dots"]
+trust_level = "trusted"
+
+[mcp_servers.atlassian]
+url = "https://mcp.atlassian.com/v1/mcp/authv2"
+EOF
 "$REPO/scripts/dotfiles-state" merge-mixed codex < "$FIXTURE_ROOT/codex.toml" > "$FIXTURE_ROOT/merged.toml"
 assert_contains "$FIXTURE_ROOT/merged.toml" 'model = "gpt-5.6-sol"'
 assert_contains "$FIXTURE_ROOT/merged.toml" 'model_reasoning_effort = "medium"'
 assert_contains "$FIXTURE_ROOT/merged.toml" "$HOME/dots"
+assert_contains "$FIXTURE_ROOT/merged.toml" '[mcp_servers.atlassian]'
+assert_contains "$FIXTURE_ROOT/merged.toml" 'url = "https://mcp.atlassian.com/v1/mcp/authv2"'
+
+capture_repo="$FIXTURE_ROOT/capture-repo"
+mkdir -p "$capture_repo/scripts" "$capture_repo/config/policies" "$capture_repo/config/portable" "$HOME/.codex"
+cp "$REPO/scripts/dotfiles-state" "$capture_repo/scripts/dotfiles-state"
+cp "$REPO/config/managed-targets.toml" "$capture_repo/config/managed-targets.toml"
+cp "$REPO/config/policies/codex.toml" "$capture_repo/config/policies/codex.toml"
+cp "$REPO/config/portable/codex.toml" "$capture_repo/config/portable/codex.toml"
+cp "$FIXTURE_ROOT/codex.toml" "$HOME/.codex/config.toml"
+"$capture_repo/scripts/dotfiles-state" capture codex --write >/dev/null
+assert_not_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.atlassian]'
+assert_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.context7]'
 
 cp "$FIXTURE_ROOT/codex.toml" "$FIXTURE_ROOT/unknown.toml"
 sed -i '' '/\[features\]/a\
@@ -23,7 +46,6 @@ printf '\n[application_metadata]\nnew_counter = 1\n' >> "$FIXTURE_ROOT/codex.tom
 assert_contains "$FIXTURE_ROOT/local.toml" 'new_counter = 1'
 assert_contains "$FIXTURE_ROOT/warnings" 'preserving unclassified local root: application_metadata'
 
-mkdir -p "$HOME/.codex"
 cat > "$HOME/.codex/config.toml" <<'EOF'
 [mcp_servers.fixture]
 url = "https://fixture-user:fixture-password@example.invalid/mcp"

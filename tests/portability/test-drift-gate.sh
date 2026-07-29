@@ -62,11 +62,11 @@ unstaged_source="$REPO/chezmoi/dot_unstaged-drift-fixture"
 trap 'rm -f "$unstaged_source"; rm -rf "$FIXTURE_ROOT"' EXIT
 printf 'unstaged fixture\n' > "$unstaged_source"
 error="$FIXTURE_ROOT/unstaged-error"
-if ! "$REPO/scripts/dotfiles-state" drift --staged >/dev/null 2>"$error"; then
-    echo "staged drift failed instead of excluding an untracked chezmoi source" >&2
+if "$REPO/scripts/dotfiles-state" drift --staged >/dev/null 2>"$error"; then
+    echo "staged drift accepted an untracked chezmoi source" >&2
     exit 1
 fi
-assert_contains "$error" "untracked dotfiles source not included in drift check"
+assert_contains "$error" "untracked dotfiles source must be staged before drift checking"
 rm "$unstaged_source"
 unset GIT_INDEX_FILE
 

@@ -49,6 +49,5 @@ After spawning, the supervisor records the actual attachment target:
 
 ## Related Files
 
-- `codex/.codex/skills/linear-implementation-supervisor/SKILL.md`
-- `codex/.codex/skills/implementation-task-worker/SKILL.md`
-- `codex/.codex/skills/task-implementation-review/SKILL.md`
+- `chezmoi/dot_codex/skills/implementation-execution/SKILL.md`
+- `chezmoi/dot_codex/skills/task-implementation-review/SKILL.md`

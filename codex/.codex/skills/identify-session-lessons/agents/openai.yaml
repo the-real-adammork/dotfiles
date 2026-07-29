@@ -1,4 +1,0 @@
-interface:
-  display_name: "Identify Session Lessons"
-  short_description: "Find high-value lessons from session friction"
-  default_prompt: "Use the identify-session-lessons skill to review the current session for unexpected friction, score lesson candidates, and get approval before writing anything."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Playwright Coverage"
-  short_description: "Audit covered and missing browser flows"
-  default_prompt: "Use $playwright-coverage to audit which web app flows are covered or missing from Playwright tests."

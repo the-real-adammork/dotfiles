@@ -1,4 +1,0 @@
-interface:
-  display_name: "PRD Builder"
-  short_description: "Create new PRDs from raw requirements"
-  default_prompt: "Use $prd with a requirements source to create a product requirements document."

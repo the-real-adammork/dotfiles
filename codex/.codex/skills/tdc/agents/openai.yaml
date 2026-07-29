@@ -1,4 +1,0 @@
-interface:
-  display_name: "TDC"
-  short_description: "Kick off technical design cycles"
-  default_prompt: "Use $tdc docs/requirements/FEATURE_PRD.md to start a guarded technical design cycle."

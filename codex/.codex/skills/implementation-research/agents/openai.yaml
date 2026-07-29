@@ -1,4 +1,0 @@
-interface:
-  display_name: "Implementation Research"
-  short_description: "Research high-level ideas into build directions"
-  default_prompt: "Use $implementation-research to have repo-defined researcher agents critique an idea and produce a high-level implementation direction."
