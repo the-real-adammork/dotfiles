@@ -239,7 +239,7 @@ with config_path.open("rb") as handle:
     config = tomllib.load(handle)
 
 assert config["model"] == "gpt-5.6-sol"
-assert config["model_reasoning_effort"] == "medium"
+assert "model_reasoning_effort" not in config
 
 node_repl = config["mcp_servers"]["node_repl"]
 assert node_repl["command"] == str(resources / "cua_node/bin/node_repl")
