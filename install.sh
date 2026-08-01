@@ -82,6 +82,15 @@ else
     warn "Homebrew not available, skipping package installation."
 fi
 
+# --- RTK Codex integration ---
+if command -v rtk &>/dev/null; then
+    info "Initializing RTK for Codex..."
+    rtk init --global --codex
+    ok "RTK Codex integration initialized"
+else
+    warn "rtk not found, skipping Codex integration."
+fi
+
 # --- IDB client (required by ios-simulator-mcp) ---
 if [[ "$OS" == "Darwin" ]]; then
     if command -v pipx &>/dev/null; then

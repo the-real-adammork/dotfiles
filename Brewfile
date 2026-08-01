@@ -1,6 +1,8 @@
 # Brewfile — cross-platform CLI tools
 # macOS-only casks, mas entries, and macOS formulae live in Brewfile.macos
 
+tap "hashicorp/tap"
+
 # -----------------------------------------------------------------------------
 # Load-bearing for dotfiles
 # -----------------------------------------------------------------------------
@@ -47,6 +49,7 @@ brew "fzf"
 brew "git-extras"
 brew "git-lfs"
 brew "git-secret"
+brew "gitleaks"
 brew "glab"
 brew "gnu-sed"
 brew "gnupg"
@@ -64,8 +67,10 @@ brew "pandoc"
 brew "pipx"
 brew "poppler"
 brew "resvg"
+brew "rtk"
 brew "sevenzip"
 brew "tealdeer"
+brew "hashicorp/tap/terraform", trusted: true
 brew "trash"
 brew "tree"
 brew "uv"              # used by ~/lib_sh/pdf-to-markdown dependency setup
