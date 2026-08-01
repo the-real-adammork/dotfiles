@@ -17,6 +17,7 @@ local_paths = [
   "mcp_servers.atlassian",
   "mcp_servers.openaiDeveloperDocs",
   "mcp_servers.posthog",
+  "mcp_servers.supabase",
   "marketplaces.openai-bundled",
   "marketplaces.openai-primary-runtime",
   "marketplaces.openai-curated",

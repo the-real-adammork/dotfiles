@@ -77,11 +77,6 @@ enabled = false
 [mcp_servers.nxt]
 url = "https://nxt.fly.dev/mcp"
 
-[mcp_servers.serena]
-command = "serena"
-args = ["start-mcp-server", "--context=codex", "--project-from-cwd"]
-enabled = false
-
 [mcp_servers.node_repl]
 command = "__CODEX_NODE_REPL__"
 startup_timeout_sec = 120
@@ -124,9 +119,6 @@ enabled = false
 
 [mcp_servers.figma]
 url = "https://mcp.figma.com/mcp"
-
-[mcp_servers.supabase]
-command = "__HOME__/lib_sh/supabase-mcp"
 
 [desktop]
 ambient-suggestions-enabled = false

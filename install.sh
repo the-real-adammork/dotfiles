@@ -166,17 +166,6 @@ else
     warn "uv not found, skipping PDF to Markdown Python dependencies."
 fi
 
-# --- Serena MCP server (referenced by Codex config) ---
-if install_group_selected codex; then
-    if command -v uv &>/dev/null; then
-        info "Installing Serena MCP server..."
-        uv tool install --upgrade serena-agent
-        ok "Serena MCP server installed"
-    else
-        warn "uv not found, skipping Serena MCP server install."
-    fi
-fi
-
 # --- Claude Code (CLI) ---
 if install_group_selected claude; then
     if command -v npm &>/dev/null; then

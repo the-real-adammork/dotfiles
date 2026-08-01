@@ -22,6 +22,12 @@ trust_level = "trusted"
 
 [mcp_servers.atlassian]
 url = "https://mcp.atlassian.com/v1/mcp/authv2"
+
+[mcp_servers.posthog]
+url = "https://example.invalid/posthog-mcp"
+
+[mcp_servers.supabase]
+command = "$HOME/.local/state/dots/bin/supabase-mcp"
 EOF
 "$REPO/scripts/dotfiles-state" merge-mixed codex < "$FIXTURE_ROOT/codex.toml" > "$FIXTURE_ROOT/merged.toml"
 assert_contains "$FIXTURE_ROOT/merged.toml" 'model = "gpt-5.6-sol"'
@@ -29,6 +35,8 @@ assert_contains "$FIXTURE_ROOT/merged.toml" 'model_reasoning_effort = "medium"'
 assert_contains "$FIXTURE_ROOT/merged.toml" "$HOME/dots"
 assert_contains "$FIXTURE_ROOT/merged.toml" '[mcp_servers.atlassian]'
 assert_contains "$FIXTURE_ROOT/merged.toml" 'url = "https://mcp.atlassian.com/v1/mcp/authv2"'
+assert_contains "$FIXTURE_ROOT/merged.toml" '[mcp_servers.posthog]'
+assert_contains "$FIXTURE_ROOT/merged.toml" '[mcp_servers.supabase]'
 python3 - "$FIXTURE_ROOT/merged.toml" <<'PY'
 import sys
 import tomllib
@@ -49,6 +57,8 @@ cp "$REPO/config/portable/codex.toml" "$capture_repo/config/portable/codex.toml"
 cp "$FIXTURE_ROOT/codex.toml" "$HOME/.codex/config.toml"
 "$capture_repo/scripts/dotfiles-state" capture codex --write >/dev/null
 assert_not_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.atlassian]'
+assert_not_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.posthog]'
+assert_not_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.supabase]'
 assert_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.context7]'
 assert_contains "$capture_repo/config/portable/codex.toml" 'vim_mode_default = false'
 assert_not_contains "$capture_repo/config/portable/codex.toml" 'fixture-model'

@@ -209,7 +209,6 @@ assert_contains "$HOME/.claude/settings.json" "$HOME/.tmux/plugins/tmux-agent-si
 assert_not_contains "$HOME/.codex/config.toml" "__HOME__"
 assert_not_contains "$HOME/.codex/config.toml" "__CODEX_"
 assert_not_contains "$REPO/install.sh" 'apply --only codex,claude'
-assert_contains "$REPO/install.sh" 'uv tool install --upgrade serena-agent'
 assert_contains "$REPO/Brewfile" 'brew "git-secret"'
 assert_contains "$REPO/Brewfile" 'brew "rtk"'
 assert_contains "$REPO/install.sh" 'rtk init --global --codex'
@@ -260,13 +259,13 @@ xcodebuild_mcp = config["mcp_servers"]["XcodeBuildMCP"]
 assert xcodebuild_mcp["command"] == "xcodebuildmcp"
 assert xcodebuild_mcp["args"] == ["mcp"]
 assert config["mcp_servers"]["ios-simulator"]["env"]["IOS_SIMULATOR_MCP_IDB_PATH"] == str(home / ".local/bin/idb")
-supabase_mcp = config["mcp_servers"]["supabase"]
-assert supabase_mcp["command"] == str(home / "lib_sh/supabase-mcp")
-assert "args" not in supabase_mcp
+assert "supabase" not in config["mcp_servers"]
 PY
 
-assert_contains "$HOME/lib_sh/supabase-mcp" 'gopass show -o supabase/mcp-token'
-assert_contains "$HOME/lib_sh/supabase-mcp" 'Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}'
+if [[ -e "$HOME/lib_sh/supabase-mcp" ]]; then
+  echo "machine-local Supabase MCP wrapper was rendered from portable source" >&2
+  exit 1
+fi
 
 assert_contains "$REPO/Brewfile.macos" 'tap "getsentry/xcodebuildmcp"'
 assert_contains "$REPO/Brewfile.macos" 'brew "xcodebuildmcp"'
