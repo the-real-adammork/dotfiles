@@ -27,6 +27,16 @@ nonessential creative, media, utility, and App Store apps later with:
 ./install.sh --only tmux,nvim,zsh
 ```
 
+## Upgrade Required Tools
+
+```bash
+./upgrade.sh
+```
+
+This upgrades required Homebrew formulae, casks, App Store dependencies, and
+the non-Brew CLI tools provisioned by `install.sh`. It does not install or
+upgrade the opt-in software from `Brewfile.macos.optional`.
+
 ## Preview and Apply
 
 ```bash
