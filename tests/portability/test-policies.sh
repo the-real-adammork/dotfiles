@@ -7,6 +7,7 @@ cat > "$FIXTURE_ROOT/codex.toml" <<EOF
 model_reasoning_effort = "medium"
 EOF
 cat "$REPO/config/portable/codex.toml" >> "$FIXTURE_ROOT/codex.toml"
+sed -i '' '/^model_reasoning_summary = /d' "$FIXTURE_ROOT/codex.toml"
 cat >> "$FIXTURE_ROOT/codex.toml" <<EOF
 
 [tui]
@@ -46,6 +47,8 @@ with open(sys.argv[1], "rb") as handle:
 
 assert config["tui"]["vim_mode_default"] is True
 assert config["tui"]["model_availability_nux"]["fixture-model"] == 1
+assert config["model_reasoning_summary"] == "auto"
+assert "model_reasoning_summary" not in config["marketplaces"]["compound-engineering-plugin"]
 PY
 
 capture_repo="$FIXTURE_ROOT/capture-repo"
