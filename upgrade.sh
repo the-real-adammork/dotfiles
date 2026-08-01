@@ -3,6 +3,7 @@ set -uo pipefail
 
 DOTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$DOTS_DIR/scripts/homebrew-bootstrap.sh"
+source "$DOTS_DIR/scripts/homebrew-macos-apps.sh"
 
 # Match install.sh when invoked from a translated shell on Apple Silicon.
 homebrew_restart_native "$0" "$@"
@@ -42,8 +43,20 @@ if [[ "$OS" == "Darwin" ]]; then
         brew trust --formula facebook/fb/idb-companion
     run_step "Trusting the XcodeBuildMCP formula" \
         brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp
-    run_step "Upgrading required macOS dependencies" \
-        brew bundle upgrade --file="$DOTS_DIR/Brewfile.macos"
+    if macos_casks="$(homebrew_macos_casks "$DOTS_DIR/Brewfile.macos")"; then
+        run_step "Upgrading required macOS formulae and App Store dependencies" \
+            env HOMEBREW_BUNDLE_CASK_SKIP="$macos_casks" \
+            brew bundle upgrade --file="$DOTS_DIR/Brewfile.macos"
+
+        while IFS= read -r cask; do
+            [[ -n "$cask" ]] || continue
+            run_step "Upgrading macOS app: $cask" \
+                homebrew_install_or_upgrade_cask "$cask"
+        done <<<"$macos_casks"
+    else
+        warn "Could not list casks from Brewfile.macos"
+        failures+=("Brewfile.macos cask inventory")
+    fi
 fi
 
 if command -v rtk &>/dev/null; then

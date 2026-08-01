@@ -8,6 +8,8 @@ bash -n "$UPGRADE"
 assert_contains "$UPGRADE" 'brew bundle upgrade --file="$DOTS_DIR/Brewfile"'
 assert_contains "$UPGRADE" 'brew bundle upgrade --file="$DOTS_DIR/Brewfile.macos"'
 assert_not_contains "$UPGRADE" 'Brewfile.macos.optional'
+assert_contains "$UPGRADE" 'HOMEBREW_BUNDLE_CASK_SKIP="$macos_casks"'
+assert_contains "$UPGRADE" 'homebrew_install_or_upgrade_cask "$cask"'
 assert_contains "$UPGRADE" 'homebrew_restart_native "$0" "$@"'
 assert_contains "$UPGRADE" 'brew trust --formula facebook/fb/idb-companion'
 assert_contains "$UPGRADE" 'brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp'

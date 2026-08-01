@@ -3,6 +3,7 @@ set -euo pipefail
 
 DOTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$DOTS_DIR/scripts/homebrew-bootstrap.sh"
+source "$DOTS_DIR/scripts/homebrew-macos-apps.sh"
 
 # Universal macOS binaries inherit a translated parent's architecture. Restart
 # the bootstrap natively so Apple Silicon machines always select ARM Homebrew.
@@ -12,6 +13,7 @@ source "$DOTS_DIR/scripts/claude-plugins.sh"
 source "$DOTS_DIR/scripts/codex-plugins.sh"
 source "$DOTS_DIR/scripts/install-groups.sh"
 ONLY=""
+macos_app_failures=()
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -54,7 +56,27 @@ if command -v brew &>/dev/null; then
         brew tap getsentry/xcodebuildmcp
         brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp
         info "Installing macOS tools from Brewfile.macos..."
-        brew bundle --file="$DOTS_DIR/Brewfile.macos"
+        if macos_casks="$(homebrew_macos_casks "$DOTS_DIR/Brewfile.macos")"; then
+            if ! HOMEBREW_BUNDLE_CASK_SKIP="$macos_casks" \
+                brew bundle --file="$DOTS_DIR/Brewfile.macos"; then
+                warn "macOS formula or App Store dependency installation failed"
+                macos_app_failures+=("Brewfile.macos formulae or App Store dependencies")
+            fi
+
+            while IFS= read -r cask; do
+                [[ -n "$cask" ]] || continue
+                info "Installing or upgrading macOS app: $cask..."
+                if homebrew_install_or_upgrade_cask "$cask"; then
+                    ok "$cask is installed"
+                else
+                    warn "$cask failed; continuing with the remaining macOS apps"
+                    macos_app_failures+=("$cask")
+                fi
+            done <<<"$macos_casks"
+        else
+            warn "Could not list casks from Brewfile.macos"
+            macos_app_failures+=("Brewfile.macos cask inventory")
+        fi
 
         # Select the full Xcode installation and complete its one-time setup.
         # -runFirstLaunch accepts the license and installs required components.
@@ -309,4 +331,9 @@ fi
 
 # --- Summary ---
 echo ""
+if (( ${#macos_app_failures[@]} > 0 )); then
+    warn "Installation completed with ${#macos_app_failures[@]} macOS dependency failure(s):"
+    printf '  - %s\n' "${macos_app_failures[@]}" >&2
+    exit 1
+fi
 ok "Done! Portable dotfiles are managed by chezmoi."
