@@ -702,16 +702,21 @@ def cmd_adopt(args) -> int:
     backup.mkdir(parents=True, mode=0o700)
     checkpoint = STATE / "adoption.json"
     selected_roots = [home / item for item in selected]
-    for target in selected_roots:
-        target.parent.mkdir(parents=True, exist_ok=True)
     folded_directories: list[dict[str, str]] = []
     unmanaged_targets = declared_unmanaged_targets()
+    folded_candidates: list[Path] = []
     for target in selected_roots:
-        if not target.is_symlink():
-            continue
+        if target.is_symlink() and target.resolve(strict=False).is_dir():
+            folded_candidates.append(target)
+        for parent in target.parents:
+            if parent == home:
+                break
+            if parent.is_symlink():
+                referent = parent.resolve(strict=False)
+                if referent == REPO or REPO in referent.parents:
+                    folded_candidates.append(parent)
+    for target in sorted(dict.fromkeys(folded_candidates), key=lambda path: len(path.parts)):
         referent = target.resolve(strict=False)
-        if not referent.is_dir():
-            continue
         rel = target.relative_to(home)
         unmanaged_descendants: list[str] = []
         for unmanaged in unmanaged_targets:
@@ -787,7 +792,10 @@ def cmd_adopt(args) -> int:
 
             # Copy portable/runtime state, but never read or copy declared
             # credentials. Move those exact nodes into the live tree instead.
-            shutil.copytree(referent, target, symlinks=True, ignore=ignore_unmanaged)
+            if referent.is_dir():
+                shutil.copytree(referent, target, symlinks=True, ignore=ignore_unmanaged)
+            else:
+                target.mkdir(parents=True)
             for relative in unmanaged:
                 source = referent / relative
                 destination = target / relative
@@ -795,6 +803,8 @@ def cmd_adopt(args) -> int:
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     source.rename(destination)
             materialized.append(item)
+        for target in selected_roots:
+            target.parent.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         for item in reversed(materialized):
             target = home / item["target"]

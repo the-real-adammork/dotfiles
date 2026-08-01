@@ -15,6 +15,7 @@ ln -s "$legacy_stow/zsh/.zshrc" "$HOME/.zshrc"
 ln -s "$legacy_stow/tmux/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
 ln -s "$legacy_stow/bat/.config/bat" "$HOME/.config/bat"
+ln -s "$legacy_stow/git/.config/git" "$HOME/.config/git"
 # Source validation is lexical and must permit the legacy symlink topology
 # that preview/adopt are responsible for replacing.
 "$REPO/scripts/dotfiles-state" validate >/dev/null
@@ -32,6 +33,7 @@ printf '[user]\n\tname = Fixture User\n\temail = fixture@example.invalid\n' > "$
 "$REPO/scripts/dotfiles-state" adopt --home "$HOME" --only zsh,git,bat,gh --yes >/dev/null
 [[ ! -L "$HOME/.zshrc" ]] || { echo "adoption left Stow symlink" >&2; exit 1; }
 [[ -d "$HOME/.config/bat" && ! -L "$HOME/.config/bat" ]] || { echo "adoption left directory Stow symlink" >&2; exit 1; }
+[[ -f "$HOME/.config/git/ignore" && ! -L "$HOME/.config/git" ]] || { echo "adoption left dangling parent Stow symlink" >&2; exit 1; }
 [[ -L "$HOME/.tmux.conf" ]] || { echo "bounded adoption changed unrelated tmux target" >&2; exit 1; }
 assert_contains "$HOME/.config/git/local" 'fixture@example.invalid'
 [[ "$(/usr/bin/stat -f '%Lp' "$HOME/.config/git/local")" == "600" ]] || { echo "local Git identity permissions are not private" >&2; exit 1; }
@@ -44,6 +46,7 @@ printf 'changed\n' > "$HOME/.zshrc"
 assert_not_contains "$HOME/.zshrc" 'changed'
 [[ -L "$HOME/.zshrc" && "$(readlink "$HOME/.zshrc")" == "$legacy_stow/zsh/.zshrc" ]] || { echo "rollback did not restore file symlink topology" >&2; exit 1; }
 [[ -L "$HOME/.config/bat" && "$(readlink "$HOME/.config/bat")" == "$legacy_stow/bat/.config/bat" ]] || { echo "rollback did not restore directory symlink topology" >&2; exit 1; }
+[[ -L "$HOME/.config/git" && "$(readlink "$HOME/.config/git")" == "$legacy_stow/git/.config/git" ]] || { echo "rollback did not restore parent symlink topology" >&2; exit 1; }
 [[ -L "$HOME/.tmux.conf" ]] || { echo "rollback changed unrelated tmux target" >&2; exit 1; }
 
 mkdir -p "$HOME/.codex"
