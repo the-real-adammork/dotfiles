@@ -217,7 +217,7 @@ def portable_source(name: str, *, staged: bool = False) -> tuple[dict, dict]:
 
 def merge_config(name: str, live: dict, *, staged: bool = False) -> tuple[dict, dict]:
     policy, portable = portable_source(name, staged=staged)
-    roots = set(policy["portable_roots"])
+    roots = policy["portable_roots"]
     local_roots = set(policy.get("local_roots", []))
     local_paths = [tuple(item.split(".")) for item in policy.get("local_paths", [])]
     safe = set(policy.get("safe_sensitive_keys", []))
