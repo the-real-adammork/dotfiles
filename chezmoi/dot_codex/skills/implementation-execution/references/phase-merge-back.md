@@ -73,7 +73,7 @@ Do not dump full diffs by default. If a dirty or untracked path appears secret-b
 
 3. Compute path overlap between dirty base paths and paths changed by the accepted phase commit range. Treat exact path matches as potential conflicts. For directories or generated trees, treat a dirty path under a phase-changed directory as a potential conflict unless the repo's ownership rules make it clearly independent.
 
-4. If dirty paths are non-overlapping and the base branch is an ancestor of the phase branch, merge back with `git merge --ff-only`. Do not stash local changes as the default preservation strategy, because stashes can hide secret-bearing files and make the workflow less auditable. Use stash only after explicit human approval and after `$secrets` classification when suspected secrets/runtime data are present.
+4. If dirty paths are non-overlapping and the base branch is an ancestor of the phase branch, merge back with `git merge --ff-only`. Do not stash local changes as the default preservation strategy, because stashes can hide secret-bearing files and make the workflow less auditable. Use stash only after explicit human approval and after applying `$secrets` safeguards when suspected secrets/runtime data are present.
 
 5. If dirty paths overlap, the base branch diverged, or fast-forward fails, use the merge reconciliation protocol. The supervisor is expected to make reasonable autonomous merge decisions and only escalate critical mismatches.
 

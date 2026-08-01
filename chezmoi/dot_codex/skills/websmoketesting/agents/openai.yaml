@@ -1,4 +1,6 @@
 interface:
   display_name: "Web Smoke Testing"
   short_description: "Playwright smoke tests for real user flows"
-  default_prompt: "Use the websmoketesting skill to write, run, debug, or report Playwright smoke tests for real user journeys."
+  default_prompt: "Use $websmoketesting to run and report the existing Playwright smoke tests for this user journey."
+policy:
+  allow_implicit_invocation: false

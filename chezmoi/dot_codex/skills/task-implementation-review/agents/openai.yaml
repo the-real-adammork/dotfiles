@@ -2,3 +2,5 @@ interface:
   display_name: "Task Implementation Review"
   short_description: "Review task code against its plan"
   default_prompt: "Use $task-implementation-review to review this task implementation before human review."
+policy:
+  allow_implicit_invocation: false

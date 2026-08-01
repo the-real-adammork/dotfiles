@@ -9,6 +9,14 @@ EOF
 cat "$REPO/config/portable/codex.toml" >> "$FIXTURE_ROOT/codex.toml"
 cat >> "$FIXTURE_ROOT/codex.toml" <<EOF
 
+[tui]
+vim_mode_default = false
+
+[tui.model_availability_nux]
+"fixture-model" = 1
+EOF
+cat >> "$FIXTURE_ROOT/codex.toml" <<EOF
+
 [projects."$HOME/dots"]
 trust_level = "trusted"
 
@@ -21,6 +29,16 @@ assert_contains "$FIXTURE_ROOT/merged.toml" 'model_reasoning_effort = "medium"'
 assert_contains "$FIXTURE_ROOT/merged.toml" "$HOME/dots"
 assert_contains "$FIXTURE_ROOT/merged.toml" '[mcp_servers.atlassian]'
 assert_contains "$FIXTURE_ROOT/merged.toml" 'url = "https://mcp.atlassian.com/v1/mcp/authv2"'
+python3 - "$FIXTURE_ROOT/merged.toml" <<'PY'
+import sys
+import tomllib
+
+with open(sys.argv[1], "rb") as handle:
+    config = tomllib.load(handle)
+
+assert config["tui"]["vim_mode_default"] is True
+assert config["tui"]["model_availability_nux"]["fixture-model"] == 1
+PY
 
 capture_repo="$FIXTURE_ROOT/capture-repo"
 mkdir -p "$capture_repo/scripts" "$capture_repo/config/policies" "$capture_repo/config/portable" "$HOME/.codex"
@@ -32,6 +50,8 @@ cp "$FIXTURE_ROOT/codex.toml" "$HOME/.codex/config.toml"
 "$capture_repo/scripts/dotfiles-state" capture codex --write >/dev/null
 assert_not_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.atlassian]'
 assert_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.context7]'
+assert_contains "$capture_repo/config/portable/codex.toml" 'vim_mode_default = false'
+assert_not_contains "$capture_repo/config/portable/codex.toml" 'fixture-model'
 
 cp "$FIXTURE_ROOT/codex.toml" "$FIXTURE_ROOT/unknown.toml"
 sed -i '' '/\[features\]/a\

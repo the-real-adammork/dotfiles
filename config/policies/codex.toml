@@ -5,16 +5,18 @@ portable_roots = [
   "approval_policy", "sandbox_mode", "web_search", "personality", "model",
   "approvals_reviewer", "model_reasoning_summary",
   "hide_agent_reasoning", "service_tier", "sandbox_workspace_write", "features",
-  "notice", "plugins", "mcp_servers", "desktop", "marketplaces",
+  "notice", "plugins", "mcp_servers", "desktop", "marketplaces", "tui",
 ]
-local_roots = ["projects", "tui", "hooks", "model_reasoning_effort"]
+local_roots = ["projects", "hooks", "model_reasoning_effort"]
 local_paths = [
+  "tui.model_availability_nux",
   "mcp_servers.node_repl.env.NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S",
   "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_BUILD_FLAVOR",
   "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_VERSION",
   "mcp_servers.figma.enabled",
   "mcp_servers.atlassian",
   "mcp_servers.openaiDeveloperDocs",
+  "mcp_servers.posthog",
   "marketplaces.openai-bundled",
   "marketplaces.openai-primary-runtime",
   "marketplaces.openai-curated",

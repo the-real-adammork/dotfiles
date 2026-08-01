@@ -1,0 +1,6 @@
+interface:
+  display_name: "Git Secret"
+  short_description: "Encrypt repository secrets with git-secret"
+  default_prompt: "Use $git-secret to encrypt and verify repository secret files."
+policy:
+  allow_implicit_invocation: false

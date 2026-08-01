@@ -2,6 +2,12 @@
 
 Keep a repository's root checkout on its main branch. When work needs a separate branch, create it in a linked worktree under `.worktrees/<branch-name>/` instead of switching the root checkout away from main.
 
+## Engineering Principles
+
+Use YAGNI (You Aren't Gonna Need It): don't build functionality until it is actually needed.
+
+Use ASD-STE100 Simplified Technical English when creating tickets, tasks, or specifications.
+
 ## Git Worktree Isolation
 
 When working inside a git worktree, never create symlinks that point to paths in the main repo or sibling worktrees, including `node_modules`, `.env`, `venv`, data dirs, config files, or build artifacts. Worktrees exist to isolate state; symlinking defeats that and causes mutations in one worktree to silently affect others.
@@ -46,21 +52,28 @@ For apps that require login, prefer seeded durable local/test accounts so smoke 
 - Do not print passwords, tokens, or secret values in logs, docs, comments, or final responses.
 - Verify seeded accounts can authenticate locally before claiming login, smoke, or E2E flows pass.
 
+{{- if eq .chezmoi.hostname "Mac" }}
+
+## Jira Attachments
+
+Use `jira-attach` to upload media to Jira tickets.
+
+## Credential Access
+
+Use `gopass` for authorized secrets and credentials. Run `gopass ls` to find an entry, but do not log or paste the listing. Pass values directly to the consuming command through standard input or a single-command environment; never inspect, print, log, paste, or persist them. Ask when the entry or authorization is unclear.
+{{- end }}
+
 ## Playbooks
 
 Use this table to route recurring work to the right global skill. Read the skill only when the task matches the topic.
 
-| Topic                                                          | Skill                                              |
-| -------------------------------------------------------------- | -------------------------------------------------- |
-| Web smoke testing and Playwright E2E                           | `~/.codex/skills/websmoketesting/SKILL.md`         |
-| Playwright coverage gaps by user flow                          | `~/.codex/skills/playwright-coverage/SKILL.md`     |
-| Design brief of app pages, functionality, and available data   | `~/.codex/skills/design-brief/SKILL.md`            |
-| Durable local/test account seeding                             | `~/.codex/skills/account-seeding/SKILL.md`         |
-| Researching a high-level idea into an implementation direction | `~/.codex/skills/implementation-research/SKILL.md` |
-| Repo-specific expert researcher profiles                       | `~/.codex/skills/expert-researcher/SKILL.md`       |
-| Repo-specific expert implementation or research agent profiles | `~/.codex/skills/expert-agent/SKILL.md`            |
-| Secrets, credentials, env files, API keys                      | `~/.codex/skills/secrets/SKILL.md`                 |
-| Git commits and commit messages                                | `~/.codex/skills/commit/SKILL.md`                  |
+| Topic                                        | Skill                                          |
+| -------------------------------------------- | ---------------------------------------------- |
+| Web smoke testing and Playwright E2E         | `~/.codex/skills/websmoketesting/SKILL.md`     |
+| Playwright coverage gaps by user flow        | `~/.codex/skills/playwright-coverage/SKILL.md` |
+| Durable local/test account seeding           | `~/.codex/skills/account-seeding/SKILL.md`     |
+| Secrets, credentials, env files, API keys    | `~/.codex/skills/secrets/SKILL.md`             |
+| Git commits and commit messages              | `~/.codex/skills/commit/SKILL.md`              |
 
 <!-- BEGIN COMPOUND CODEX TOOL MAP -->
 ## Compound Codex Tool Mapping (Claude Compatibility)
@@ -84,3 +97,5 @@ Tool mapping:
 - Skill: open the referenced SKILL.md and follow it
 - ExitPlanMode: ignore
 <!-- END COMPOUND CODEX TOOL MAP -->
+
+@{{ .chezmoi.homeDir }}/.codex/RTK.md

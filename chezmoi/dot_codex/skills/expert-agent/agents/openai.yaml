@@ -2,3 +2,5 @@ interface:
   display_name: "Expert Agent"
   short_description: "Create repo-specific expert agent profiles"
   default_prompt: "Use $expert-agent to propose repo-specific expert researcher or worker agents for approval before writing them."
+policy:
+  allow_implicit_invocation: false

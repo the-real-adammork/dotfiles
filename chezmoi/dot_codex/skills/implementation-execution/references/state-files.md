@@ -523,6 +523,17 @@ mocks_or_fixtures:
     conversion_task: null
     evidence:
       - "docs/qa/artifacts/phase-2/create-record-trace.zip"
+secret_material_changed: true
+secret_posture: "side-project/greenfield"
+secrets:
+  - name: "JWT_SECRET"
+    generated_by: "agent"
+    storage: "ignored-plaintext"
+    plaintext_ignored: true
+    committed_plaintext: false
+    verification:
+      - command: "/usr/bin/git status --short"
+        result: "no plaintext secret staged"
 residual_risks: []
 review_status: approved # not_reviewed | approved | needs_fix | blocked
 lesson_candidate:

@@ -59,6 +59,11 @@ export PATH="$PATH:$HOME/.local/share/mise/installs/cargo-anchor-cli/0.31.1/bin"
   export PATH="$PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
 {{- end }}
 
+# Load machine-local environment configuration kept outside the dotfiles repository.
+machine_env_file="${XDG_STATE_HOME:-$HOME/.local/state}/dots/machine-env.zsh"
+[[ -r "$machine_env_file" ]] && source "$machine_env_file"
+unset machine_env_file
+
 # Man pages in nvim
 export MANPAGER="nvim +Man!"
 
@@ -86,6 +91,9 @@ function codex-commit() {
 }
 
 alias cxc='codex-commit'
+alias cma='codex mcp add atlassian --url https://mcp.atlassian.com/v1/mcp/authv2'
+alias cyolo='codex --dangerously-bypass-approvals-and-sandbox'
+alias cyolor='codex resume --dangerously-bypass-approvals-and-sandbox'
 
 # Keep Codex diffs foreground-colored without tinted line backgrounds.
 function codex() {

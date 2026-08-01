@@ -198,6 +198,7 @@ chmod +x "$alternate_home/.tmux/plugins/tmux-agent-sidebar/hook.sh"
 "$REPO/scripts/dotfiles-state" apply --home "$HOME"
 
 assert_file "$HOME/.zshrc"
+assert_contains "$HOME/.zshrc" "alias cma='codex mcp add atlassian --url https://mcp.atlassian.com/v1/mcp/authv2'"
 assert_file "$HOME/.gitconfig"
 assert_file "$HOME/.codex/config.toml"
 assert_file "$HOME/.claude/settings.json"

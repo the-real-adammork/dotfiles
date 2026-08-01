@@ -90,7 +90,7 @@ The result must include:
 - lesson candidate when the worker found a recurring, proven, repo-specific problem;
 - recommended downstream plan edits;
 - blockers or escalations.
-- secret handling fields from `$secrets` when secret material changed.
+- secret handling fields defined in `references/state-files.md` when secret material changed; include project posture, credential names, generator, storage type, plaintext ignore status, committed-plaintext status, and verification results, but never secret values.
 - compact event log path when the worker wrote `events/worker-<lane>-<timestamp>.jsonl`.
 
 ## Restrictions
@@ -105,7 +105,7 @@ The result must include:
 - Do not satisfy service wiring with mocks when real wiring is required; if a mock/fixture/fake is useful during implementation, disclose it and make sure it can be reconciled by the orchestrator's mock/fixture ledger.
 - Do not spawn other agents.
 - Do not call local setup friction a human blocker. Missing dev tools, stale installs, local runtime setup, generated files, migrations, ports, and non-secret env config should be reported as blocker-resolver candidates.
-- Do not generate, write, reveal, hide, stage, or commit secret material without following `$secrets`.
+- Apply `$secrets` safeguards whenever secret material is present. Do not generate credentials or choose storage unless the user explicitly invoked `$credential-management`; do not operate repository encryption unless the user explicitly invoked `$git-secret`.
 
 ## Lesson Candidates
 

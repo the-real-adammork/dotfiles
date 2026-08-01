@@ -1,11 +1,19 @@
 ---
 name: websmoketesting
-description: "Use when Codex needs to write, run, debug, or report web smoke tests and E2E checks for a product website or web app, especially with Playwright, real user journeys, durable login accounts, page coverage, service integration proof, and real-data validation."
+description: "Manually invoked workflow for writing, running, debugging, or reporting Playwright smoke tests and browser E2E checks for real user journeys. Use only when the user explicitly invokes $websmoketesting."
 ---
 
 # Web Smoke Testing
 
-For any product with a website or web app, verify important behavior with Playwright. Test the product the way a normal user would use it, not as isolated units.
+Verify explicitly requested web behavior with Playwright. Test the product the way a normal user would use it, not as isolated units.
+
+## Authorization Boundary
+
+- Perform only the requested operations: report, run existing tests, write or update tests, or debug failures.
+- Running tests may start required local services and browsers. It does not authorize changing product code, test infrastructure, accounts, credentials, or external resources.
+- Write or update tests only when the user explicitly asks. If Playwright is not configured, report the missing setup unless the request authorizes adding it.
+- Do not create or seed accounts, change credential material, fix product code, or record proof videos unless the user explicitly requests that action.
+- Classify and report failures before proposing the next action. Apply a fix only when the user asks for implementation.
 
 ## Core Rule
 
@@ -18,7 +26,7 @@ Use Playwright to prove the integrated system works end to end:
 - verify key functionality works together across frontend, backend, persistence, jobs, and external/local services;
 - treat unexpected UI/API/data results as a coding or integration failure first, not as a reason to weaken the test.
 
-If the app cannot be tested like a normal user because stable credentials or seed data are missing, flag that as an implementation issue. Fix it by adding durable local/test accounts and seed data. Use the `account-seeding` skill for credential handling.
+If stable credentials or seed data are missing, report the smoke test as blocked and recommend explicit use of `$account-seeding`. Do not create accounts as part of this skill unless the user separately authorizes that work.
 
 ## Durable Accounts
 
@@ -30,11 +38,11 @@ Expected credential source:
 account.env
 ```
 
-The plaintext `account.env` must be ignored and encrypted with `git-secret` as `account.env.secret`. Do not print secrets. If the account file is absent or cannot be revealed, the smoke test is blocked on account seeding, not complete.
+The plaintext `account.env` must be ignored and encrypted with `git-secret` as `account.env.secret`. Do not print secrets. If the account file is absent or cannot be revealed, report the smoke test as blocked.
 
 ## Writing Tests
 
-Prefer the repo's existing Playwright setup and scripts. If none exists, add the smallest conventional setup that fits the repo.
+When the user asks to write or update tests, prefer the repo's existing Playwright setup and scripts. Add a new setup only when the request explicitly includes it.
 
 Write tests around human-visible outcomes:
 
@@ -43,7 +51,7 @@ Write tests around human-visible outcomes:
 - avoid arbitrary sleeps;
 - assert page content, navigation, persisted data, API-backed state, and error-free user paths;
 - include login, navigation, create/read/update flows, and critical empty/error/success states when relevant;
-- capture screenshots/traces/videos on failure when the repo supports it.
+- preserve failure artifacts produced by the existing Playwright configuration; do not enable new screenshot, trace, or video capture unless the user asks.
 
 Do not add smoke-test instructions, reviewer notes, local setup guidance, or handoff text to product UI or seeded user-facing content. Those belong in docs/artifacts, not in the app.
 
@@ -56,7 +64,7 @@ Classify failures this way:
 - `test_setup_failure`: server, port, browser, env, seed account, or fixture setup is missing.
 - `test_bug`: assertion is stale, brittle, or does not match the product requirement.
 
-Default to `product_failure` or `integration_failure` when Playwright reaches the app but gets the wrong real response. Fix the code or seed path first. Rewrite the test only after confirming the test expectation is wrong.
+Default to `product_failure` or `integration_failure` when Playwright reaches the app but gets the wrong real response. Report the failure without changing product code or seed data. Rewrite a test only after confirming its expectation is wrong and only when the request authorizes test changes.
 
 ## Reporting
 

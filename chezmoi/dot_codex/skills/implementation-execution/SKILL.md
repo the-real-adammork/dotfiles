@@ -64,7 +64,7 @@ Load only the module needed for the current action:
 - `references/qa-acceptance.md` - phase acceptance gate, service-wiring verification, mock/fixture ledger reconciliation, platform E2E expectations, and acceptance packet contents.
 - `references/lessons.md` - lesson candidate rules, orchestrator promotion criteria, `docs/lessons` creation, and `AGENTS.md` pointers.
 - `references/consistency-handoff.md` - batched plan consistency updates, compact actual-vs-planned notes, context handoffs, and final output.
-- Use `$secrets` before generating, writing, revealing, hiding, staging, committing, or reviewing secrets, credentials, env files, database passwords, app keys, API tokens, or secret-bearing config.
+- Apply `$secrets` safeguards before inspecting, writing, staging, committing, or reviewing suspected secret material. Credential generation and storage require an explicit `$credential-management` invocation. Repository encryption operations require an explicit `$git-secret` invocation.
 
 ## Workflow
 
@@ -115,7 +115,7 @@ Load only the module needed for the current action:
 - Do not mark a phase complete until the phase acceptance gate passes and the acceptance packet exists.
 - Do not request `phase_completion` until the delegated acceptance worker/agent has written the phase-transition handoff/report with local setup instructions and smoke-test expectations, and the orchestrator has validated that result.
 - Do not put smoke-test instructions, reviewer instructions, implementation workflow prompts, agent handoff text, acceptance checklists, internal QA notes, or local setup guidance into the actual product UI, API responses, seed user-facing content, generated demo content, or runtime assets unless the product requirements explicitly call for end-user help content. These belong in handoff documents, QA artifacts, acceptance packets, transition YAML, or developer docs only. If workflow-only text appears in runtime app files, phase acceptance is blocked until it is removed from the app surface.
-- Do not request `phase_completion` for an app with login-gated smoke tests unless local setup seeds an admin user and the transition handoff/report tells the supervisor how to access it. Include harmless local/demo credentials only when classified safe under `$secrets`; otherwise list the ignored plaintext file path and variable/account names without printing secret values.
+- Do not request `phase_completion` for an app with login-gated smoke tests unless local setup seeds an admin user and the transition handoff/report tells the supervisor how to access it. Include harmless local/demo credentials only when previously classified safe through an explicit `$credential-management` run; otherwise list the ignored plaintext file path and variable/account names without printing secret values.
 - Do not write abbreviated, malformed, manually typed, or unvalidated commit hashes into workflow state; resolve full 40-character hashes with `/usr/bin/git rev-parse ...^{commit}` and validate them before transition handling.
 - Do not advance to the next phase before the phase-merge sub-agent merges or reconciles the accepted phase branch/worktree back into the run base branch and records the resulting base commit and any reconciliation decisions in `transitions/<phase>.yaml`.
 - Do not launch the next phase orchestrator before the supervisor has stopped the completed phase orchestrator pane/session or recorded an explicit teardown failure.
@@ -125,7 +125,7 @@ Load only the module needed for the current action:
 - Do not block next-phase orchestrator startup on local verification or smoke-report printing after the completed phase has been merged to the run base branch and the completed orchestrator has been stopped.
 - Do not block supervisor progress on workflow-auditor reports. Workflow auditing is background follow-up for later review, not a prerequisite for phase transition, local verification, smoke reporting, or escalation handling.
 - Do not stop after a phase completes while `run.yaml` points at another phase, unless execution scope is explicitly `single-phase`, an allowed escalation blocks progress, context handoff is required, or the user stops the workflow.
-- Do not commit plaintext unsafe secrets; use `$secrets` for classification, generation, `git-secret`, and verification.
+- Do not commit unsafe plaintext secrets. Apply `$secrets` safeguards, and require explicit `$credential-management` or `$git-secret` invocation for those operational workflows.
 
 ## Handoff
 

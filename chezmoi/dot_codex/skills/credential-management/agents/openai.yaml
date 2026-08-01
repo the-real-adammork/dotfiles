@@ -1,0 +1,6 @@
+interface:
+  display_name: "Credential Management"
+  short_description: "Classify, generate, and store credentials safely"
+  default_prompt: "Use $credential-management to classify and manage these credentials safely."
+policy:
+  allow_implicit_invocation: false
