@@ -63,6 +63,10 @@ Use `jira-attach` to upload media to Jira tickets.
 Use `gopass` for authorized secrets and credentials. Run `gopass ls` to find an entry, but do not log or paste the listing. Pass values directly to the consuming command through standard input or a single-command environment; never inspect, print, log, paste, or persist them. Ask when the entry or authorization is unclear.
 {{- end }}
 
+## Machine Instructions
+
+Read `~/.codex/AGENTS.machine.md` if present. Keep this local add-on out of shared configuration.
+
 ## Playbooks
 
 Use this table to route recurring work to the right global skill. Read the skill only when the task matches the topic.
@@ -72,6 +76,7 @@ Use this table to route recurring work to the right global skill. Read the skill
 | Web smoke testing and Playwright E2E         | `~/.codex/skills/websmoketesting/SKILL.md`     |
 | Playwright coverage gaps by user flow        | `~/.codex/skills/playwright-coverage/SKILL.md` |
 | Durable local/test account seeding           | `~/.codex/skills/account-seeding/SKILL.md`     |
+| Local iOS Simulator lifecycle and resources  | `~/.codex/skills/simslim/SKILL.md`             |
 | Secrets, credentials, env files, API keys    | `~/.codex/skills/secrets/SKILL.md`             |
 | Git commits and commit messages              | `~/.codex/skills/commit/SKILL.md`              |
 

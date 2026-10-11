@@ -5,11 +5,13 @@
 # -----------------------------------------------------------------------------
 tap "facebook/fb"
 tap "getsentry/xcodebuildmcp"
+tap "mobai-app/tap"
 
 brew "cocoapods"          # iOS dev
 brew "idb-companion"      # companion process for ios-simulator-mcp
 brew "mas"                # Mac App Store CLI
 brew "pinentry-mac"       # GPG pinentry for macOS
+brew "simslim"            # reduce iOS Simulator background resource usage
 brew "xcodebuildmcp"      # deterministic Xcode MCP startup without npx
 
 # -----------------------------------------------------------------------------

@@ -55,6 +55,8 @@ if command -v brew &>/dev/null; then
         brew trust --formula facebook/fb/idb-companion
         brew tap getsentry/xcodebuildmcp
         brew trust --formula getsentry/xcodebuildmcp/xcodebuildmcp
+        brew tap mobai-app/tap
+        brew trust --formula mobai-app/tap/simslim
         info "Installing macOS tools from Brewfile.macos..."
         if macos_casks="$(homebrew_macos_casks "$DOTS_DIR/Brewfile.macos")"; then
             if ! HOMEBREW_BUNDLE_CASK_SKIP="$macos_casks" \

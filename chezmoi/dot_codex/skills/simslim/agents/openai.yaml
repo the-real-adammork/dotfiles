@@ -1,0 +1,4 @@
+interface:
+  display_name: "SimSlim"
+  short_description: "Manage efficient local iOS simulators with SimSlim"
+  default_prompt: "Use SimSlim to manage local iOS simulators efficiently while preserving the app capabilities this task needs."
