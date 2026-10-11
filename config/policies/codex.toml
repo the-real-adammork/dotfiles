@@ -9,10 +9,15 @@ portable_roots = [
 ]
 local_roots = ["projects", "hooks", "model_reasoning_effort"]
 local_paths = [
+  "mcp_servers.node_repl",
+  "plugins.codex-app-tools@openai-bundled",
+  "tui.screen_reader_detection_done",
+  "plugins.chrome@openai-bundled",
+  "plugins.unified-computer-use@openai-bundled",
+  "plugins.code-review@openai-bundled",
+  "plugins.computer-use@openai-bundled",
+  "mcp_servers.mobbin",
   "tui.model_availability_nux",
-  "mcp_servers.node_repl.env.NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S",
-  "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_BUILD_FLAVOR",
-  "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_VERSION",
   "mcp_servers.figma.enabled",
   "mcp_servers.atlassian",
   "mcp_servers.openaiDeveloperDocs",

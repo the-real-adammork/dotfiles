@@ -12,6 +12,13 @@ cat >> "$FIXTURE_ROOT/codex.toml" <<EOF
 
 [tui]
 vim_mode_default = false
+screen_reader_detection_done = true
+
+[plugins."codex-app-tools@openai-bundled"]
+enabled = true
+
+[mcp_servers.node_repl]
+command = "/fixture/local/node-repl"
 
 [tui.model_availability_nux]
 "fixture-model" = 1
@@ -31,7 +38,7 @@ url = "https://example.invalid/posthog-mcp"
 command = "$HOME/.local/state/dots/bin/supabase-mcp"
 EOF
 "$REPO/scripts/dotfiles-state" merge-mixed codex < "$FIXTURE_ROOT/codex.toml" > "$FIXTURE_ROOT/merged.toml"
-assert_contains "$FIXTURE_ROOT/merged.toml" 'model = "gpt-5.6-sol"'
+assert_contains "$FIXTURE_ROOT/merged.toml" 'model = "gpt-6.1-sol"'
 assert_contains "$FIXTURE_ROOT/merged.toml" 'model_reasoning_effort = "medium"'
 assert_contains "$FIXTURE_ROOT/merged.toml" "$HOME/dots"
 assert_contains "$FIXTURE_ROOT/merged.toml" '[mcp_servers.atlassian]'
@@ -46,6 +53,10 @@ with open(sys.argv[1], "rb") as handle:
     config = tomllib.load(handle)
 
 assert config["tui"]["vim_mode_default"] is True
+assert config["tui"]["alternate_screen"] == "never"
+assert config["tui"]["screen_reader_detection_done"] is True
+assert config["plugins"]["codex-app-tools@openai-bundled"]["enabled"] is True
+assert config["mcp_servers"]["node_repl"]["command"] == "/fixture/local/node-repl"
 assert config["tui"]["model_availability_nux"]["fixture-model"] == 1
 assert config["model_reasoning_summary"] == "auto"
 assert "model_reasoning_summary" not in config["marketplaces"]["compound-engineering-plugin"]
@@ -65,6 +76,9 @@ assert_not_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.sup
 assert_contains "$capture_repo/config/portable/codex.toml" '[mcp_servers.context7]'
 assert_contains "$capture_repo/config/portable/codex.toml" 'vim_mode_default = false'
 assert_not_contains "$capture_repo/config/portable/codex.toml" 'fixture-model'
+assert_not_contains "$capture_repo/config/portable/codex.toml" 'screen_reader_detection_done'
+assert_not_contains "$capture_repo/config/portable/codex.toml" 'codex-app-tools@openai-bundled'
+assert_not_contains "$capture_repo/config/portable/codex.toml" '/fixture/local/node-repl'
 
 cp "$FIXTURE_ROOT/codex.toml" "$FIXTURE_ROOT/unknown.toml"
 sed -i '' '/\[features\]/a\

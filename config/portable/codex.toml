@@ -2,14 +2,11 @@ approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 web_search = "live"
 personality = "pragmatic"
-model = "gpt-5.6-sol"
+model = "gpt-6.1-sol"
 approvals_reviewer = "user"
 model_reasoning_summary = "auto"
 hide_agent_reasoning = false
 service_tier = "default"
-
-[tui]
-vim_mode_default = true
 
 [sandbox_workspace_write]
 network_access = true
@@ -53,9 +50,6 @@ enabled = true
 [plugins."template-creator@openai-primary-runtime"]
 enabled = true
 
-[plugins."sites@openai-bundled"]
-enabled = true
-
 [plugins."visualize@openai-bundled"]
 enabled = true
 
@@ -68,7 +62,7 @@ args = ["-y", "@upstash/context7-mcp"]
 
 [mcp_servers.linear]
 url = "https://mcp.linear.app/mcp"
-enabled = false
+enabled = true
 
 [mcp_servers.railway]
 url = "https://mcp.railway.com"
@@ -76,22 +70,6 @@ enabled = false
 
 [mcp_servers.nxt]
 url = "https://nxt.fly.dev/mcp"
-
-[mcp_servers.node_repl]
-command = "__CODEX_NODE_REPL__"
-startup_timeout_sec = 120
-
-[mcp_servers.node_repl.env]
-NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = "__CODEX_NODE_MODULES__"
-NODE_REPL_NODE_PATH = "__CODEX_NODE__"
-NODE_REPL_TRUSTED_CODE_PATHS = "__HOME__/.codex"
-CODEX_HOME = "__HOME__/.codex"
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
-NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
-NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
-CODEX_CLI_PATH = "__CODEX_CLI__"
 
 [mcp_servers.adobe-illustrator]
 url = "http://localhost:18412/v1/mcp"
@@ -123,8 +101,8 @@ url = "https://mcp.figma.com/mcp"
 [desktop]
 ambient-suggestions-enabled = false
 preventSleepWhileRunning = false
-keepRemoteControlAwakeWhilePluggedIn = false
-conversationDetailMode = "STEPS_COMMANDS"
+keepRemoteControlAwakeWhilePluggedIn = true
+conversationDetailMode = "STEPS_PROSE"
 followUpQueueMode = "queue"
 dock-icon-preference = "codex-system"
 sansFontSize = 14
@@ -133,3 +111,7 @@ codeFontSize = 13
 [marketplaces.compound-engineering-plugin]
 source_type = "git"
 source = "https://github.com/EveryInc/compound-engineering-plugin.git"
+
+[tui]
+alternate_screen = "never"
+vim_mode_default = true
