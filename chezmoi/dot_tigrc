@@ -11,4 +11,10 @@ bind refs T ?git checkout %(tag)
 # Apply the current stash
 bind stash A !?git stash apply %(stash)
 
+# Jump to the next changed file in the diff view
+bind diff } :/^diff --(git|cc)
+
+# Return to the diff header and file list
+bind diff { move-first-line
+
 set main-view-id-display = true

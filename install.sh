@@ -199,6 +199,18 @@ if install_group_selected claude; then
     fi
 fi
 
+# --- Codex interface skills ---
+if install_group_selected codex; then
+    if command -v npx &>/dev/null; then
+        info "Installing interface skills for Codex..."
+        npx --yes skills add jakubkrehel/skills \
+            --global --agent codex --skill '*' --yes --copy
+        ok "Codex interface skills installed"
+    else
+        warn "npx not found, skipping Codex interface skills."
+    fi
+fi
+
 # --- TPM (Tmux Plugin Manager) ---
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     info "Installing TPM..."

@@ -27,5 +27,10 @@ font-feature = ss10
 window-padding-x = 4
 window-padding-y = 4
 
+# Detect URLs in terminal output and open them with Command-click on macOS.
+link-url = true
+# Keep Shift-modified clicks in Ghostty so they can bypass tmux mouse capture.
+mouse-shift-capture = never
+
 # Theme
 theme = Catppuccin Latte
